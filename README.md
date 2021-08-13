@@ -8,7 +8,7 @@ spack load py-h5py
 spack load py-matplotlib
 spack load py-mpi4py
 spack load qcat
-module load r
+module load r/4.0.3-gcc/8.3.1  
 
 Python 3.6.4 or higher must be used due to dependacies
 
