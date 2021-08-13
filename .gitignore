@@ -1,0 +1,11 @@
+temp
+outputs
+datasets
+notes
+image_results
+__pycache__
+.DS_Store
+*.ipynb
+*.r 
+*.txt
+*.csv
