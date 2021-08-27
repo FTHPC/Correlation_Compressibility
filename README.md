@@ -3,7 +3,7 @@ To use on Palmetto:
 
 source /zfs/ftdice/setup.sh 
 spack load libpressio 
-spack load libpressio tthresh
+spack load libpressio-tthresh
 spack load py-h5py
 spack load py-matplotlib
 spack load py-mpi4py
