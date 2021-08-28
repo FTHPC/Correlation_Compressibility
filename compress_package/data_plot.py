@@ -27,8 +27,8 @@ def original_data(data_class):
 
 def set_variables(gaussian):
     independent_names = ["a_range"] if gaussian else []
-    independent_names.extend(["global_variogram", "n99","H16_std_singular_mode","H16_avg_singular_mode","H16_std_local_variogram",
-                         "H16_avg_local_variogram","H32_std_singular_mode","H32_avg_singular_mode","H32_std_local_variogram","H32_avg_local_variogram",])
+    independent_names.extend(["global_variogram","n99","H16_std_singular_mode","H16_mean_singular_mode","H16_std_local_variogram",
+                         "H16_avg_local_variogram","H32_std_singular_mode","H32_mean_singular_mode","H32_std_local_variogram","H32_avg_local_variogram",])
     #must be in the same order
     independent_labels = ["Smoothness Correlation Range"] if gaussian else []
     independent_labels.extend([
@@ -86,11 +86,12 @@ def sdrbench_comparison(sample_data_classes, fit='log'):
             bound_title = []
             for bound in bounds:
                 if not bound in legend_slices:
-                    legend_slices.update({bound : {
-                        'global_variogram':[],'psnr':[],'compression_ratio':[],'ssim':[],'n99':[],
-                        'H16_std_singular_mode':[],'H16_avg_singular_mode':[],'H16_std_local_variogram':[], 'H16_avg_local_variogram':[],
-                        'H32_std_singular_mode':[],'H32_avg_singular_mode':[],'H32_std_local_variogram':[],'H32_avg_local_variogram':[],
-                    }})  
+                    names = {}
+                    names_list = independent_names + dependent_names
+                    for each in names_list:
+                        names.update({each:[]})
+                    legend_slices.update({bound : names})  
+
                 loc = sorted_classes.get(keys)[sliced]
                 loc_comp = loc.compression_measurements.get(bound)
                 bound_title.append(str(loc_comp.get('compressor'))+'_'+str(loc_comp.get('bound')))
@@ -101,15 +102,10 @@ def sdrbench_comparison(sample_data_classes, fit='log'):
                 legend_slices[bound]['global_variogram'].append(loc.global_variogram_fitting)
                 legend_slices[bound]['n99'].append(loc.global_svd_measurements.get('n99'))
                 
-                legend_slices[bound]['H16_std_singular_mode'].append(loc.tiled_svd_measurements.get('H_16').get('Standard_Deviation'))
-                legend_slices[bound]['H16_avg_singular_mode'].append(loc.tiled_svd_measurements.get('H_16').get('Mean'))
-                legend_slices[bound]['H16_std_local_variogram'].append(loc.local_variogram_measurements.get('H16_std_local_variogram'))
-                legend_slices[bound]['H16_avg_local_variogram'].append(loc.local_variogram_measurements.get('H16_avg_local_variogram'))
-
-                legend_slices[bound]['H32_std_singular_mode'].append(loc.tiled_svd_measurements.get('H_32').get('Standard_Deviation'))
-                legend_slices[bound]['H32_avg_singular_mode'].append(loc.tiled_svd_measurements.get('H_32').get('Mean'))
-                legend_slices[bound]['H32_std_local_variogram'].append(loc.local_variogram_measurements.get('H32_std_local_variogram'))
-                legend_slices[bound]['H32_avg_local_variogram'].append(loc.local_variogram_measurements.get('H32_avg_local_variogram'))
+                for mode in ['H16_std_singular_mode', 'H16_mean_singular_mode', 'H32_std_singular_mode', 'H32_mean_singular_mode']:
+                    legend_slices[bound][mode].append(loc.tiled_svd_measurements.get(mode))
+                for mode in ['H16_std_local_variogram', 'H16_avg_local_variogram', 'H32_std_local_variogram', 'H32_avg_local_variogram']:
+                    legend_slices[bound][mode].append(loc.local_variogram_measurements.get(mode))
 
         #plot function
         plot_private(False, False, fit, legend_slices, bounds, independent_names, independent_labels, 
@@ -162,9 +158,12 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
             for bound in bounds:
                 loc_comp = loc.compression_measurements.get(bound)
                 if not bound in legend_slices:
-                    legend_slices.update({bound : {'psnr':[],'compression_ratio':[],'ssim':[],'K_points':[], 'a_range':[], 'global_variogram':[],
-                        'n99':[], 'H16_std_singular_mode':[],'H16_avg_singular_mode':[],'H16_std_local_variogram':[], 'H16_avg_local_variogram':[],
-                        'H32_std_singular_mode':[],'H32_avg_singular_mode':[],'H32_std_local_variogram':[],'H32_avg_local_variogram':[],}}) 
+                    names = {'K_points':[]}
+                    names_list = independent_names + dependent_names
+                    for each in names_list:
+                        names.update({each:[]})
+                    legend_slices.update({bound:names})   
+                
                 bound_title.append(str(loc_comp.get('compressor'))+'_'+str(loc_comp.get('bound')))
                 legend_slices[bound]['compression_ratio'].append(loc_comp.get('size:compression_ratio')) 
                 legend_slices[bound]['psnr'].append(loc_comp.get('error_stat:psnr'))
@@ -182,30 +181,25 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
                 variogram_append = loc.global_variogram_fitting if hasattr(loc, 'global_variogram_fitting') else 'NA'
                 legend_slices[bound]['global_variogram'].append(variogram_append)    
                 legend_slices[bound]['n99'].append(loc.global_svd_measurements.get('n99'))
-                 
-                legend_slices[bound]['H16_std_singular_mode'].append(loc.tiled_svd_measurements.get('H_16').get('Standard_Deviation'))
-                legend_slices[bound]['H16_avg_singular_mode'].append(loc.tiled_svd_measurements.get('H_16').get('Mean'))
-                legend_slices[bound]['H16_std_local_variogram'].append(loc.local_variogram_measurements.get('H16_std_local_variogram'))
-                legend_slices[bound]['H16_avg_local_variogram'].append(loc.local_variogram_measurements.get('H16_avg_local_variogram'))
-
-                legend_slices[bound]['H32_std_singular_mode'].append(loc.tiled_svd_measurements.get('H_32').get('Standard_Deviation'))
-                legend_slices[bound]['H32_avg_singular_mode'].append(loc.tiled_svd_measurements.get('H_32').get('Mean'))
-                legend_slices[bound]['H32_std_local_variogram'].append(loc.local_variogram_measurements.get('H32_std_local_variogram'))
-                legend_slices[bound]['H32_avg_local_variogram'].append(loc.local_variogram_measurements.get('H32_avg_local_variogram'))
+         
+                for mode in ['H16_std_singular_mode', 'H16_mean_singular_mode', 'H32_std_singular_mode', 'H32_mean_singular_mode']:
+                    legend_slices[bound][mode].append(loc.tiled_svd_measurements.get(mode))
+                for mode in ['H16_std_local_variogram', 'H16_avg_local_variogram', 'H32_std_local_variogram', 'H32_avg_local_variogram']:
+                    legend_slices[bound][mode].append(loc.local_variogram_measurements.get(mode))
 
             #these are not affected by different bounds and compressors
             stats_sample['n100'].append(loc.global_svd_measurements.get('n100'))
             stats_sample['n9999'].append(loc.global_svd_measurements.get('n9999'))
             stats_sample['n999'].append(loc.global_svd_measurements.get('n999'))
             stats_sample['n99'].append(loc.global_svd_measurements.get('n99'))
-            stats_sample['H8_svd_H8_avg'].append(loc.tiled_svd_measurements.get('H_8').get('Standard_Deviation') /
-                                                            loc.tiled_svd_measurements.get('H_8').get('Mean'))
-            stats_sample['H16_svd_H16_avg'].append(loc.tiled_svd_measurements.get('H_16').get('Standard_Deviation') /
-                                                            loc.tiled_svd_measurements.get('H_16').get('Mean'))
-            stats_sample['H32_svd_H32_avg'].append(loc.tiled_svd_measurements.get('H_32').get('Standard_Deviation') /
-                                                            loc.tiled_svd_measurements.get('H_32').get('Mean'))
-            stats_sample['H64_svd_H64_avg'].append(loc.tiled_svd_measurements.get('H_64').get('Standard_Deviation') /
-                                                            loc.tiled_svd_measurements.get('H_64').get('Mean'))
+            stats_sample['H8_svd_H8_avg'].append(loc.tiled_svd_measurements.get('H8_std_singular_mode') /
+                                                            loc.tiled_svd_measurements.get('H8_mean_singular_mode'))
+            stats_sample['H16_svd_H16_avg'].append(loc.tiled_svd_measurements.get('H16_std_singular_mode') /
+                                                            loc.tiled_svd_measurements.get('H16_mean_singular_mode'))
+            stats_sample['H32_svd_H32_avg'].append(loc.tiled_svd_measurements.get('H32_std_singular_mode') /
+                                                            loc.tiled_svd_measurements.get('H32_mean_singular_mode'))
+            stats_sample['H64_svd_H64_avg'].append(loc.tiled_svd_measurements.get('H64_std_singular_mode') /
+                                                            loc.tiled_svd_measurements.get('H64_mean_singular_mode'))
             stats_sample['K_points'].append(loc.gaussian_attributes.get('K_points'))
             stats_sample['a_range'].append(loc.gaussian_attributes.get('a_range'))
 

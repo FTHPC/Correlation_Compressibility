@@ -123,8 +123,8 @@ class data:
     def set_global_svd_measurements(self, thresholds):
         self.global_svd_measurements = thresholds
 
-    def set_tiled_svd_measurements(self, H, measurements): 
-        self.tiled_svd_measurements.update({'H_'+str(H):measurements})
+    def set_tiled_svd_measurements(self, measurements): 
+        self.tiled_svd_measurements.update(measurements)
     
     def set_gaussian_attributes(self, measurements):
         self.gaussian_attributes = measurements
@@ -413,18 +413,18 @@ def export_class(data_class, output_name):
                              'n99': data_class.global_svd_measurements.get('n99')})                    
     #checks for tiled svd singular mode measurements
     if len(data_class.tiled_svd_measurements) > 0:    
-         dict_list[0].update({'H8_mean_singular_mode':data_class.tiled_svd_measurements.get('H_8').get('Mean'), 
-                              'H8_median_singular_mode':data_class.tiled_svd_measurements.get('H_8').get('Median'), 
-                              'H8_std_singular_mode':data_class.tiled_svd_measurements.get('H_8').get('Standard_Deviation'), 
-                              'H16_mean_singular_mode':data_class.tiled_svd_measurements.get('H_16').get('Mean'),
-                              'H16_median_singular_mode':data_class.tiled_svd_measurements.get('H_16').get('Median'),
-                              'H16_std_singular_mode':data_class.tiled_svd_measurements.get('H_16').get('Standard_Deviation'),
-                              'H32_mean_singular_mode':data_class.tiled_svd_measurements.get('H_32').get('Mean'),
-                              'H32_median_singular_mode':data_class.tiled_svd_measurements.get('H_16').get('Median'),
-                              'H32_std_singular_mode':data_class.tiled_svd_measurements.get('H_32').get('Standard_Deviation'),
-                              'H64_mean_singular_mode':data_class.tiled_svd_measurements.get('H_64').get('Mean'),
-                              'H64_median_singular_mode':data_class.tiled_svd_measurements.get('H_64').get('Median'),
-                              'H64_std_singular_mode':data_class.tiled_svd_measurements.get('H_64').get('Standard_Deviation'),
+         dict_list[0].update({'H8_mean_singular_mode':data_class.tiled_svd_measurements.get('H8_mean_singular_mode'), 
+                              'H8_median_singular_mode':data_class.tiled_svd_measurements.get('H8_median_singular_mode'), 
+                              'H8_std_singular_mode':data_class.tiled_svd_measurements.get('H8_std_singular_mode'), 
+                              'H16_mean_singular_mode':data_class.tiled_svd_measurements.get('H16_mean_singular_mode'),
+                              'H16_median_singular_mode':data_class.tiled_svd_measurements.get('H16_median_singular_mode'),
+                              'H16_std_singular_mode':data_class.tiled_svd_measurements.get('H16_std_singular_mode'),
+                              'H32_mean_singular_mode':data_class.tiled_svd_measurements.get('H32_mean_singular_mode'),
+                              'H32_median_singular_mode':data_class.tiled_svd_measurements.get('H32_median_singular_mode'),
+                              'H32_std_singular_mode':data_class.tiled_svd_measurements.get('H32_std_singular_mode'),
+                              'H64_mean_singular_mode':data_class.tiled_svd_measurements.get('H64_mean_singular_mode'),
+                              'H64_median_singular_mode':data_class.tiled_svd_measurements.get('H64_median_singular_mode'),
+                              'H64_std_singular_mode':data_class.tiled_svd_measurements.get('H64_std_singular_mode'),
                             })
     #checks for coarsened data measurements 
     if len(data_class.coarsened_attributes) > 0:
@@ -551,10 +551,10 @@ def import_class(input_name, global_class=False):
                         'n999': np.float64(lines['n999']), 'n99': np.float64(lines['n99'])})
                 if not lines['H8_mean_singular_mode'] == '':
                     for H in [8,16,32,64]:
-                        class_list[index].set_tiled_svd_measurements(H,{
-                            'Mean':np.float64(lines['H'+str(H)+'_mean_singular_mode']), 
-                            'Median':np.float64(lines['H'+str(H)+'_median_singular_mode']), 
-                            'Standard_Deviation':np.float64(lines['H'+str(H)+'_std_singular_mode'])
+                        class_list[index].set_tiled_svd_measurements({
+                            'H'+str(H)+'_mean_singular_mode':np.float64(lines['H'+str(H)+'_mean_singular_mode']), 
+                            'H'+str(H)+'_median_singular_mode':np.float64(lines['H'+str(H)+'_median_singular_mode']), 
+                            'H'+str(H)+'_std_singular_mode':np.float64(lines['H'+str(H)+'_std_singular_mode'])
                         })
                 if not lines['H8_avg_local_variogram'] == '':
                     class_list[index].set_local_variogram_measurements({

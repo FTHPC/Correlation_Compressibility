@@ -105,8 +105,10 @@ def tiled_singular(data_class, H = 16, plot = False):
     X = data_class.data
     map_res = map_svd_rank(X)
     #plot tiled sub-windows
-    measurements = {'Mean':np.mean(map_res), 'Median':np.median(map_res), 'Standard_Deviation':np.std(map_res)}
-    data_class.set_tiled_svd_measurements(H, measurements)
+    measurements = {'H'+str(H)+'_mean_singular_mode':np.mean(map_res), 'H'+str(H)+'_median_singular_mode':np.median(map_res), 'H'+str(H)+'_std_singular_mode':np.std(map_res)}
+    data_class.set_tiled_svd_measurements({measurements})
+
+
     if plot:
         K1 = X.shape[0]
         K2 = X.shape[1]
@@ -127,8 +129,8 @@ def tiled_multiple(data_class, plot = False):
     X = data_class.data
     for i, item in enumerate(H):
         map_res.append(map_svd_rank(X, H = item))
-        measurements = {'Mean':np.mean(map_res[i]), 'Median':np.median(map_res[i]), 'Standard_Deviation':np.std(map_res[i])}
-        data_class.set_tiled_svd_measurements(H[i], measurements)
+        measurements = {'H'+str(item)+'_mean_singular_mode':np.mean(map_res[i]), 'H'+str(item)+'_median_singular_mode':np.median(map_res[i]), 'H'+str(item)+'_std_singular_mode':np.std(map_res[i])}
+        data_class.set_tiled_svd_measurements({measurements})
         if plot:
             K1 = X.shape[0]
             K2 = X.shape[1]
