@@ -5,27 +5,22 @@ computed metrics. Some of the questions answered:
     How compression ratios relate to the overall correlation range?
     How compression ratios relate to local correlation ranges?
 
-functions:
+functions (public):
     original_data(data_class)
     sdrbench_comparison(sample_data_classes, fit='log')
     gaussian_comparison(sample_data_classes, K_points, multi_gaussian = True, fit = 'log')
+functions (private):
+    _set_variable(gaussian)
+    _update_variable_storage(gaussian, bounds, bound_title, loc, legend_slices, independent_names, dependent_names)
+
 '''
 from compress_package.convert import slice_data
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
 
-def original_data(data_class):
-    #displays the original data set
-    Image = np.transpose(data_class.data )
-    slice_data.create_folder('image_results')
-    slice_data.create_folder('image_results/original_data')
-    plt.imshow(Image, origin='lower')
-    plt.title('Original Data '+data_class.filename)
-    plt.imsave('image_results/original_data/'+data_class.filename+'_original.png', Image)
-    plt.close()
-
-def set_variables(gaussian):
+#CHANGE HERE TO CHANGE VARIABLES
+def _set_variable(gaussian):
     independent_names = ["a_range"] if gaussian else []
     independent_names.extend(["global_variogram","n99","H16_std_singular_mode","H16_mean_singular_mode","H16_std_local_variogram",
                          "H16_avg_local_variogram","H32_std_singular_mode","H32_mean_singular_mode","H32_std_local_variogram","H32_avg_local_variogram",])
@@ -34,12 +29,10 @@ def set_variables(gaussian):
     independent_labels.extend([
         "Estimated global variogram range",
         "SVD truncation level for 99% of variance",
-
         "Std of truncation level of local SVD (H=16)",
         "Mean truncation level of local SVD (H=16)",
         "Std of estimated of local variogram range (H=16)",
         "Mean of estimated of local variogram range (H=16)",
-
         "Std of truncation level of local SVD (H=32)",
         "Mean truncation level of local SVD (H=32)",
         "Std of estimated of local variogram range (H=32)",
@@ -53,8 +46,45 @@ def set_variables(gaussian):
     ]
     return independent_names, independent_labels, dependent_names, dependent_labels
 
-def sdrbench_comparison(sample_data_classes, fit='log'):
-    independent_names, independent_labels, dependent_names, dependent_labels = set_variables(gaussian=False)
+def _update_variable_storage(gaussian, bounds, bound_title, loc, legend_slices, independent_names, dependent_names):
+    for bound in bounds:
+        if not bound in legend_slices:
+            names = {'K_points':[]} if gaussian else {}
+            names_list = independent_names + dependent_names
+            for each in names_list:
+                names.update({each:[]})
+            legend_slices.update({bound:names})   
+        loc_comp = loc.compression_measurements.get(bound)
+        bound_title.append(str(loc_comp.get('compressor'))+'_'+str(loc_comp.get('bound')))
+        legend_slices[bound]['compression_ratio'].append(loc_comp.get('size:compression_ratio')) 
+        legend_slices[bound]['psnr'].append(loc_comp.get('error_stat:psnr'))
+        legend_slices[bound]['ssim'].append(loc_comp.get('error_stat:ssim'))
+        if gaussian:
+            legend_slices[bound]['K_points'].append(loc.gaussian_attributes.get('K_points'))
+            if 'a_range_secondary' in loc.gaussian_attributes: 
+                if loc.gaussian_attributes.get('a_range') > loc.gaussian_attributes.get('a_range_secondary'):
+                    a_value = loc.gaussian_attributes.get('a_range')
+                else:
+                    a_value = loc.gaussian_attributes.get('a_range_secondary')
+                legend_slices[bound]['a_range'].append(a_value)
+            else:   
+                legend_slices[bound]['a_range'].append(loc.gaussian_attributes.get('a_range'))
+        
+        variogram_append = loc.global_variogram_fitting if hasattr(loc, 'global_variogram_fitting') else 'NA'
+        legend_slices[bound]['global_variogram'].append(variogram_append)    
+        legend_slices[bound]['n99'].append(loc.global_svd_measurements.get('n99'))
+
+        for mode in ['H16_std_singular_mode', 'H16_mean_singular_mode', 'H32_std_singular_mode', 'H32_mean_singular_mode']:
+            legend_slices[bound][mode].append(loc.tiled_svd_measurements.get(mode))
+        for mode in ['H16_std_local_variogram', 'H16_avg_local_variogram', 'H32_std_local_variogram', 'H32_avg_local_variogram']:
+            legend_slices[bound][mode].append(loc.local_variogram_measurements.get(mode)) 
+
+
+
+#STOP CHANGES
+
+def sdrbench_comparison(sample_data_classes, fit='log', separate_by_file=True):
+    independent_names, independent_labels, dependent_names, dependent_labels = _set_variable(gaussian=False)
     slice_data.create_folder('image_results')
     slice_data.create_folder('image_results/sdrbench_comparisons')
 
@@ -67,14 +97,20 @@ def sdrbench_comparison(sample_data_classes, fit='log'):
             continue
         #get filename without the slice addition
         reduced_filename = data_class.filename.split('_slice')[0] 
-        if reduced_filename in sorted_classes:
-            #check slice, will skip slice if the std of the slice is lower than the threshold.
-            if data_class.coarsened_attributes.get('resolution_4').get('standard_deviation') > 1e-02:
+        #set dataset folder name
+        # folder_name = data_class.data_folder
+        folder_name = 'SDRBENCH-Miranda-256x384x384'
+        #check slice, will skip slice if the std of the slice is lower than the threshold.
+        if data_class.coarsened_attributes.get('resolution_4').get('standard_deviation') > 1e-02:
+            if not separate_by_file:
+                reduced_filename = folder_name
+
+            if reduced_filename in sorted_classes:
                 sorted_classes[reduced_filename].append(data_class)
-        elif data_class.coarsened_attributes.get('resolution_4').get('standard_deviation') > 1e-02:
-            sorted_classes.update({reduced_filename : []})
-            sorted_classes[reduced_filename].append(data_class)
-            reduced_filename_store.append(reduced_filename)
+            else:
+                sorted_classes.update({reduced_filename : []})
+                sorted_classes[reduced_filename].append(data_class)
+                reduced_filename_store.append(reduced_filename)
     bound_title = []
     legend_slices = {}
     for i, keys in enumerate(sorted_classes):
@@ -84,39 +120,18 @@ def sdrbench_comparison(sample_data_classes, fit='log'):
         #The a is the same for all the samples
         for sliced in range(len(sorted_classes.get(keys))):
             bound_title = []
-            for bound in bounds:
-                if not bound in legend_slices:
-                    names = {}
-                    names_list = independent_names + dependent_names
-                    for each in names_list:
-                        names.update({each:[]})
-                    legend_slices.update({bound : names})  
-
-                loc = sorted_classes.get(keys)[sliced]
-                loc_comp = loc.compression_measurements.get(bound)
-                bound_title.append(str(loc_comp.get('compressor'))+'_'+str(loc_comp.get('bound')))
-                legend_slices[bound]['psnr'].append(loc_comp.get('error_stat:psnr'))
-                legend_slices[bound]['ssim'].append(loc_comp.get('error_stat:ssim'))
-                legend_slices[bound]['compression_ratio'].append(loc_comp.get('size:compression_ratio'))
-
-                legend_slices[bound]['global_variogram'].append(loc.global_variogram_fitting)
-                legend_slices[bound]['n99'].append(loc.global_svd_measurements.get('n99'))
-                
-                for mode in ['H16_std_singular_mode', 'H16_mean_singular_mode', 'H32_std_singular_mode', 'H32_mean_singular_mode']:
-                    legend_slices[bound][mode].append(loc.tiled_svd_measurements.get(mode))
-                for mode in ['H16_std_local_variogram', 'H16_avg_local_variogram', 'H32_std_local_variogram', 'H32_avg_local_variogram']:
-                    legend_slices[bound][mode].append(loc.local_variogram_measurements.get(mode))
+            loc = sorted_classes.get(keys)[sliced]
+            _update_variable_storage(False, bounds, bound_title, loc, legend_slices, independent_names, dependent_names)
 
         #plot function
-        plot_private(False, False, fit, legend_slices, bounds, independent_names, independent_labels, 
+        _plot_private(False, False, fit, legend_slices, bounds, independent_names, independent_labels, 
                     dependent_names, dependent_labels, i, reduced_filename_store)
 
 
 def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit = 'log'):
-    independent_names, independent_labels, dependent_names, dependent_labels = set_variables(gaussian=True)
+    independent_names, independent_labels, dependent_names, dependent_labels = _set_variable(gaussian=True)
     slice_data.create_folder('image_results')
     slice_data.create_folder('image_results/gaussian_comparisons')
-    
 
     sorted_classes = {}
     reduced_filename_store = []
@@ -133,13 +148,13 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
         reduced_filename = data_class.filename.split('_Sample')[0] 
         if data_class.gaussian_attributes.get('K_points') != K_points:
             continue
-        if reduced_filename in sorted_classes:
-            if data_class.coarsened_attributes.get('resolution_4').get('standard_deviation') > 1e-02:
+        if data_class.coarsened_attributes.get('resolution_4').get('standard_deviation') > 1e-02:
+            if reduced_filename in sorted_classes:
                 sorted_classes[reduced_filename].append(data_class)
-        elif data_class.coarsened_attributes.get('resolution_4').get('standard_deviation') > 1e-02:
-            sorted_classes.update({reduced_filename : []})
-            sorted_classes[reduced_filename].append(data_class)
-            reduced_filename_store.append(reduced_filename)
+            else:
+                sorted_classes.update({reduced_filename : []})
+                sorted_classes[reduced_filename].append(data_class)
+                reduced_filename_store.append(reduced_filename)
           
     legend_slices   = {}
     stats_sample  = {'H8_svd_H8_avg':[],'H16_svd_H16_avg':[],'H32_svd_H32_avg':[],'H64_svd_H64_avg':[],
@@ -155,37 +170,7 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
             bound_title = []
             loc = sorted_classes.get(keys)[sample] 
             #these are affected by different bounds and compressors
-            for bound in bounds:
-                loc_comp = loc.compression_measurements.get(bound)
-                if not bound in legend_slices:
-                    names = {'K_points':[]}
-                    names_list = independent_names + dependent_names
-                    for each in names_list:
-                        names.update({each:[]})
-                    legend_slices.update({bound:names})   
-                
-                bound_title.append(str(loc_comp.get('compressor'))+'_'+str(loc_comp.get('bound')))
-                legend_slices[bound]['compression_ratio'].append(loc_comp.get('size:compression_ratio')) 
-                legend_slices[bound]['psnr'].append(loc_comp.get('error_stat:psnr'))
-                legend_slices[bound]['ssim'].append(loc_comp.get('error_stat:ssim'))
-                legend_slices[bound]['K_points'].append(loc.gaussian_attributes.get('K_points'))
-                if 'a_range_secondary' in loc.gaussian_attributes: 
-                    if loc.gaussian_attributes.get('a_range') > loc.gaussian_attributes.get('a_range_secondary'):
-                        a_value = loc.gaussian_attributes.get('a_range')
-                    else:
-                        a_value = loc.gaussian_attributes.get('a_range_secondary')
-                    legend_slices[bound]['a_range'].append(a_value)
-                else:   
-                    legend_slices[bound]['a_range'].append(loc.gaussian_attributes.get('a_range'))
-                
-                variogram_append = loc.global_variogram_fitting if hasattr(loc, 'global_variogram_fitting') else 'NA'
-                legend_slices[bound]['global_variogram'].append(variogram_append)    
-                legend_slices[bound]['n99'].append(loc.global_svd_measurements.get('n99'))
-         
-                for mode in ['H16_std_singular_mode', 'H16_mean_singular_mode', 'H32_std_singular_mode', 'H32_mean_singular_mode']:
-                    legend_slices[bound][mode].append(loc.tiled_svd_measurements.get(mode))
-                for mode in ['H16_std_local_variogram', 'H16_avg_local_variogram', 'H32_std_local_variogram', 'H32_avg_local_variogram']:
-                    legend_slices[bound][mode].append(loc.local_variogram_measurements.get(mode))
+            _update_variable_storage(True, bounds, bound_title, loc, legend_slices, independent_names, dependent_names)
 
             #these are not affected by different bounds and compressors
             stats_sample['n100'].append(loc.global_svd_measurements.get('n100'))
@@ -204,9 +189,8 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
             stats_sample['a_range'].append(loc.gaussian_attributes.get('a_range'))
 
     #plot function
-    plot_private(True, multi_gaussian, fit, legend_slices, bounds, independent_names, 
+    _plot_private(True, multi_gaussian, fit, legend_slices, bounds, independent_names, 
                 independent_labels, dependent_names, dependent_labels, i, reduced_filename_store)
-
 
     #other depnedents that don't rely on compressors or bounds
     #correlation range vs dependents
@@ -238,7 +222,7 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
         plt.close()
 
 
-def clean_data(legend_slices, bounds, independent_names, each_ind, each_dep):
+def _clean_data(legend_slices, bounds, independent_names, each_ind, each_dep):
     for bound in bounds:
         index_ind = 0
         index_dep = 0
@@ -267,8 +251,7 @@ def clean_data(legend_slices, bounds, independent_names, each_ind, each_dep):
                 break
             
 
-
-def plot_private(gaussian:bool, multi_gaussian:bool, fit:str, legend_slices, bounds, independent_names, independent_labels, dependent_names, dependent_labels, filename_iteration, reduced_filename_store):
+def _plot_private(gaussian:bool, multi_gaussian:bool, fit:str, legend_slices, bounds, independent_names, independent_labels, dependent_names, dependent_labels, filename_iteration, reduced_filename_store):
     #copies original data in order to reset stored variables
     og_dep = []
     og_ind = []
@@ -291,7 +274,7 @@ def plot_private(gaussian:bool, multi_gaussian:bool, fit:str, legend_slices, bou
                 legend_slices[bound][ind] = og_ind[index].copy() 
                 index += 1     
 
-            clean_data(legend_slices, bounds, independent_names, each_ind, each_dep)
+            _clean_data(legend_slices, bounds, independent_names, each_ind, each_dep)
 
             # markers = [',', '+', '.', 'o', '*', '1', '2', '3', '4', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
             #each_dep compressor has own file
@@ -364,4 +347,13 @@ def plot_private(gaussian:bool, multi_gaussian:bool, fit:str, legend_slices, bou
                     numerical_bound_list, x_values, y_values = ([] for listed in range(3))
                 pre_compressor = compressor
                 place +=1  
-   
+
+def original_data(data_class):
+    #displays the original data set
+    Image = np.transpose(data_class.data )
+    slice_data.create_folder('image_results')
+    slice_data.create_folder('image_results/original_data')
+    plt.imshow(Image, origin='lower')
+    plt.title('Original Data '+data_class.filename)
+    plt.imsave('image_results/original_data/'+data_class.filename+'_original.png', Image)
+    plt.close()

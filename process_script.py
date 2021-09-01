@@ -12,7 +12,7 @@ global_data = cp.setup.global_data()
 
 dimensions = [256,384,384]
 data_folder = 'SDRBENCH-Miranda-256x384x384'
-sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions, slices_needed=[0, 50, 100, 150, 200 255])
+sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions, slices_needed=[0, 50])
 
 
 #does global_svd, coarsening, and compression measurements on the list of sample data class
@@ -52,7 +52,7 @@ for data_class in sample_data_classes:
     cp.plot.original_data(data_class)
 
     #exports to excel .csv file
-    cp.setup.export_class(data_class, 'output.csv')
+    cp.setup.export_class(data_class, 'testtest.csv')
 
 # should be last line
 cp.setup.remove_folder(global_data.dataset_temp_folder)

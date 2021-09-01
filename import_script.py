@@ -30,7 +30,7 @@ for data_class in sample_data_classes:
         print('Global Variogram Fitting:'+str(data_class.global_variogram_fitting))
     print(json.dumps(data_class.local_variogram_measurements, indent=4))
 
-cp.plot.sdrbench_comparison(sample_data_classes, fit='log')
+cp.plot.sdrbench_comparison(sample_data_classes, fit='log', separate_by_file=False)
 cp.plot.gaussian_comparison(sample_data_classes, K_points=128, multi_gaussian=False, fit='log')
 cp.plot.gaussian_comparison(sample_data_classes, K_points=1028, multi_gaussian=False, fit='log')
 cp.plot.gaussian_comparison(sample_data_classes, K_points=1028, multi_gaussian=True, fit='log')
