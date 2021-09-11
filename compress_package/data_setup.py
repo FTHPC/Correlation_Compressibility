@@ -440,13 +440,12 @@ def export_class(data_class, output_name):
         dict_list[0].update({'global_variogram_fit': data_class.global_variogram_fitting})
     #checks for local variogram study
     if hasattr(data_class, 'local_variogram_measurements'): 
-        dict_list[0].update({'H8_avg_local_variogram':data_class.local_variogram_measurements.get('H8_avg_local_variogram'), 
-                             'H8_std_local_variogram':data_class.local_variogram_measurements.get('H8_std_local_variogram'), 
-                             'H16_avg_local_variogram':data_class.local_variogram_measurements.get('H16_avg_local_variogram'),
-                             'H16_std_local_variogram':data_class.local_variogram_measurements.get('H16_std_local_variogram'), 
-                             'H32_avg_local_variogram':data_class.local_variogram_measurements.get('H32_avg_local_variogram'), 
-                             'H32_std_local_variogram':data_class.local_variogram_measurements.get('H32_std_local_variogram'), 
-                            })  
+        measurement_keys = ['_avg_local_variogram', 'std_local_variogram'] 
+        dict = {}
+        for i in [8, 16, 32]:
+            for keys in measurement_keys:
+                dict.update({'H'+str(i)+keys: data_class.local_variogram_measurements.get('H'+str(i)+keys)})   
+        dict_list[0].update(dict)
     #checks for compression measurments 
     if len(data_class.compression_measurements) > 0:
         for i, keys in enumerate(data_class.compression_measurements):
