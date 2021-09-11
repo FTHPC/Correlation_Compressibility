@@ -229,8 +229,9 @@ def _clean_data(legend_slices, bounds, independent_names, each_ind, each_dep):
         
         #check independents
         for number in range(len(legend_slices[bound][each_dep])):
-            if (legend_slices[bound][each_ind][index_ind] == 'NA' or legend_slices[bound][each_ind][index_ind] <= 0 or 
-                np.isnan(legend_slices[bound][each_ind][index_ind]) or  np.isinf(legend_slices[bound][each_ind][index_ind])):
+            if (legend_slices[bound][each_ind][index_ind] == 'NA' or legend_slices[bound][each_ind][index_ind] == 'NA' or
+                legend_slices[bound][each_ind][index_ind] <= 0 or np.isnan(legend_slices[bound][each_ind][index_ind]) or  
+                np.isinf(legend_slices[bound][each_ind][index_ind])):
                 legend_slices[bound][each_dep].pop(index_ind)
                 for each in independent_names:
                     legend_slices[bound][each].pop(index_ind)
@@ -240,8 +241,9 @@ def _clean_data(legend_slices, bounds, independent_names, each_ind, each_dep):
                 break
         #check dependents
         for number in range(len(legend_slices[bound][each_dep])):
-            if (legend_slices[bound][each_dep][index_dep] == 'NA' or legend_slices[bound][each_dep][index_dep] <= 0 or
-                np.isinf(legend_slices[bound][each_dep][index_dep]) or np.isnan(legend_slices[bound][each_dep][index_dep])):
+            if (legend_slices[bound][each_dep][index_dep] == 'NA' or legend_slices[bound][each_dep][index_dep] == '' or 
+                legend_slices[bound][each_dep][index_dep] <= 0 or np.isinf(legend_slices[bound][each_dep][index_dep]) or 
+                np.isnan(legend_slices[bound][each_dep][index_dep])):
                 legend_slices[bound][each_dep].pop(index_dep)
                 for each in independent_names:
                     legend_slices[bound][each].pop(index_dep)

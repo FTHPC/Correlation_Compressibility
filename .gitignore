@@ -3,9 +3,13 @@ outputs
 datasets
 notes
 image_results
+test_code
 __pycache__
 .DS_Store
 *.ipynb
 *.r 
 *.txt
 *.csv
+*.tgz
+compression_mpi.e*
+compression_mpi.o*

@@ -213,7 +213,7 @@ inputs:
 returns: list of new data_classes related to the new slices created
 '''
 def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', dataset_name='standard',
-                      parse='', slices_needed=[]):
+                      parse='', slices_needed=[], slice_dimensions=[]):
     location = 0
     dset_name = dataset_name
     slicing_needed = False
@@ -265,9 +265,9 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
 
             #hardcoding parsing of file names to get key information
 
-            #slice file shave the style: slice_1200_density-3072x3072x3072.f32.dat.h5
+            #slice file shave the style: density-3072x3072x3072_slice_1200.f32.dat.h5
             if parse == 'slice':
-                step = files.split('_')[1].split('_')
+                step = files.split('slice_')[1].split('.')
                 data_slice_classes[location].set_slice(step[0])
 
             #Gaussian files have have the style: sample_gp_K64_a05_Sample1.dat.h5 
@@ -412,20 +412,13 @@ def export_class(data_class, output_name):
                              'n999': data_class.global_svd_measurements.get('n999'),
                              'n99': data_class.global_svd_measurements.get('n99')})                    
     #checks for tiled svd singular mode measurements
-    if len(data_class.tiled_svd_measurements) > 0:    
-         dict_list[0].update({'H8_mean_singular_mode':data_class.tiled_svd_measurements.get('H8_mean_singular_mode'), 
-                              'H8_median_singular_mode':data_class.tiled_svd_measurements.get('H8_median_singular_mode'), 
-                              'H8_std_singular_mode':data_class.tiled_svd_measurements.get('H8_std_singular_mode'), 
-                              'H16_mean_singular_mode':data_class.tiled_svd_measurements.get('H16_mean_singular_mode'),
-                              'H16_median_singular_mode':data_class.tiled_svd_measurements.get('H16_median_singular_mode'),
-                              'H16_std_singular_mode':data_class.tiled_svd_measurements.get('H16_std_singular_mode'),
-                              'H32_mean_singular_mode':data_class.tiled_svd_measurements.get('H32_mean_singular_mode'),
-                              'H32_median_singular_mode':data_class.tiled_svd_measurements.get('H32_median_singular_mode'),
-                              'H32_std_singular_mode':data_class.tiled_svd_measurements.get('H32_std_singular_mode'),
-                              'H64_mean_singular_mode':data_class.tiled_svd_measurements.get('H64_mean_singular_mode'),
-                              'H64_median_singular_mode':data_class.tiled_svd_measurements.get('H64_median_singular_mode'),
-                              'H64_std_singular_mode':data_class.tiled_svd_measurements.get('H64_std_singular_mode'),
-                            })
+    if len(data_class.tiled_svd_measurements) > 0:
+        measurement_keys = ['_mean_singular_mode', '_median_singular_mode', '_std_singular_mode'] 
+        dict = {}
+        for i in [8, 16, 32, 64]:
+            for keys in measurement_keys:
+                dict.update({'H'+str(i)+keys: data_class.tiled_svd_measurements.get('H'+str(i)+keys)})   
+        dict_list[0].update(dict)
     #checks for coarsened data measurements 
     if len(data_class.coarsened_attributes) > 0:
         measurement_keys = ['res4_coarsen_std', 'res8_coarsen_std', 'res12_coarsen_std', 'res16_coarsen_std',
@@ -503,7 +496,7 @@ def import_class(input_name, global_class=False):
     prev_filename = ''
     file_in = '../'+input_name
     path = str(Path(__file__).parent.absolute() / file_in)
-    with open(path, 'r') as f_object:
+    with open(path, 'r', encoding='utf-8-sig') as f_object:
         csv_file = DictReader(f_object)
         for lines in csv_file:
             #only happens due to multiple compressor bounds/ compressors used
