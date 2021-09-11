@@ -440,7 +440,7 @@ def export_class(data_class, output_name):
         dict_list[0].update({'global_variogram_fit': data_class.global_variogram_fitting})
     #checks for local variogram study
     if hasattr(data_class, 'local_variogram_measurements'): 
-        measurement_keys = ['_avg_local_variogram', 'std_local_variogram'] 
+        measurement_keys = ['_avg_local_variogram', '_std_local_variogram'] 
         dict = {}
         for i in [8, 16, 32]:
             for keys in measurement_keys:

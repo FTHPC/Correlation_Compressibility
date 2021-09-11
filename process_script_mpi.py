@@ -68,7 +68,6 @@ comm.Barrier()
 i = rank
 while i<len(sample_data_classes):
     data_class = sample_data_classes[i]
-    print(rank)
     #stores the ouptut in coarsen_class.global_svd_measurements
     cp.svd_coarsen.global_svd(data_class, plot=True)
 
