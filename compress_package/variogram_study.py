@@ -43,9 +43,10 @@ def global_variogram_study(data_class, plot=False):
                 library('gstat')
                 graphics.off()
                 ## global variogram fitting
-                n <- dim(X)[1]
-                xc <- rep(1:n,each=n)/n
-                yc <- rep(1:n,n)/n
+                n1 <- dim(X)[1]
+                n2 <- dim(X)[2]
+                xc <- rep(1:n1,each=n1)/n1
+                yc <- rep(1:n2,n2)/n2
                 df <- data.frame(v=c(X),x=xc,y=yc)
                 vgm_emp <- variogram(v~x+y, locations = ~x + y, data = df)
                 fit.vgm_gauss <- fit.variogram(vgm_emp, vgm(tail(vgm_emp$gamma,1), "Gau", 1/4))
@@ -200,10 +201,11 @@ def coarsen_variogram_study(data_class):
             vgm_coarsen <- c()
             for (j in 1:length(N)){
                 xi <- coarsen(X,N[[j]][1])
-                n <- dim(xi)[1]
-                v <- c(xi[1:n,1:n])
-                x <- rep(1:n,each=n)/n
-                y <- rep(1:n,n)/n
+                n1 <- dim(xi)[1]
+                n2 <- dim(xi)[2]
+                v <- c(xi[1:n1,1:n2])
+                x <- rep(1:n1,each=n1)/n1
+                y <- rep(1:n2,n2)/n2
                 df <- data.frame(v=v,x=x,y=y)
                 vg <- variogram(v~x+y, locations = ~x + y, data = df)
                 fit.sph <- fit.variogram(vg, vgm(tail(vg$gamma,1), "Gau", 1/4)) 
@@ -237,10 +239,11 @@ def coarsen_multiple_resolution_variogram_study_addition(X):
         coarsened_variogram_study <- function(X){ 
             library('gstat')
             graphics.off()
-            n <- dim(X)[1]
-            v <- c(X[1:n,1:n])
-            x <- rep(1:n,each=n)/n
-            y <- rep(1:n,n)/n
+            n1 <- dim(X)[1]
+            n2 <- dim(X)[2]
+            v <- c(X[1:n1,1:n2])
+            x <- rep(1:n1,each=n1)/n1
+            y <- rep(1:n2,n2)/n2
             df <- data.frame(v=v,x=x,y=y)
             vg <- variogram(v~x+y, locations = ~x + y, data = df)
             fit.sph <- fit.variogram(vg, vgm(tail(vg$gamma,1), "Gau", 1/4)) 

@@ -33,8 +33,8 @@ inputs:
     dataset_directory   : foldername of where the datasets are contained, default = 'datasets'
 returns the output path of the newly created file
 '''
-def slice(filename:str, dataset_name:str, data_folder:str, temp_folder:str, dtype:str, X:int, dataset_directory='datasets'):
-    new_addition = '_'+'slice_'+str(X)
+def slice(filename:str, dataset_name:str, data_folder:str, temp_folder:str, dtype:str, X:int, dataset_directory='datasets', dimension_needed= 'X'):
+    new_addition = '_'+'slice_'+str(X)+'_'+dimension_needed
     new_file_name = os.path.splitext(os.path.splitext(filename)[0])[0]+new_addition+'.dat.h5'
     new_dataset_name = os.path.splitext(new_file_name)[0]
     input_file = '../../'+dataset_directory+'/'+data_folder+'/'+filename
@@ -43,7 +43,12 @@ def slice(filename:str, dataset_name:str, data_folder:str, temp_folder:str, dtyp
     output_file_full = str(Path(__file__).parent.absolute() / output_file)
     with h5.File(input_file_full, 'r') as f:
         #transposes the stored array into Vx
-        Vx = np.transpose(f[dataset_name])[:,:,X]
+        if dimension_needed == 'X':
+            Vx = np.transpose(f[dataset_name])[:,:,X]
+        elif dimension_needed == 'Y':
+            Vx = np.transpose(f[dataset_name])[:,X,:]
+        elif dimension_needed == 'Z':
+            Vx = np.transpose(f[dataset_name])[X,:,:]
         f.close()
 
     dims_data = Vx.shape

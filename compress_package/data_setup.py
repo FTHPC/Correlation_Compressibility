@@ -39,6 +39,8 @@ class global_data:
                                             'error_stat:mse',
                                             'error_stat:average_difference',
                                             'error_stat:average_error',
+                                            'sz:regression_blocks',
+                                            'sz:lorenzo_blocks'
                                         ]):
         #bool
         #if the h5 equalivalent file isn't found, 
@@ -210,10 +212,11 @@ inputs:
     dataset_name        : name of the dataset within h5 file, default = 'standard'
     parse               : to parse filenames within the folder (ex: 'gaussian'), default = ''
     slices_needed       : a list of the slices that are needed, default = []
+    slice_dimensions    : dimensions in which to slice the data
 returns: list of new data_classes related to the new slices created
 '''
 def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', dataset_name='standard',
-                      parse='', slices_needed=[], slice_dimensions=[]):
+                      parse='', slices_needed=[], slice_dimensions='X'):
     location = 0
     dset_name = dataset_name
     slicing_needed = False
@@ -245,7 +248,7 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
             data_slice_classes.append(data(global_class))
             slicing_needed = True
             full_file_path, sliced_filename, sliced_dataset_name= slice_data.slice(filename, dset_name, data_folder_h5, 
-            global_class.temp_folder, dtype, slice_needed, global_class.dataset_directory)
+            global_class.temp_folder, dtype, slice_needed, global_class.dataset_directory, slice_dimensions)
             data_slice_classes[location].set_slice(slice_needed)
             if dataset_name == 'standard':
                 new_dataset_name = sliced_dataset_name
@@ -383,6 +386,7 @@ def export_class(data_class, output_name):
                 #'error_stat:open_cv_ssim',
                 'error_stat:ssim', 'error_stat:psnr', 'error_stat:rmse',
                 'error_stat:mse', 'error_stat:average_difference', 'error_stat:average_error',
+                'sz:regression_blocks', 'sz:regression_blocks',  
                 ]
 
     #list of dictionaries
@@ -455,6 +459,13 @@ def export_class(data_class, output_name):
                 #Two copies were required since it was a dictionary within a list
                 copy = dict_list[i-1].copy()
                 dict_list.append(copy.copy())
+            try:    
+                regression = data_class.compression_measurements.get(keys).get('sz:regression_blocks')
+                lorenzo = data_class.compression_measurements.get(keys).ge('sz:lorenzo_blocks')
+            except:
+                regression = ''
+                loorenzo = ''
+
             dict_list[i].update({'compressor':data_class.compression_measurements.get(keys).get('compressor'), 
                                  'bound':data_class.compression_measurements.get(keys).get('bound'), 
                                  'size:compression_ratio':data_class.compression_measurements.get(keys).get('size:compression_ratio'),
@@ -465,6 +476,8 @@ def export_class(data_class, output_name):
                                  'error_stat:mse':data_class.compression_measurements.get(keys).get('error_stat:mse'), 
                                  'error_stat:average_difference':data_class.compression_measurements.get(keys).get('error_stat:average_difference'), 
                                  'error_stat:average_error':data_class.compression_measurements.get(keys).get('error_stat:average_error'),
+                                 'sz:regression_blocks': regression,
+                                 'sz:lorenzo_blocks':lorenzo,
                                 })
 
     # Open CSV file in append mode

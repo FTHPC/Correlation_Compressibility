@@ -46,7 +46,8 @@ def _set_variable(gaussian):
     ]
     return independent_names, independent_labels, dependent_names, dependent_labels
 
-def _update_variable_storage(gaussian, bounds, bound_title, loc, legend_slices, independent_names, dependent_names):
+def _update_variable_storage(
+    gaussian, bounds, bound_title, loc, legend_slices, independent_names, dependent_names):
     for bound in bounds:
         if not bound in legend_slices:
             names = {'K_points':[]} if gaussian else {}
@@ -132,7 +133,6 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
     independent_names, independent_labels, dependent_names, dependent_labels = _set_variable(gaussian=True)
     slice_data.create_folder('image_results')
     slice_data.create_folder('image_results/gaussian_comparisons')
-
     sorted_classes = {}
     reduced_filename_store = []
     #puts all the slices together
@@ -159,7 +159,7 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
     legend_slices   = {}
     stats_sample  = {'H8_svd_H8_avg':[],'H16_svd_H16_avg':[],'H32_svd_H32_avg':[],'H64_svd_H64_avg':[],
                      'n100':[],'n9999':[],'n999':[],'n99':[],'K_points':[], 'a_range':[]}
-
+    print(sorted_classes)
     for i, keys in enumerate(sorted_classes):
         bounds = []
         #The a is the same for all the samples
@@ -188,10 +188,10 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
             stats_sample['K_points'].append(loc.gaussian_attributes.get('K_points'))
             stats_sample['a_range'].append(loc.gaussian_attributes.get('a_range'))
 
-    #plot function
+        #plot function
     _plot_private(True, multi_gaussian, fit, legend_slices, bounds, independent_names, 
-                independent_labels, dependent_names, dependent_labels, i, reduced_filename_store)
-
+                independent_labels, dependent_names, dependent_labels, 0, reduced_filename_store)
+    '''
     #other depnedents that don't rely on compressors or bounds
     #correlation range vs dependents
     dependent_names = ["H8_svd_H8_avg","H16_svd_H16_avg","H32_svd_H32_avg","H64_svd_H64_avg","n100","n9999","n999","n99"]
@@ -220,7 +220,7 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
         multi = '_multi' if multi_gaussian else ''
         plt.savefig('image_results/gaussian_comparisons/gaussian'+multi+'_'+str(stats_sample['K_points'][0])+'_'+each+'_correl_'+fit+'.png',facecolor='w', edgecolor='w')
         plt.close()
-
+    '''
 
 def _clean_data(legend_slices, bounds, independent_names, each_ind, each_dep):
     for bound in bounds:
@@ -253,7 +253,26 @@ def _clean_data(legend_slices, bounds, independent_names, each_ind, each_dep):
                 break
             
 
-def _plot_private(gaussian:bool, multi_gaussian:bool, fit:str, legend_slices, bounds, independent_names, independent_labels, dependent_names, dependent_labels, filename_iteration, reduced_filename_store):
+def _plot_private(
+    gaussian:bool,multi_gaussian:bool,fit:str,legend_slices, bounds, 
+    independent_names, independent_labels, dependent_names, dependent_labels,
+    filename_iteration, reduced_filename_store):
+
+    font = {'family' : 'normal',
+        'weight' : 'bold',}
+
+    plt.rc('font', **font)
+    SMALL = 10
+    MEDIUM = 14
+    BIGGER = 16
+
+    plt.rc('font', size=MEDIUM)
+    plt.rc('axes', titlesize=BIGGER)    
+    plt.rc('axes', labelsize=BIGGER)     
+    plt.rc('xtick', labelsize=MEDIUM)  
+    plt.rc('ytick', labelsize=MEDIUM) 
+    plt.rc('legend', fontsize=SMALL)
+    plt.rc('figure', titlesize=BIGGER)
     #copies original data in order to reset stored variables
     og_dep = []
     og_ind = []
@@ -286,7 +305,7 @@ def _plot_private(gaussian:bool, multi_gaussian:bool, fit:str, legend_slices, bo
             plot_needed = False
             pre_compressor = ''
             compressor_list, numerical_bound_list, x_values, y_values = ([] for k in range(4))
-
+     
             for j, bound in enumerate(bounds):
                 compressor = bound.split('_bound_')[0]
                 numerical_bound = bound.split('_bound_')[1]
@@ -307,10 +326,7 @@ def _plot_private(gaussian:bool, multi_gaussian:bool, fit:str, legend_slices, bo
                 except:
                     next_compressor = 'NA'
                 if plot_needed and next_compressor != compressor:
-                    if gaussian:
-                        plt.title(f"K ={legend_slices[bound]['K_points'][0]} {compressor_list[created]}")
-                    else:
-                        plt.title(f"{reduced_filename_store[filename_iteration]} {compressor_list[created]}")   
+                    plt.title(f"{compressor_list[created]}")   
                     plt.xlabel(f'{independent_labels[count_ind]}')
                     plt.ylabel(f'{dependent_labels[count_dep]}')
 
@@ -332,8 +348,8 @@ def _plot_private(gaussian:bool, multi_gaussian:bool, fit:str, legend_slices, bo
                     legend_list = []
                     for pos, num_bound in enumerate(numerical_bound_list):
                         legend_list.append(str(num_bound)+' '+str(np.round(linear_model[pos], decimals=2)))
-                    plt.legend(plts[pre_compressor], legend_list, loc="lower right")
-
+                    plt.legend(plts[pre_compressor], legend_list, loc="upper right")
+                    plt.tight_layout()
                     if gaussian:
                         multi = '_multi' if multi_gaussian else ''
                         plt.savefig('image_results/gaussian_comparisons/gaussian'+multi+'_'+str(legend_slices[bound]['K_points'][0])+'_'+
