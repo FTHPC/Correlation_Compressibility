@@ -11,5 +11,6 @@ __pycache__
 *.txt
 *.csv
 *.tgz
+*.png
 compression_mpi.e*
 compression_mpi.o*
