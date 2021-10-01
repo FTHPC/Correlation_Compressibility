@@ -3,6 +3,8 @@ outputs
 datasets
 notes
 image_results
+image_results_old
+image_results_dim
 test_code
 __pycache__
 .DS_Store
