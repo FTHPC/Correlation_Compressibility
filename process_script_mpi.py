@@ -5,7 +5,7 @@ results are outputted in a 'outputs' folder. The files are then combined to
 a specified output file.
 process_script.py with mpi
 '''
-output_file = 'testoutputs.csv'
+output_file = 'outputsdim.csv'
 
 import compress_package as cp
 import pandas as pd
@@ -37,17 +37,18 @@ if not rank:
     '''
     dimensions = [256,384,384]
     data_folder = 'SDRBENCH-Miranda-256x384x384'
+    '''
     sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
             slices_needed=range(0, 255, 100), slice_dimensions='X')
     '''
     sample_data_classes_X = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
-            slices_needed=range(0, 255, 100), slice_dimensions='X')
+            slices_needed=range(0, 255, 50), slice_dimensions='X')
     sample_data_classes_Y = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
-            slices_needed=range(0, 255, 100), slice_dimensions='Y')
+            slices_needed=range(0, 255, 50), slice_dimensions='Y')
     sample_data_classes_Z = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
-            slices_needed=range(0, 255, 100), slice_dimensions='Z')
+            slices_needed=range(0, 255, 50), slice_dimensions='Z')
     sample_data_classes = sample_data_classes_X + sample_data_classes_Y + sample_data_classes_Z
-    '''
+    
     '''
     # the 3 statistical analysis on the Gaussian samples (global SVD, tiled-SVD and 
     compute the standard deviation of the coarsened data)

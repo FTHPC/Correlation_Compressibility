@@ -386,7 +386,7 @@ def export_class(data_class, output_name):
                 #'error_stat:open_cv_ssim',
                 'error_stat:ssim', 'error_stat:psnr', 'error_stat:rmse',
                 'error_stat:mse', 'error_stat:average_difference', 'error_stat:average_error',
-                'sz:regression_blocks', 'sz:regression_blocks',  
+                'sz:lorenzo_blocks', 'sz:regression_blocks',  
                 ]
 
     #list of dictionaries
@@ -461,10 +461,10 @@ def export_class(data_class, output_name):
                 dict_list.append(copy.copy())
             try:    
                 regression = data_class.compression_measurements.get(keys).get('sz:regression_blocks')
-                lorenzo = data_class.compression_measurements.get(keys).ge('sz:lorenzo_blocks')
+                lorenzo = data_class.compression_measurements.get(keys).get('sz:lorenzo_blocks')
             except:
                 regression = ''
-                loorenzo = ''
+                lorenzo = ''
 
             dict_list[i].update({'compressor':data_class.compression_measurements.get(keys).get('compressor'), 
                                  'bound':data_class.compression_measurements.get(keys).get('bound'), 

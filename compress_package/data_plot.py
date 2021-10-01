@@ -97,7 +97,8 @@ def sdrbench_comparison(sample_data_classes, fit='log', separate_by_file=True):
         if not hasattr(data_class, 'slice'):  
             continue
         #get filename without the slice addition
-        reduced_filename = data_class.filename.split('_slice')[0] 
+        reduced_filename = data_class.filename.split('_slice')[0]
+        # reduced_filename = data_class.filename.split('_slice')[0] + data_class.filename.split('_slice')[1].split('_')[2].split('.dat')[0]
         #set dataset folder name
         # folder_name = data_class.data_folder
         folder_name = 'SDRBENCH-Miranda-256x384x384'
@@ -105,9 +106,10 @@ def sdrbench_comparison(sample_data_classes, fit='log', separate_by_file=True):
         if data_class.coarsened_attributes.get('resolution_4').get('standard_deviation') > 1e-02:
             if not separate_by_file:
                 reduced_filename = folder_name
-
+        
             if reduced_filename in sorted_classes:
                 sorted_classes[reduced_filename].append(data_class)
+                
             else:
                 sorted_classes.update({reduced_filename : []})
                 sorted_classes[reduced_filename].append(data_class)
@@ -159,7 +161,6 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
     legend_slices   = {}
     stats_sample  = {'H8_svd_H8_avg':[],'H16_svd_H16_avg':[],'H32_svd_H32_avg':[],'H64_svd_H64_avg':[],
                      'n100':[],'n9999':[],'n999':[],'n99':[],'K_points':[], 'a_range':[]}
-    print(sorted_classes)
     for i, keys in enumerate(sorted_classes):
         bounds = []
         #The a is the same for all the samples
@@ -343,12 +344,12 @@ def _plot_private(
                             x_s=np.arange(.9*np.min(value),np.max(value),(np.max(value)-np.min(value))/100)
                             plt.plot(x_s,linear_model_fn(x_s))
 
-                    plt.xlim(.5*np.min(min(x_values)), 1.9*np.max(max(x_values)))
-                    plt.ylim(0.5*np.min(min(y_values)), 1.1*np.max(max(y_values)))
+                    plt.xlim(.5*np.min(min(x_values)), 1.1*np.max(max(x_values)))
+                    plt.ylim(0.5*np.min(min(y_values)), 1.4*np.max(max(y_values)))
                     legend_list = []
                     for pos, num_bound in enumerate(numerical_bound_list):
                         legend_list.append(str(num_bound)+' '+str(np.round(linear_model[pos], decimals=2)))
-                    plt.legend(plts[pre_compressor], legend_list, loc="upper right")
+                    plt.legend(plts[pre_compressor], legend_list, loc="upper center", ncol=2, labelspacing=0.05)
                     plt.tight_layout()
                     if gaussian:
                         multi = '_multi' if multi_gaussian else ''
