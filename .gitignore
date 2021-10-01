@@ -2,9 +2,7 @@ temp
 outputs
 datasets
 notes
-image_results
-image_results_old
-image_results_dim
+image_results*
 test_code
 __pycache__
 .DS_Store
