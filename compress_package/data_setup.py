@@ -28,6 +28,7 @@ from compress_package.convert import convert_dat_h5
 from compress_package.convert import slice_data
 
 '''
+@type class
 Contains information that is relevant to every dataset that will be stored within
 the class data. Must setup at beginning of script file.
 '''
@@ -39,6 +40,7 @@ class global_data:
                                             'error_stat:mse',
                                             'error_stat:average_difference',
                                             'error_stat:average_error',
+                                            'error_stat:value_range',
                                             'sz:regression_blocks',
                                             'sz:lorenzo_blocks'
                                         ]):
@@ -59,6 +61,7 @@ class global_data:
         #this will be the compression metrics wanted for each dataset
         self.compress_metrics_needed = compress_metrics_needed      
 '''
+@type class
 Contains information that is relevant dataset specfic. This will store measurments and calculations that will
 be outputted to .csv or graphed. Must setup for each new dataset wanting to be inputted.
 '''
@@ -385,7 +388,7 @@ def export_class(data_class, output_name):
                 'compressor', 'bound', 'size:compression_ratio', 
                 #'error_stat:open_cv_ssim',
                 'error_stat:ssim', 'error_stat:psnr', 'error_stat:rmse',
-                'error_stat:mse', 'error_stat:average_difference', 'error_stat:average_error',
+                'error_stat:mse', 'error_stat:average_difference', 'error_stat:average_error', 'error_stat:value_range',
                 'sz:lorenzo_blocks', 'sz:regression_blocks',  
                 ]
 
@@ -476,6 +479,7 @@ def export_class(data_class, output_name):
                                  'error_stat:mse':data_class.compression_measurements.get(keys).get('error_stat:mse'), 
                                  'error_stat:average_difference':data_class.compression_measurements.get(keys).get('error_stat:average_difference'), 
                                  'error_stat:average_error':data_class.compression_measurements.get(keys).get('error_stat:average_error'),
+                                 'error_stat:value_range': data_class.compression_measurements.get(keys).get('error_stat:value_range'),
                                  'sz:regression_blocks': regression,
                                  'sz:lorenzo_blocks':lorenzo,
                                 })
@@ -517,7 +521,7 @@ def import_class(input_name, global_class=False):
                 metrics = {'compressor':lines['compressor'],'bound':lines['bound'],'error_stat:ssim':np.float64(lines['error_stat:ssim'])}
                 for measurement in class_list[index-1].global_data.compress_metrics_needed:
                     if lines[measurement] == '':
-                        metrics.update({measurement:''})
+                        metrics.update({measurement:np.nan})
                     elif lines[measurement] == '#NAME?':
                         metrics.update({measurement:np.inf})
                     else:
@@ -535,7 +539,7 @@ def import_class(input_name, global_class=False):
                 class_list[index].set_data_folder(lines['dataset_folder'])
                 class_list[index].set_dimensions(eval(lines['dimensions']))
                 if not lines['slice'] == '':
-                    class_list[index].set_slice(lines['slice'])
+                    class_list[index].set_slice(np.int(lines['slice']))
                 #if has first element, it will have all elements in list
                 if not lines['a_range_secondary'] == '':
                     class_list[index].set_gaussian_attributes({

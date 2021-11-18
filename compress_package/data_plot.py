@@ -20,6 +20,29 @@ import numpy as np
 import itertools
 
 #CHANGE HERE TO CHANGE VARIABLES
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
+@type private function
+
+setups all the variables to be graphed
+inputs: gaussian                    : bool determine if gaussian 
+
+'''
 def _set_variable(gaussian):
     independent_names = ["a_range"] if gaussian else []
     independent_names.extend(["global_variogram","n99","H16_std_singular_mode","H16_mean_singular_mode","H16_std_local_variogram",
@@ -38,11 +61,13 @@ def _set_variable(gaussian):
         "Std of estimated of local variogram range (H=32)",
         "Mean of estimated of local variogram range (H=32)",
     ])
-    dependent_names = ["ssim","psnr","compression_ratio"]
+    dependent_names = ["ssim","psnr","compression_ratio", "mse", "value_range"]
     dependent_labels = [
         "SSIM",
         "PSNR",
-        "Compression Ratio"
+        "Compression Ratio",
+        "Mean Square Error",
+        "Value Range"
     ]
     return independent_names, independent_labels, dependent_names, dependent_labels
 
@@ -60,6 +85,8 @@ def _update_variable_storage(
         legend_slices[bound]['compression_ratio'].append(loc_comp.get('size:compression_ratio')) 
         legend_slices[bound]['psnr'].append(loc_comp.get('error_stat:psnr'))
         legend_slices[bound]['ssim'].append(loc_comp.get('error_stat:ssim'))
+        legend_slices[bound]['mse'].append(loc_comp.get('error_stat:mse'))
+        legend_slices[bound]['value_range'].append(loc_comp.get('error_stat:value_range'))
         if gaussian:
             legend_slices[bound]['K_points'].append(loc.gaussian_attributes.get('K_points'))
             if 'a_range_secondary' in loc.gaussian_attributes: 
@@ -70,9 +97,9 @@ def _update_variable_storage(
                 legend_slices[bound]['a_range'].append(a_value)
             else:   
                 legend_slices[bound]['a_range'].append(loc.gaussian_attributes.get('a_range'))
-        
+
         variogram_append = loc.global_variogram_fitting if hasattr(loc, 'global_variogram_fitting') else 'NA'
-        legend_slices[bound]['global_variogram'].append(variogram_append)    
+        legend_slices[bound]['global_variogram'].append(variogram_append)   
         legend_slices[bound]['n99'].append(loc.global_svd_measurements.get('n99'))
 
         for mode in ['H16_std_singular_mode', 'H16_mean_singular_mode', 'H32_std_singular_mode', 'H32_mean_singular_mode']:
@@ -83,7 +110,16 @@ def _update_variable_storage(
 
 
 #STOP CHANGES
+'''
+@type function 
+sdrbench_comparison
 
+inputs:
+    sample_data_classes             : The list of classes that contains information about each slice
+    fit                             : Fit of the linear trend within the graphs generated. Either 'log' or 'linear'
+    separate_by_file                : boolean varaible 
+returns: nothing
+'''
 def sdrbench_comparison(sample_data_classes, fit='log', separate_by_file=True):
     independent_names, independent_labels, dependent_names, dependent_labels = _set_variable(gaussian=False)
     slice_data.create_folder('image_results')
@@ -97,8 +133,8 @@ def sdrbench_comparison(sample_data_classes, fit='log', separate_by_file=True):
         if not hasattr(data_class, 'slice'):  
             continue
         #get filename without the slice addition
-        reduced_filename = data_class.filename.split('_slice')[0]
-        # reduced_filename = data_class.filename.split('_slice')[0] + data_class.filename.split('_slice')[1].split('_')[2].split('.dat')[0]
+        # reduced_filename = data_class.filename.split('_slice')[0]
+        reduced_filename = data_class.filename.split('_slice')[0] + data_class.filename.split('_slice')[1].split('_')[2].split('.dat')[0]
         #set dataset folder name
         # folder_name = data_class.data_folder
         folder_name = 'SDRBENCH-Miranda-256x384x384'
@@ -114,23 +150,36 @@ def sdrbench_comparison(sample_data_classes, fit='log', separate_by_file=True):
                 sorted_classes.update({reduced_filename : []})
                 sorted_classes[reduced_filename].append(data_class)
                 reduced_filename_store.append(reduced_filename)
-    bound_title = []
-    legend_slices = {}
+    
+
+    #for each dataset 
     for i, keys in enumerate(sorted_classes):
+        legend_slices = {}
+
         bounds = []
+        #update bounds for the sorted class
         for key in sorted_classes.get(keys)[0].compression_measurements:
             bounds.append(key)
-        #The a is the same for all the samples
+        #update independent and dependent variables for the given bound
         for sliced in range(len(sorted_classes.get(keys))):
             bound_title = []
             loc = sorted_classes.get(keys)[sliced]
             _update_variable_storage(False, bounds, bound_title, loc, legend_slices, independent_names, dependent_names)
 
-        #plot function
         _plot_private(False, False, fit, legend_slices, bounds, independent_names, independent_labels, 
                     dependent_names, dependent_labels, i, reduced_filename_store)
 
+'''
+@type function 
+gaussian_comparison
 
+inputs:
+    sample_data_classes             : The list of classes that contains information about each slice
+    K_points                        : 1D size of the generated Gaussian dataset 'K'
+    multi_gaussian                  : boolean that determines if the datasets presented had multi correlation ranges
+    fit                             : Fit of the linear trend within the graphs generated. Either 'log' or 'linear'
+returns: nothing
+'''
 def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit = 'log'):
     independent_names, independent_labels, dependent_names, dependent_labels = _set_variable(gaussian=True)
     slice_data.create_folder('image_results')
@@ -159,8 +208,8 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
                 reduced_filename_store.append(reduced_filename)
           
     legend_slices   = {}
-    stats_sample  = {'H8_svd_H8_avg':[],'H16_svd_H16_avg':[],'H32_svd_H32_avg':[],'H64_svd_H64_avg':[],
-                     'n100':[],'n9999':[],'n999':[],'n99':[],'K_points':[], 'a_range':[]}
+    # stats_sample  = {'H8_svd_H8_avg':[],'H16_svd_H16_avg':[],'H32_svd_H32_avg':[],'H64_svd_H64_avg':[],
+    #                  'n100':[],'n9999':[],'n999':[],'n99':[],'K_points':[], 'a_range':[]}
     for i, keys in enumerate(sorted_classes):
         bounds = []
         #The a is the same for all the samples
@@ -173,23 +222,23 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
             #these are affected by different bounds and compressors
             _update_variable_storage(True, bounds, bound_title, loc, legend_slices, independent_names, dependent_names)
 
-            #these are not affected by different bounds and compressors
-            stats_sample['n100'].append(loc.global_svd_measurements.get('n100'))
-            stats_sample['n9999'].append(loc.global_svd_measurements.get('n9999'))
-            stats_sample['n999'].append(loc.global_svd_measurements.get('n999'))
-            stats_sample['n99'].append(loc.global_svd_measurements.get('n99'))
-            stats_sample['H8_svd_H8_avg'].append(loc.tiled_svd_measurements.get('H8_std_singular_mode') /
-                                                            loc.tiled_svd_measurements.get('H8_mean_singular_mode'))
-            stats_sample['H16_svd_H16_avg'].append(loc.tiled_svd_measurements.get('H16_std_singular_mode') /
-                                                            loc.tiled_svd_measurements.get('H16_mean_singular_mode'))
-            stats_sample['H32_svd_H32_avg'].append(loc.tiled_svd_measurements.get('H32_std_singular_mode') /
-                                                            loc.tiled_svd_measurements.get('H32_mean_singular_mode'))
-            stats_sample['H64_svd_H64_avg'].append(loc.tiled_svd_measurements.get('H64_std_singular_mode') /
-                                                            loc.tiled_svd_measurements.get('H64_mean_singular_mode'))
-            stats_sample['K_points'].append(loc.gaussian_attributes.get('K_points'))
-            stats_sample['a_range'].append(loc.gaussian_attributes.get('a_range'))
+            # #these are not affected by different bounds and compressors
+            # stats_sample['n100'].append(loc.global_svd_measurements.get('n100'))
+            # stats_sample['n9999'].append(loc.global_svd_measurements.get('n9999'))
+            # stats_sample['n999'].append(loc.global_svd_measurements.get('n999'))
+            # stats_sample['n99'].append(loc.global_svd_measurements.get('n99'))
+            # stats_sample['H8_svd_H8_avg'].append(loc.tiled_svd_measurements.get('H8_std_singular_mode') /
+            #                                                 loc.tiled_svd_measurements.get('H8_mean_singular_mode'))
+            # stats_sample['H16_svd_H16_avg'].append(loc.tiled_svd_measurements.get('H16_std_singular_mode') /
+            #                                                 loc.tiled_svd_measurements.get('H16_mean_singular_mode'))
+            # stats_sample['H32_svd_H32_avg'].append(loc.tiled_svd_measurements.get('H32_std_singular_mode') /
+            #                                                 loc.tiled_svd_measurements.get('H32_mean_singular_mode'))
+            # stats_sample['H64_svd_H64_avg'].append(loc.tiled_svd_measurements.get('H64_std_singular_mode') /
+            #                                                 loc.tiled_svd_measurements.get('H64_mean_singular_mode'))
+            # stats_sample['K_points'].append(loc.gaussian_attributes.get('K_points'))
+            # stats_sample['a_range'].append(loc.gaussian_attributes.get('a_range'))
 
-        #plot function
+    #plot function
     _plot_private(True, multi_gaussian, fit, legend_slices, bounds, independent_names, 
                 independent_labels, dependent_names, dependent_labels, 0, reduced_filename_store)
     '''
@@ -223,47 +272,69 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
         plt.close()
     '''
 
+'''
+@type function
+Elimates empty data for independent and dependent variables.
+This removes any values that are infinity, negative, empty, or nan
+'''
 def _clean_data(legend_slices, bounds, independent_names, each_ind, each_dep):
     for bound in bounds:
         index_ind = 0
         index_dep = 0
         
         #check independents
-        for number in range(len(legend_slices[bound][each_dep])):
-            if (legend_slices[bound][each_ind][index_ind] == 'NA' or legend_slices[bound][each_ind][index_ind] == 'NA' or
-                legend_slices[bound][each_ind][index_ind] <= 0 or np.isnan(legend_slices[bound][each_ind][index_ind]) or  
-                np.isinf(legend_slices[bound][each_ind][index_ind])):
-                legend_slices[bound][each_dep].pop(index_ind)
+        data_ind = legend_slices[bound][each_ind]
+        data_dep = legend_slices[bound][each_dep]
+        for number in range(len(data_dep)):
+            if (data_ind[index_ind] == 'NA' or data_ind[index_ind] == '' or
+                data_ind[index_ind] <= 0 or np.isnan(data_ind[index_ind]) or  
+                np.isinf(data_ind[index_ind])):
+                data_dep.pop(index_ind)
                 for each in independent_names:
                     legend_slices[bound][each].pop(index_ind)
+
+                # legend_slices[bound]['slice'].pop(index_ind)
                 index_ind -=1
             index_ind +=1
-            if index_ind >= len(legend_slices[bound][each_ind]):
+            if index_ind >= len(data_ind):
                 break
         #check dependents
-        for number in range(len(legend_slices[bound][each_dep])):
-            if (legend_slices[bound][each_dep][index_dep] == 'NA' or legend_slices[bound][each_dep][index_dep] == '' or 
-                legend_slices[bound][each_dep][index_dep] <= 0 or np.isinf(legend_slices[bound][each_dep][index_dep]) or 
-                np.isnan(legend_slices[bound][each_dep][index_dep])):
-                legend_slices[bound][each_dep].pop(index_dep)
+        for number in range(len(data_dep)):
+            if (data_dep[index_dep] == 'NA' or data_dep[index_dep] == '' or 
+                data_dep[index_dep] <= 0 or np.isinf(data_dep[index_dep]) or 
+                np.isnan(data_dep[index_dep])):
+                data_dep.pop(index_dep)
                 for each in independent_names:
                     legend_slices[bound][each].pop(index_dep)
+                # legend_slices[bound]['slice'].pop(index_dep)
                 index_dep -=1
             index_dep +=1
-            if index_dep >= len(legend_slices[bound][each_dep]):
+            if index_dep >= len(data_dep):
                 break
             
-
+'''
+@type function
+private used to plot the slices 
+'''
 def _plot_private(
-    gaussian:bool,multi_gaussian:bool,fit:str,legend_slices, bounds, 
-    independent_names, independent_labels, dependent_names, dependent_labels,
-    filename_iteration, reduced_filename_store):
+    gaussian:bool,          #  
+    multi_gaussian:bool,    #
+    fit:str,                #
+    legend_slices,          #
+    bounds,                 #
+    independent_names,      #
+    independent_labels,     #
+    dependent_names,        #
+    dependent_labels,       #
+    filename_iteration,     #
+    reduced_filename_store  #
+    ):
 
     font = {'family' : 'normal',
-        'weight' : 'bold',}
+            'weight' : 'bold',}
 
     plt.rc('font', **font)
-    SMALL = 10
+    SMALL = 12
     MEDIUM = 14
     BIGGER = 16
 
@@ -272,13 +343,14 @@ def _plot_private(
     plt.rc('axes', labelsize=BIGGER)     
     plt.rc('xtick', labelsize=MEDIUM)  
     plt.rc('ytick', labelsize=MEDIUM) 
-    plt.rc('legend', fontsize=SMALL)
+    plt.rc('legend', fontsize=SMALL, columnspacing = .5, handlelength = 1.0)
     plt.rc('figure', titlesize=BIGGER)
     #copies original data in order to reset stored variables
     og_dep = []
     og_ind = []
     for dep, bound in itertools.product(dependent_names, bounds):
         og_dep.append(legend_slices[bound][dep].copy())
+
     for ind, bound in itertools.product(independent_names, bounds):
         og_ind.append(legend_slices[bound][ind].copy())
 
@@ -289,7 +361,7 @@ def _plot_private(
             #resets independent and dependent data lists
             index = 0
             for dep, bound in itertools.product(dependent_names, bounds):
-                legend_slices[bound][dep] = og_dep[index].copy()     
+                legend_slices[bound][dep] = og_dep[index].copy() 
                 index += 1     
             index = 0
             for ind, bound in itertools.product(independent_names, bounds):
@@ -298,75 +370,79 @@ def _plot_private(
 
             _clean_data(legend_slices, bounds, independent_names, each_ind, each_dep)
 
-            # markers = [',', '+', '.', 'o', '*', '1', '2', '3', '4', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
             #each_dep compressor has own file
             plts = {}
             created = 0
-            place = 0
-            plot_needed = False
-            pre_compressor = ''
+            pre_compressor = None
             compressor_list, numerical_bound_list, x_values, y_values = ([] for k in range(4))
      
             for j, bound in enumerate(bounds):
-                compressor = bound.split('_bound_')[0]
-                numerical_bound = bound.split('_bound_')[1]
-                if pre_compressor == compressor: 
-                    plot_needed = True
-                else:
-                    plts.update({compressor:[]})
-                    compressor_list.append(compressor)
+                #points were removed due to being outliers. If there are less <=2 points - a graph will not be exported
 
-                plts[compressor].append(plt.scatter(legend_slices[bound][each_ind], legend_slices[bound][each_dep], s=32, marker='.'))
-                x_values.append(legend_slices[bound][each_ind])
-                y_values.append(legend_slices[bound][each_dep])
-                numerical_bound_list.append(numerical_bound)
+                compressor = None
+                if len(legend_slices[bound][each_ind]) > 2 and len(legend_slices[bound][each_dep]) > 2:
+                    compressor = bound.split('_bound_')[0]
+                    numerical_bound = bound.split('_bound_')[1]
+                    if pre_compressor != compressor: 
+                        plts.update({compressor:[]})
+                        compressor_list.append(compressor)
 
-                #if plot needed and next compressor not equal current compressor
-                try:
-                    next_compressor = bounds[j+1].split('_bound_')[0]
-                except:
-                    next_compressor = 'NA'
-                if plot_needed and next_compressor != compressor:
-                    plt.title(f"{compressor_list[created]}")   
-                    plt.xlabel(f'{independent_labels[count_ind]}')
-                    plt.ylabel(f'{dependent_labels[count_dep]}')
+                    #if plot needed and next compressor not equal current compressor
+                    try:
+                        next_compressor = bounds[j+1].split('_bound_')[0]
+                    except:
+                        next_compressor = 'NA'
 
-                    linear_model = []
-                    for pos, value in enumerate(x_values):
-                        if fit=='log':
-                            linear_model.append(np.polyfit(np.log10(value),y_values[pos],1))
-                            linear_model_fn=np.poly1d(linear_model[pos])
-                            x_s=np.arange(.9*np.min(value),np.max(value),(np.max(value)-np.min(value))/100)
-                            plt.plot(x_s,linear_model_fn(np.log10(x_s)))
-                        elif fit=='linear':
-                            linear_model.append(np.polyfit(value,y_values[pos],1))
-                            linear_model_fn=np.poly1d(linear_model[pos])
-                            x_s=np.arange(.9*np.min(value),np.max(value),(np.max(value)-np.min(value))/100)
-                            plt.plot(x_s,linear_model_fn(x_s))
+                    plts[compressor].append(plt.scatter(legend_slices[bound][each_ind], legend_slices[bound][each_dep], s=32, marker='o'))
+                    x_values.append(legend_slices[bound][each_ind])
+                    y_values.append(legend_slices[bound][each_dep])
+                    numerical_bound_list.append(numerical_bound)
 
-                    plt.xlim(.5*np.min(min(x_values)), 1.1*np.max(max(x_values)))
-                    plt.ylim(0.5*np.min(min(y_values)), 1.4*np.max(max(y_values)))
-                    legend_list = []
-                    for pos, num_bound in enumerate(numerical_bound_list):
-                        legend_list.append(str(num_bound)+' '+str(np.round(linear_model[pos], decimals=2)))
-                    plt.legend(plts[pre_compressor], legend_list, loc="upper center", ncol=2, labelspacing=0.05)
-                    plt.tight_layout()
-                    if gaussian:
-                        multi = '_multi' if multi_gaussian else ''
-                        plt.savefig('image_results/gaussian_comparisons/gaussian'+multi+'_'+str(legend_slices[bound]['K_points'][0])+'_'+
-                        compressor_list[created]+'_'+each_ind+'_'+each_dep+'_correl_'+fit+'.png',facecolor='w', edgecolor='w')
-                    else:
-                        plt.savefig('image_results/sdrbench_comparisons/'+str(reduced_filename_store[filename_iteration])+'_'+compressor_list[created]+
-                        '_'+each_ind+'_'+each_dep+'_correl_'+fit+'.png',facecolor='w', edgecolor='w')
-                    plt.close()    
-                    created += 1
-                    #reset variables and lists
-                    place = 0
-                    plot_needed = False
-                    numerical_bound_list, x_values, y_values = ([] for listed in range(3))
+                    if pre_compressor == compressor and next_compressor != compressor:
+                        plt.title(f"{compressor_list[created]}")   
+                        plt.xlabel(f'{independent_labels[count_ind]}')
+                        plt.ylabel(f'{dependent_labels[count_dep]}')
+
+                        linear_model = []
+                        for pos, value in enumerate(x_values):
+                            if fit=='log':
+                                linear_model.append(np.polyfit(np.log10(value),y_values[pos],1))
+                                linear_model_fn=np.poly1d(linear_model[pos])
+                                x_s=np.arange(.9*np.min(value),np.max(value),(np.max(value)-np.min(value))/100)
+                                plt.plot(x_s,linear_model_fn(np.log10(x_s)))
+                            elif fit=='linear':
+                                linear_model.append(np.polyfit(value,y_values[pos],1))
+                                linear_model_fn=np.poly1d(linear_model[pos])
+                                x_s=np.arange(.9*np.min(value),np.max(value),(np.max(value)-np.min(value))/100)
+                                plt.plot(x_s,linear_model_fn(x_s))
+
+                        plt.xlim(.5*np.min(min(x_values)), 1.1*np.max(max(x_values)))
+                        plt.ylim(0.5*np.min(min(y_values)), 1.4*np.max(max(y_values)))
+                        legend_list = []
+                        for pos, num_bound in enumerate(numerical_bound_list):
+                            legend_list.append(str(num_bound)+' '+str(np.round(linear_model[pos], decimals=2)))
+                        plt.legend(plts[pre_compressor], legend_list, loc="upper center", ncol=2, labelspacing=0.05, frameon=False)
+                        plt.tight_layout()
+                        if gaussian:
+                            multi = '_multi' if multi_gaussian else ''
+                            plt.savefig('image_results/gaussian_comparisons/gaussian'+multi+'_'+str(legend_slices[bound]['K_points'][0])+'_'+
+                            compressor_list[created]+'_'+each_ind+'_'+each_dep+'_correl_'+fit+'.png',facecolor='w', edgecolor='w')
+                        else:
+                            plt.savefig('image_results/sdrbench_comparisons/'+str(reduced_filename_store[filename_iteration])+'_'+compressor_list[created]+
+                            '_'+each_ind+'_'+each_dep+'_correl_'+fit+'.png',facecolor='w', edgecolor='w')
+                        plt.close()    
+                        created += 1
+                        #only resets after graphing
+                        numerical_bound_list, x_values, y_values = ([] for listed in range(3))
                 pre_compressor = compressor
-                place +=1  
 
+
+'''
+@type function
+original_data
+plots the original data slice as a 2-D image using plt.imsave
+saves file within image_results/original_data/
+'''
 def original_data(data_class):
     #displays the original data set
     Image = np.transpose(data_class.data )

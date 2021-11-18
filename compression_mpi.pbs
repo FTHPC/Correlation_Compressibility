@@ -1,5 +1,5 @@
 #PBS -N compression_mpi
-#PBS -l select=1:ncpus=32:mpiprocs=32:mem=100gb:interconnect=25ge,walltime=1:30:00
+#PBS -l select=1:ncpus=32:mpiprocs=32:mem=100gb:interconnect=25ge,walltime=16:30:00
 
 source /zfs/ftdice/setup.sh
 spack load py-h5py
@@ -11,6 +11,6 @@ module load r/4.0.3-gcc/8.3.1
 module load openmpi/3.1.6-gcc/8.4.1 
 cd compression
 
+mpiexec -n 32 python -m mpi4py single_stat_script.py
 #mpiexec -n 32 python -m mpi4py process_script_mpi.py
-python import_script.py
-
+#python import_script.py

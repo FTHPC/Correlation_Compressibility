@@ -185,3 +185,38 @@ def run_compressors(data_class, compressors, start=-5, stop=-3):
                 metrics.update({key:val})
 
         data_class.set_compression_measurements(f"{compressor_id}_bound_{bound}", metrics)
+
+
+
+'''
+@type function
+inputs: d       : numpy array of data
+returns: entropy of the given dataset
+'''
+def entropy(d):
+    """returns the per-symbol entropy"""
+    _, counts = np.unique(d, return_counts=True)
+    prob = counts/d.size
+    return -(prob * np.log2(prob)).sum()
+
+'''​
+@type function
+inputs: d       : numpy array of data
+returns: entropy of the given dataset
+'''
+def quantized_entropy(d, eps=1e-6, return_quants=False):
+    """returns the quantized by the error bound"""
+    quant = np.round((d - d.min())/eps)
+    if return_quants:
+        return entropy(quant), quant
+    else:
+        return entropy(quant)
+
+'''
+@type function
+inputs: d       : numpy array of data
+returns: entropy of the given dataset
+'''
+def quantized_rel_entropy(d, eps=1e-6, return_quants=False):
+    assert np.all(d > 0)
+    return quantized_entropy(np.log2(d), eps=eps, return_quants=return_quants)
