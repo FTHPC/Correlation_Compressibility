@@ -1,0 +1,10 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+spack:
+  # add package specs to the `specs` list
+  specs: [qcat@master, libpressio+hdf5+mgard+python+sz+zfp ^sz+stats, py-h5py, libpressio-tthresh,
+    r, py-matplotlib, libpressio-tools+tthresh]
+  view: true
+  concretization: together

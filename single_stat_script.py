@@ -47,13 +47,10 @@ while i<len(sample_data_classes):
     dict_list = []
     entropy = cp.compress.entropy(data_class.data)
     quan_entropy = cp.compress.quantized_entropy(data_class.data)
-    try:
-        quan_rel_entropy = cp.compress.quantized_rel_entropy(data_class.data)
-    except:
-        quan_rel_entropy = 0
+
     field_names = ['filename', 'slice', 'entropy', 'quantized_entropy', 'quantized_rel_entropy']
     dict_list.append({'filename':data_class.filename,'slice':data_class.slice, 
-                      'entropy':entropy,'quantized_entropy':quan_entropy,'quantized_rel_entropy':quan_rel_entropy})
+                      'entropy':entropy,'quantized_entropy':quan_entropy})
     file_out = '../'+output_file
     path = str(Path(__file__).parent.absolute() / file_out)
     file_exists = os.path.isfile(path)

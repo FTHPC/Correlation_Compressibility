@@ -5,7 +5,8 @@ results are outputted in a 'outputs' folder. The files are then combined to
 a specified output file.
 process_script.py with mpi
 '''
-output_file = 'output_cesm_oct21.csv'
+#indicated output file
+output_file = 'output_test_nov21.csv'
 
 import compress_package as cp
 import pandas as pd
@@ -22,39 +23,33 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 if not rank:
-    '''
-    This is the section where one will setup the slices to import.
-    A list of classes using cp.setup.read_slice_folder is needed. 
-    
-    '''
-    '''
-    # This shows how to setup a single slice for import to be used by other functions
-    dimensions = [3072,3072]
-    data_folder = 'Density-3072x3072-slices'
-    sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions, 
-            dtype='float32', parse = 'slice')
-    
-    '''
-    dimensions = [26,1800,3600]
-    data_folder = 'SDRBENCH-CESM-ATM-26x1800x3600'
-#   sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
-#             slices_needed=[0, 50, 100, 150, 200, 255], slice_dimensions='X')
+    # Parent rank sets up slices to be ready for reading
+    # a list of classes using cp.setup.read_slice_folder is needed. 
+
+    dimensions = [256,384,384]
+    data_folder = 'SDRBENCH-Miranda-256x384x384'
     
     sample_data_classes_X = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
-            slices_needed=range(0, 25, 5), slice_dimensions='X')
+            slices_needed=range(0, 255, 5), slice_dimensions='X')
     sample_data_classes_Y = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
-            slices_needed=range(0, 25, 5), slice_dimensions='Y')
+            slices_needed=range(0, 255, 5), slice_dimensions='Y')
     sample_data_classes_Z = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
-            slices_needed=range(0, 25, 5), slice_dimensions='Z')
+            slices_needed=range(0, 255, 5), slice_dimensions='Z')
+
     sample_data_classes = sample_data_classes_X + sample_data_classes_Y + sample_data_classes_Z
     
         
-    
-    # sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
-    #         slices_needed=range(0,25, 5), slice_dimensions='X')
 
+    #slices are not needed below due to datasets being 2D; pay attention to differing syntax. 
+    #slices_needed is defaulted to false
+    #dataset_name is the name of the hdf5 dataset name to access the data
 
-    #slices are not needed below so there is different syntax while calling the function
+    #parse parameters -> slice, gaussian, gaussian_multi
+        #slice is a SDRBENCH file                           diffusivity.d64        
+        #gaussian is a single correlation range file        sample_gp_K128_a1_Sample1.d64
+        #gaussian_multi is a multi correlation range file   sample_gp_K1028_multiscale_a01_a5_Sample2.d64
+        
+
     '''
     dimensions = [1028,1028]
     data_folder = 'Gaussian_2D_Samples_K1028'
@@ -67,32 +62,38 @@ if not rank:
     sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions, 
             dataset_name = 'Z', parse = 'gaussian_multi')
     '''
+
+    # This shows how to setup a single slice for import to be used by other functions
+    '''
+    dimensions = [3072,3072]
+    data_folder = 'Density-3072x3072-slices'
+    sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions, 
+            dtype='float32', parse = 'slice')
+    '''
 else:
     sample_data_classes = []
-
+# parent rank shares with all other proccesses 
 sample_data_classes = comm.bcast(sample_data_classes, root=0)
 comm.Barrier()
-    
-#does global_svd, coarsening, and compression measurements on the list of sample data class
+
+
 i = rank
 while i<len(sample_data_classes):
     data_class = sample_data_classes[i]
-    #stores the ouptut in coarsen_class.global_svd_measurements
 
     #runs all the statistics available 
-    #cp.setup.run(data_class, plot=True, variogram=True, compressors=["sz", "zfp", "mgard", "tthresh", start=-5, stop=-2])
+    #cp.setup.all_stats(data_class, plot=True, variogram=True, compressors=["sz", "zfp", "mgard", "tthresh"], start=-5, stop=-2)
 
     #runs stats individually
     #stores the ouptut in coarsen_class.global_svd_measurements
     cp.svd_coarsen.global_svd(data_class, plot=True)
 
-    #stores the output in coarsen_class.tiled_svd_measurments
+    # #stores the output in coarsen_class.tiled_svd_measurments
     cp.svd_coarsen.tiled_multiple(data_class, plot=True)
 
-    #data_import.coarsened_attributes will store the different resolution stats 
+    # #data_import.coarsened_attributes will store the different resolution stats 
     cp.svd_coarsen.coarsen_multiple_resolution(data_class, plot=True, variogram_study=True)
 
-    print("Compression Statistics: ")
     cp.compress.run_compressors(data_class,["sz", "zfp", "mgard", "tthresh"], start=-5, stop=-2)
     
     cp.variogram.global_variogram_study(data_class, plot=True)
@@ -105,7 +106,6 @@ while i<len(sample_data_classes):
     cp.setup.slice_data.create_folder('outputs')
     cp.setup.export_class(data_class, 'outputs/output'+str(rank)+'.csv')
     i += size
-
 
 comm.Barrier()
 '''

@@ -174,8 +174,12 @@ def run_compressors(data_class, compressors, start=-5, stop=-3):
 
         #parese the metrics only grabbing what we need
         metrics = {}
+        print(metrics_all)
         metrics.update({"compressor": compressor_id, "bound": bound, 
                 "error_stat:ssim": get_qcat_ssim(data_class, full_original_path, full_decomp_path),
+                #"": entropy(),
+                #"": quantized_entropy(),
+                #"": quantized_rel_entropy(),
                 #"error_stat:open_cv_ssim": get_open_cv_ssim(data_class, decomp_data)
                 })
 

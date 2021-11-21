@@ -1,0 +1,1 @@
+/home/dkrasow/spack/opt/spack/linux-centos8-skylake_avx512/gcc-8.4.1/py-kiwisolver-1.3.2-altafts4xow27hg3rxypepkwgmpxqwcw/.spack/repos/builtin/packages/expat/package.py

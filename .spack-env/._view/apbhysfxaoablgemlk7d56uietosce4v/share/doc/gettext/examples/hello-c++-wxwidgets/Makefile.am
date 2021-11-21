@@ -1,0 +1,1 @@
+/home/dkrasow/spack/opt/spack/linux-centos8-skylake_avx512/gcc-8.4.1/gettext-0.21-gfe25p5vsca4lgmddccehdburzapp3hb/share/doc/gettext/examples/hello-c++-wxwidgets/Makefile.am

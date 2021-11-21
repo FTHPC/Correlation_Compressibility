@@ -1,0 +1,1 @@
+/home/dkrasow/spack/opt/spack/linux-centos8-skylake_avx512/gcc-8.4.1/openblas-0.3.18-ygwwiwebzhfhg7zdzfbiikun236ikqqz/include/cblas.h

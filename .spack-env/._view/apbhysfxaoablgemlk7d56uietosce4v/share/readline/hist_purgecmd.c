@@ -1,0 +1,1 @@
+/home/dkrasow/spack/opt/spack/linux-centos8-skylake_avx512/gcc-8.4.1/readline-8.1-7sdai4wsqxfro4l3t3rqvgakaabizg7r/share/readline/hist_purgecmd.c

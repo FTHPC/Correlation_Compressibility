@@ -1,0 +1,1 @@
+/home/dkrasow/spack/opt/spack/linux-centos8-skylake_avx512/gcc-8.4.1/tar-1.34-yyvocm5ikymhzp2frzdwow2brb7ers4y/share/locale/bg/LC_MESSAGES/tar.mo

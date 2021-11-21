@@ -462,13 +462,7 @@ def export_class(data_class, output_name):
                 #Two copies were required since it was a dictionary within a list
                 copy = dict_list[i-1].copy()
                 dict_list.append(copy.copy())
-            try:    
-                regression = data_class.compression_measurements.get(keys).get('sz:regression_blocks')
-                lorenzo = data_class.compression_measurements.get(keys).get('sz:lorenzo_blocks')
-            except:
-                regression = ''
-                lorenzo = ''
-
+                
             dict_list[i].update({'compressor':data_class.compression_measurements.get(keys).get('compressor'), 
                                  'bound':data_class.compression_measurements.get(keys).get('bound'), 
                                  'size:compression_ratio':data_class.compression_measurements.get(keys).get('size:compression_ratio'),
@@ -480,8 +474,8 @@ def export_class(data_class, output_name):
                                  'error_stat:average_difference':data_class.compression_measurements.get(keys).get('error_stat:average_difference'), 
                                  'error_stat:average_error':data_class.compression_measurements.get(keys).get('error_stat:average_error'),
                                  'error_stat:value_range': data_class.compression_measurements.get(keys).get('error_stat:value_range'),
-                                 'sz:regression_blocks': regression,
-                                 'sz:lorenzo_blocks':lorenzo,
+                                 'sz:regression_blocks': data_class.compression_measurements.get(keys).get('sz:regression_blocks'),
+                                 'sz:lorenzo_blocks': data_class.compression_measurements.get(keys).get('sz:lorenzo_blocks'),
                                 })
 
     # Open CSV file in append mode

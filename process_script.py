@@ -23,30 +23,30 @@ for data_class in sample_data_classes:
         print(json.dumps(data_class.gaussian_attributes, indent=4))
 
     #stores the ouptut in coarsen_class.global_svd_measurements
-    cp.svd_coarsen.global_svd(data_class, plot=True)
-    print("Global SVD Statistics: ")
-    print(json.dumps(data_class.global_svd_measurements, indent=4))
+    #cp.svd_coarsen.global_svd(data_class, plot=True)
+    #print("Global SVD Statistics: ")
+    #print(json.dumps(data_class.global_svd_measurements, indent=4))
 
     #stores the output in coarsen_class.tiled_svd_measurments
-    cp.svd_coarsen.tiled_multiple(data_class, plot=True)
-    print("2D Tiled Statistics of Singular Modes: ")
-    print(json.dumps(data_class.tiled_svd_measurements, indent=4))
+    #cp.svd_coarsen.tiled_multiple(data_class, plot=True)
+    #print("2D Tiled Statistics of Singular Modes: ")
+    #print(json.dumps(data_class.tiled_svd_measurements, indent=4))
 
     #data_import.coarsened_attributes will store the different resolution stats 
-    cp.svd_coarsen.coarsen_multiple_resolution(data_class, plot=True, variogram_study=True)
-    print("Coarsen Statistics: ")
-    print(json.dumps(data_class.coarsened_attributes, indent=4))
-    print(json.dumps(data_class.coarsened_variogram_measurements, indent=4))
+    #cp.svd_coarsen.coarsen_multiple_resolution(data_class, plot=True, variogram_study=True)
+    #print("Coarsen Statistics: ")
+    #print(json.dumps(data_class.coarsened_attributes, indent=4))
+    #print(json.dumps(data_class.coarsened_variogram_measurements, indent=4))
 
     print("Compression Statistics: ")
     cp.compress.run_compressors(data_class,["sz", "zfp", "mgard", "tthresh"], start=-5, stop=-2)
     print(json.dumps(data_class.compression_measurements, indent=4))
     
-    print("Variogram Study Statistics: ")
-    cp.variogram.global_variogram_study(data_class, plot=True)
-    print('Global Variogram Fitting:'+str(data_class.global_variogram_fitting))
-    cp.variogram.local_variogram_study(data_class, plot=True)
-    print(json.dumps(data_class.local_variogram_measurements, indent=4))
+    #print("Variogram Study Statistics: ")
+    #cp.variogram.global_variogram_study(data_class, plot=True)
+    #print('Global Variogram Fitting:'+str(data_class.global_variogram_fitting))
+    #cp.variogram.local_variogram_study(data_class, plot=True)
+    #print(json.dumps(data_class.local_variogram_measurements, indent=4))
     
     #plot original 
     cp.plot.original_data(data_class)

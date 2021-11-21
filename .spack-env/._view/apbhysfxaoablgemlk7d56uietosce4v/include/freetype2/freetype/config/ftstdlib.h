@@ -1,0 +1,1 @@
+/home/dkrasow/spack/opt/spack/linux-centos8-skylake_avx512/gcc-8.4.1/freetype-2.11.0-abl2ahi7bmsp3i2wxrdn6lmg3x5h5e4y/include/freetype2/freetype/config/ftstdlib.h

@@ -1,0 +1,1 @@
+/home/dkrasow/spack/opt/spack/linux-centos8-skylake_avx512/gcc-8.4.1/zstd-1.5.0-bbt36iqu2o5234nbk65vufxggyn7lfzu/.spack/repos/builtin/packages/zstd/package.py
