@@ -54,7 +54,7 @@ def global_svd(data_class, plot = False):
     n999 = 100*((np.min(np.where(ev0 >= .999))+1)/n).squeeze()
     n99 = 100*((np.min(np.where(ev0 >= .99))+1)/n).squeeze()
 
-    thresholds = {'n100':n100, 'n9999':n9999, 'n999': n999, 'n99': n99}
+    thresholds = {'stat:n100':n100, 'stat:n9999':n9999, 'stat:n999': n999, 'stat:n99': n99}
     data_class.set_global_svd_measurements(thresholds)
     
     if plot:
@@ -105,7 +105,9 @@ def tiled_singular(data_class, H = 16, plot = False):
     X = data_class.data
     map_res = map_svd_rank(X)
     #plot tiled sub-windows
-    measurements = {'H'+str(H)+'_mean_singular_mode':np.mean(map_res), 'H'+str(H)+'_median_singular_mode':np.median(map_res), 'H'+str(H)+'_std_singular_mode':np.std(map_res)}
+    measurements = {'stat:H'+str(H)+'_mean_singular_mode':np.mean(map_res), 
+                    'stat:H'+str(H)+'_median_singular_mode':np.median(map_res), 
+                    'stat:H'+str(H)+'_std_singular_mode':np.std(map_res)}
     data_class.set_tiled_svd_measurements(measurements)
 
 
@@ -129,7 +131,9 @@ def tiled_multiple(data_class, plot = False):
     X = data_class.data
     for i, item in enumerate(H):
         map_res.append(map_svd_rank(X, H = item))
-        measurements = {'H'+str(item)+'_mean_singular_mode':np.mean(map_res[i]), 'H'+str(item)+'_median_singular_mode':np.median(map_res[i]), 'H'+str(item)+'_std_singular_mode':np.std(map_res[i])}
+        measurements = {'stat:H'+str(item)+'_mean_singular_mode':np.mean(map_res[i]),
+                        'stat:H'+str(item)+'_median_singular_mode':np.median(map_res[i]),
+                        'stat:H'+str(item)+'_std_singular_mode':np.std(map_res[i])}
         data_class.set_tiled_svd_measurements(measurements)
         if plot:
             K1 = X.shape[0]
@@ -214,10 +218,16 @@ def coarsen_multiple_resolution(data_class, new_data_classes = False, plot = Fal
 
     X = data_class.data 
     slice_data.create_folder(f"{data_class.dataset_temp_folder}")
-    decompressed_data_path = data_class.full_sliced_file_path
+    # decompressed_data_path = data_class.full_sliced_file_path
     
     for i, item in enumerate(N):
         Xc.append(coarsen(X, N[i]))
+        coarsen_data_measurements = {"stat:res"+str(N[i])+"_coarsen_std":np.std(Xc[i])}
+        #occurs if variogram_study is set to True
+        if variogram_study:
+            vgm_coarsen=variogram.coarsen_multiple_resolution_variogram_study_addition(Xc[i])
+            coarsen_variogram_measurements = {"stat:res"+str(N[i])+"_coarsen_variogram":vgm_coarsen} 
+
         #this will create new classes with each coarsened resolution as a new data file. this will allow one entry within the data_class.coarsened_attributes 
         #per each class created. Creating the classes will allow the information to be manipulated later (ex: sz or other methods)
         if new_data_classes:
@@ -232,14 +242,9 @@ def coarsen_multiple_resolution(data_class, new_data_classes = False, plot = Fal
             coarsened_data_classes[i].setup_slice(coarse_filename, coarse_dataset_name, data_class.temp_folder, coarse_full_path, Xc[i].shape, data_class.dtype)
             coarsened_data_classes[i].set_data(Xc[i])
             #setup coarsened_attributes
-            coarsen_ratio = setup.slice_compression_ratio(coarsened_data_classes[i], decompressed_data_path)
-            coarsen_data_measurements = {"resolution_"+str(N[i]): {"standard_deviation":np.std(Xc[i]), "compression_ratio":coarsen_ratio}}
+            #coarsen_ratio = setup.slice_compression_ratio(coarsened_data_classes[i], decompressed_data_path)
             coarsened_data_classes[i].set_coarsened_attributes(coarsen_data_measurements)
-
-            #occurs if variogram_study is set to True
             if variogram_study:
-                vgm_coarsen=variogram.coarsen_multiple_resolution_variogram_study_addition(Xc[i])
-                coarsen_variogram_measurements = {'resolution_'+str(N[i]):{'coarsen_variogram':vgm_coarsen}}
                 coarsened_data_classes[i].set_coarsened_variogram_measurements(coarsen_variogram_measurements)
             if plot:
                 plot_resolution(coarsened_data_classes[i], N[i])
@@ -247,14 +252,10 @@ def coarsen_multiple_resolution(data_class, new_data_classes = False, plot = Fal
         #results in multiple entries within the dictionary data_class.coarsened_attributes with each entry containing the 
         #standard deviation. Also data_class.coarsened_variogram_measurements will store the coarsened variogram study metrics
         else:
-            coarsen_data_measurements = {"resolution_"+str(N[i]): {"standard_deviation":np.std(Xc[i])}}
             data_class.set_coarsened_attributes(coarsen_data_measurements)
             coarsened_data_classes.append(data_class)
-
             #occurs if variogram_study is set to True
             if variogram_study:
-                vgm_coarsen=variogram.coarsen_multiple_resolution_variogram_study_addition(Xc[i])
-                coarsen_variogram_measurements = {'resolution_'+str(N[i]):{'coarsen_variogram':vgm_coarsen}}
                 data_class.set_coarsened_variogram_measurements(coarsen_variogram_measurements)
             if plot:
                 plot_resolution(data_class, N[i])

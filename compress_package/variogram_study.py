@@ -153,8 +153,8 @@ def local_variogram_study(data_class, plot=False):
     H_values = output[0]
     measurements = {}
     for i, value in enumerate(H_values):
-        measurements.update({'H'+str(int(value))+'_avg_local_variogram':np.mean(np.asarray(output[1][i])),
-                             'H'+str(int(value))+'_std_local_variogram':np.std(np.asarray(output[1][i]))    
+        measurements.update({'stat:H'+str(int(value))+'_avg_local_variogram':np.mean(np.asarray(output[1][i])),
+                             'stat:H'+str(int(value))+'_std_local_variogram':np.std(np.asarray(output[1][i]))    
                             })
     data_class.set_local_variogram_measurements(measurements)
 
@@ -222,7 +222,7 @@ def coarsen_variogram_study(data_class):
     output = np.asarray(coarsen_variogram_study_call(X, N))
     measurements = {}
     for i, value in enumerate(N):
-        measurements.update({'resolution_'+str(int(value)):{'coarsen_variogram':output[i]}})
+        measurements.update({'stat:res'+str(int(value))+'coarsen_variogram':output[i]})
     data_class.set_coarsened_variogram_measurements(measurements)
     numpy2ri.deactivate()
 

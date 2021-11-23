@@ -6,7 +6,7 @@ a specified output file.
 process_script.py with mpi
 '''
 #indicated output file
-output_file = 'output_test_nov21.csv'
+output_file = 'testtest.csv'
 
 import compress_package as cp
 import pandas as pd
@@ -25,7 +25,7 @@ size = comm.Get_size()
 if not rank:
     # Parent rank sets up slices to be ready for reading
     # a list of classes using cp.setup.read_slice_folder is needed. 
-
+    '''
     dimensions = [256,384,384]
     data_folder = 'SDRBENCH-Miranda-256x384x384'
     
@@ -37,8 +37,8 @@ if not rank:
             slices_needed=range(0, 255, 5), slice_dimensions='Z')
 
     sample_data_classes = sample_data_classes_X + sample_data_classes_Y + sample_data_classes_Z
-    
-        
+    '''
+
 
     #slices are not needed below due to datasets being 2D; pay attention to differing syntax. 
     #slices_needed is defaulted to false
@@ -50,12 +50,12 @@ if not rank:
         #gaussian_multi is a multi correlation range file   sample_gp_K1028_multiscale_a01_a5_Sample2.d64
         
 
-    '''
+    
     dimensions = [1028,1028]
     data_folder = 'Gaussian_2D_Samples_K1028'
     sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
             dataset_name = 'Z', parse = 'gaussian')
-    '''
+    
     '''
     dimensions = [1028,1028]
     data_folder = 'Gaussian_2D_Samples_K1028_multiscale'
@@ -81,10 +81,6 @@ i = rank
 while i<len(sample_data_classes):
     data_class = sample_data_classes[i]
 
-    #runs all the statistics available 
-    #cp.setup.all_stats(data_class, plot=True, variogram=True, compressors=["sz", "zfp", "mgard", "tthresh"], start=-5, stop=-2)
-
-    #runs stats individually
     #stores the ouptut in coarsen_class.global_svd_measurements
     cp.svd_coarsen.global_svd(data_class, plot=True)
 
@@ -93,12 +89,11 @@ while i<len(sample_data_classes):
 
     # #data_import.coarsened_attributes will store the different resolution stats 
     cp.svd_coarsen.coarsen_multiple_resolution(data_class, plot=True, variogram_study=True)
-
-    cp.compress.run_compressors(data_class,["sz", "zfp", "mgard", "tthresh"], start=-5, stop=-2)
+    cp.compress.run_compressors(data_class, ["sz", "zfp", "mgard", "tthresh"], start=-5, stop=-2)
     
     cp.variogram.global_variogram_study(data_class, plot=True)
     cp.variogram.local_variogram_study(data_class, plot=True)
-
+    
     #plot original 
     cp.plot.original_data(data_class)
 

@@ -142,6 +142,16 @@ no return
 def run_compressors(data_class, compressors, start=-5, stop=-3):
     input_data = data_class.data
     decomp_data = input_data.copy()
+    independent_metrics={}
+    #bound/compressor indepenedent 
+    if "stat:entropy" in data_class.compress_metrics_needed:
+        independent_metrics.update({'stat:entropy':entropy(data_class.data)})
+    if "stat:quantized_entropy" in data_class.compress_metrics_needed:
+        independent_metrics.update({'stat:quantized_entropy':quantized_entropy(data_class.data)})
+    if "stat:quantized_rel_entropy" in data_class.compress_metrics_needed:
+        independent_metrics.update({'stat:quantized_rel_entropy':quantized_rel_entropy(data_class.data)})
+    
+    #bound/compressor dependent 
     for compressor_id, bound in itertools.product(compressors, np.logspace(start=start, stop=stop, num=-1*(start-stop-1))):
         compressor = libpressio.PressioCompressor.from_config({
             # configure which compressor to use
@@ -171,18 +181,20 @@ def run_compressors(data_class, compressors, start=-5, stop=-3):
 
     
         metrics_all = compressor.get_metrics()
-
-        #parese the metrics only grabbing what we need
         metrics = {}
-        print(metrics_all)
-        metrics.update({"compressor": compressor_id, "bound": bound, 
-                "error_stat:ssim": get_qcat_ssim(data_class, full_original_path, full_decomp_path),
-                #"": entropy(),
-                #"": quantized_entropy(),
-                #"": quantized_rel_entropy(),
-                #"error_stat:open_cv_ssim": get_open_cv_ssim(data_class, decomp_data)
-                })
-
+        #parese the metrics only grabbing what we need
+        metrics.update({"info:compressor": compressor_id, "info:bound": bound})
+        if "error_stat:ssim" in data_class.compress_metrics_needed:
+            metrics.update({"error_stat:ssim": get_qcat_ssim(data_class, full_original_path, full_decomp_path)})
+        if "error_stat:open_cv_ssim" in data_class.compress_metrics_needed:
+            metrics.update({"error_stat:open_cv_ssim": get_open_cv_ssim(data_class, decomp_data)})
+        if "stat:entropy" in data_class.compress_metrics_needed:
+            metrics.update({'stat:entropy':independent_metrics.get('stat:entropy')})
+        if "stat:quantized_entropy" in data_class.compress_metrics_needed:
+            metrics.update({'stat:quantized_entropy':independent_metrics.get('stat:quantized_entropy')})
+        if "stat:quantized_rel_entropy" in data_class.compress_metrics_needed:
+            metrics.update({'stat:quantized_rel_entropy':independent_metrics.get('stat:quantized_rel_entropy')})
+    
         for key in data_class.compress_metrics_needed:
             val = metrics_all.get(key)
             if val:

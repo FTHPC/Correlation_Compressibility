@@ -16,7 +16,6 @@ functions:
     export_class(data_class, output_name)
     import_class(input_name, global_class=False)
 '''
-
 import os
 import numpy as np
 from csv import DictWriter, DictReader
@@ -27,6 +26,23 @@ from compress_package import compare_compressors
 from compress_package.convert import convert_dat_h5
 from compress_package.convert import slice_data
 
+#stats returned when compress_package.compress.run_compressors is ran
+defaults = ['info:compressor',
+            'info:bound',
+            'size:compression_ratio',
+            'error_stat:psnr',
+            'error_stat:rmse',
+            'error_stat:mse',
+            'error_stat:average_difference',
+            'error_stat:average_error',
+            'error_stat:value_range',
+            'error_stat:ssim',
+            'sz:regression_blocks',
+            'sz:lorenzo_blocks',
+            'stat:entropy',
+            'stat:quantized_entropy',
+            ]
+
 '''
 @type class
 Contains information that is relevant to every dataset that will be stored within
@@ -34,16 +50,7 @@ the class data. Must setup at beginning of script file.
 '''
 class global_data:
     def __init__(self, temp_folder='temp',dataset_directory='datasets',all_files=False,
-                compress_metrics_needed = [ 'size:compression_ratio',
-                                            'error_stat:psnr',
-                                            'error_stat:rmse',
-                                            'error_stat:mse',
-                                            'error_stat:average_difference',
-                                            'error_stat:average_error',
-                                            'error_stat:value_range',
-                                            'sz:regression_blocks',
-                                            'sz:lorenzo_blocks'
-                                        ]):
+                compress_metrics_needed = defaults):
         #bool
         #if the h5 equalivalent file isn't found, 
         #True if you want to convert everything witin data_folder
@@ -68,6 +75,8 @@ be outputted to .csv or graphed. Must setup for each new dataset wanting to be i
 class data:    
     def __init__(self, global_data_class):
         #measurements is a dictorary 
+        self.info = {}
+        self.stat_methods = {}
         self.compression_measurements = {}
         self.tiled_svd_measurements = {}
         self.coarsened_attributes = {}
@@ -92,29 +101,35 @@ class data:
     #this will turn the 3-D array into a 2-D array 
     def set_slice(self, slice = 0):
         self.slice = slice
+        self.info.update({'info:slice':slice})
 
     #ex - 'velocityx.d64'
     #must be in binary format   
     def set_filename(self, filename=''):
         self.filename = filename
+        self.info.update({'info:filename':filename})
 
     #ex - 'velocityx.d64.dat'
     #dataset name of the h5 file    
     def set_dataset_name(self, dataset_name=''):
         self.dataset_name = dataset_name
+        self.info.update({'info:dataset_name':dataset_name})
     
     #ex - 'SDRBENCH-Miranda-256x384x384'
     #must be within a 'datasets' directory 
     def set_data_folder(self, data_folder=''):
         self.data_folder = data_folder
+        self.info.update({'info:dataset_folder':data_folder})
     
     #ex - [256, 384, 384]
     def set_dimensions(self, dimensions):
         self.dimensions = dimensions
+        self.info.update({'info:dimensions':dimensions})
 
     #ex - 'float64'
     def set_dtype(self, dtype='float64'):
         self.dtype = dtype
+        self.info.update({'info:dtype':dtype})
 
     #stores the data of the slice
     def set_data(self, data):
@@ -125,29 +140,36 @@ class data:
     def set_compression_measurements(self, compressor_id, measurements):
         self.compression_measurements.update({compressor_id: measurements})
 
-    def set_global_svd_measurements(self, thresholds):
-        self.global_svd_measurements = thresholds
+    def set_global_svd_measurements(self, measurements):
+        self.global_svd_measurements = measurements
+        self.stat_methods.update(measurements)
 
     def set_tiled_svd_measurements(self, measurements): 
         self.tiled_svd_measurements.update(measurements)
+        self.stat_methods.update(measurements)
     
     def set_gaussian_attributes(self, measurements):
         self.gaussian_attributes = measurements
+        self.info.update(measurements)
 
     def set_coarsened_attributes(self, measurements):
         self.coarsened_attributes.update(measurements)
+        self.stat_methods.update(measurements)
         
     #coarsened variogram study
     def set_coarsened_variogram_measurements(self, measurements):
         self.coarsened_variogram_measurements.update(measurements)
+        self.stat_methods.update(measurements)
     
     #global variogram study 
     def set_global_variogram_fitting(self, fitting):
         self.global_variogram_fitting = fitting
+        self.stat_methods.update({'stat:global_variogram_fit':fitting})
     
     #local variogram study
     def set_local_variogram_measurements(self, measurements):
         self.local_variogram_measurements = measurements
+        self.stat_methods.update(measurements)
 
     #ex - '/home/dkrasow/compression/datasets/temp/z_K64_a1_Sample1.dat.h5'   
     #this will set the full file path 
@@ -159,20 +181,20 @@ class data:
         self.full_sliced_file_path = path
 
     def setup_slice(self, filename, dataset_name, data_folder, full_sliced_file_path, dimensions, dtype):
-        self.created = True
-        self.filename = filename
+        self.set_created(True)
+        self.set_filename(filename)
         #ex - 'velocityx.d64.dat'
         #dataset name of the h5 file
-        self.dataset_name = dataset_name
+        self.set_dataset_name(dataset_name)
         #ex - 'SDRBENCH-Miranda-256x384x384'
         #must be within a 'datasets' directory
-        self.data_folder = data_folder 
+        self.set_data_folder(data_folder) 
         #ex - '/home/dkrasow/compression/datasets/temp/z_K64_a1_Sample1.dat.h5' 
-        self.full_sliced_file_path = full_sliced_file_path
+        self.set_full_sliced_file_path(full_sliced_file_path)
         #ex - [256, 384, 384]
-        self.dimensions = dimensions
+        self.set_dimensions(dimensions)
         #ex - 'float64'
-        self.dtype = dtype
+        self.set_dtype(dtype)
 
 '''
 @type function
@@ -296,13 +318,13 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
                     if a2.startswith('0'):
                         a2 = a2[:1] + '.' + a2[1:]
                 step = os.path.splitext(files)[0]
-                Sample = step.split('Sample')[1]
-                if parse == 'gaussian':
-                    sample_data_attributes = {"a_range":float(a1), "K_points":int(K_points), "Sample": int(Sample)}
-                else:
-                    sample_data_attributes = {"a_range":float(a1), "a_range_secondary":float(a2), "K_points":int(K_points), "Sample": int(Sample)}
-                data_slice_classes[location].set_gaussian_attributes(sample_data_attributes)
+                sample = step.split('Sample')[1]
+                
+                sample_data_attributes = {"info:a_range":float(a1), "info:k_points":int(K_points), "info:sample": int(sample)}
+                if parse == 'gaussian_multi':
+                    sample_data_attributes.update({"info:a_range_secondary":float(a2)})
 
+                data_slice_classes[location].set_gaussian_attributes(sample_data_attributes)
             location += 1
     return data_slice_classes
 
@@ -362,121 +384,56 @@ no return, exports a .csv file
 def export_class(data_class, output_name):
     # # list of column names 
                 # common file attributes
-    field_names = ['filename','dataset_name','dataset_folder',
+    field_names = ['info:filename','info:dtype', 'info:dataset_name','info:dataset_folder',
                 # 'a_range', 'a_range_secondary','K_points', and 'Sample' realte to 2D Guassian sample created
-                'dimensions','slice','a_range','a_range_secondary','K_points','Sample',
+                'info:dimensions','info:slice','info:a_range','info:a_range_secondary','info:k_points','info:sample',
                 # n values are global SVD
-                'n100','n9999','n999','n99', 
+                'stat:n100','stat:n9999','stat:n999','stat:n99', 
                 # H values are 2D tiled stats of singular modes
-                'H8_mean_singular_mode', 'H8_median_singular_mode', 'H8_std_singular_mode', 
-                'H16_mean_singular_mode','H16_median_singular_mode','H16_std_singular_mode',
-                'H32_mean_singular_mode','H32_median_singular_mode','H32_std_singular_mode',
-                'H64_mean_singular_mode','H64_median_singular_mode','H64_std_singular_mode',
+                'stat:H8_mean_singular_mode', 'stat:H8_median_singular_mode', 'stat:H8_std_singular_mode', 
+                'stat:H16_mean_singular_mode','stat:H16_median_singular_mode','stat:H16_std_singular_mode',
+                'stat:H32_mean_singular_mode','stat:H32_median_singular_mode','stat:H32_std_singular_mode',
+                'stat:H64_mean_singular_mode','stat:H64_median_singular_mode','stat:H64_std_singular_mode',
                 # coarsened standard deviations of the data
-                'res4_coarsen_std', 'res8_coarsen_std', 'res12_coarsen_std', 'res16_coarsen_std',
-                'res24_coarsen_std', 'res32_coarsen_std', 'res48_coarsen_std', 'res64_coarsen_std', 
+                'stat:res4_coarsen_std', 'stat:res8_coarsen_std', 'stat:res12_coarsen_std', 'stat:res16_coarsen_std',
+                'stat:res24_coarsen_std', 'stat:res32_coarsen_std', 'stat:res48_coarsen_std', 'stat:res64_coarsen_std', 
                 # coarsened global variogram study 
-                'res4_coarsen_variogram', 'res8_coarsen_variogram', 'res12_coarsen_variogram', 'res16_coarsen_variogram',
-                'res24_coarsen_variogram', 'res32_coarsen_variogram', 'res48_coarsen_variogram', 'res64_coarsen_variogram', 
+                'stat:res4_coarsen_variogram', 'stat:res8_coarsen_variogram', 'stat:res12_coarsen_variogram', 'stat:res16_coarsen_variogram',
+                'stat:res24_coarsen_variogram', 'stat:res32_coarsen_variogram', 'stat:res48_coarsen_variogram', 'stat:res64_coarsen_variogram', 
                 # global variogram study statistics
-                'global_variogram_fit', 
+                'stat:global_variogram_fit', 
                 # local variogram study statistics
-                'H8_avg_local_variogram', 'H8_std_local_variogram',
-                'H16_avg_local_variogram', 'H16_std_local_variogram',
-                'H32_avg_local_variogram', 'H32_std_local_variogram',
-                # compressor statistics using zfp and sz
-                'compressor', 'bound', 'size:compression_ratio', 
-                #'error_stat:open_cv_ssim',
-                'error_stat:ssim', 'error_stat:psnr', 'error_stat:rmse',
-                'error_stat:mse', 'error_stat:average_difference', 'error_stat:average_error', 'error_stat:value_range',
-                'sz:lorenzo_blocks', 'sz:regression_blocks',  
-                ]
+                'stat:H8_avg_local_variogram', 'stat:H8_std_local_variogram',
+                'stat:H16_avg_local_variogram', 'stat:H16_std_local_variogram',
+                'stat:H32_avg_local_variogram', 'stat:H32_std_local_variogram',
+                ] + data_class.global_data.compress_metrics_needed
+                #adds the compression metrics needed
+ 
 
     #list of dictionaries
     dict_list = []
+    dict_list.append({})
 
-    #Every single slice will have these values 
-    dict_list.append({'filename':data_class.filename,'dataset_name':data_class.dataset_name, 
-                      'dataset_folder':data_class.data_folder,'dimensions':data_class.dimensions,})
-    #checks if there is a slice from a larger data set
-    if hasattr(data_class, 'slice'):  
-        dict_list[0].update({'slice': data_class.slice})
-    #checks if the data has gaussian attributes. This means the data was created by the 2-d gaussian generator
-    if hasattr(data_class, 'gaussian_attributes'):
-        if 'a_range_secondary' in data_class.gaussian_attributes:
-            dict_list[0].update({'a_range':data_class.gaussian_attributes.get('a_range'),
-                                 'a_range_secondary':data_class.gaussian_attributes.get('a_range_secondary'),
-                                 'K_points': data_class.gaussian_attributes.get('K_points'),
-                                 'Sample': data_class.gaussian_attributes.get('Sample')})
-        else: 
-            dict_list[0].update({'a_range':data_class.gaussian_attributes.get('a_range'),
-                                 'K_points': data_class.gaussian_attributes.get('K_points'),
-                                 'Sample': data_class.gaussian_attributes.get('Sample')})
-    #checks for global svd measurmenets
-    if hasattr(data_class, 'global_svd_measurements'):
-        dict_list[0].update({'n100':data_class.global_svd_measurements.get('n100'),
-                             'n9999': data_class.global_svd_measurements.get('n9999'),
-                             'n999': data_class.global_svd_measurements.get('n999'),
-                             'n99': data_class.global_svd_measurements.get('n99')})                    
-    #checks for tiled svd singular mode measurements
-    if len(data_class.tiled_svd_measurements) > 0:
-        measurement_keys = ['_mean_singular_mode', '_median_singular_mode', '_std_singular_mode'] 
-        dict = {}
-        for i in [8, 16, 32, 64]:
-            for keys in measurement_keys:
-                dict.update({'H'+str(i)+keys: data_class.tiled_svd_measurements.get('H'+str(i)+keys)})   
-        dict_list[0].update(dict)
-    #checks for coarsened data measurements 
-    if len(data_class.coarsened_attributes) > 0:
-        measurement_keys = ['res4_coarsen_std', 'res8_coarsen_std', 'res12_coarsen_std', 'res16_coarsen_std',
-                            'res24_coarsen_std', 'res32_coarsen_std', 'res48_coarsen_std', 'res64_coarsen_std', ]
-        dict = {}
-        for i, keys in enumerate(data_class.coarsened_attributes):
-            dict.update({measurement_keys[i]: data_class.coarsened_attributes.get(keys).get('standard_deviation')})                   
-        dict_list[0].update(dict)
-    #checks for coarsened variogram study
-    if len(data_class.coarsened_variogram_measurements) > 0:
-        measurement_keys = ['res4_coarsen_variogram', 'res8_coarsen_variogram', 'res12_coarsen_variogram', 'res16_coarsen_variogram',
-                            'res24_coarsen_variogram', 'res32_coarsen_variogram', 'res48_coarsen_variogram', 'res64_coarsen_variogram'] 
-        dict = {}
-        for i, keys in enumerate(data_class.coarsened_variogram_measurements):
-            dict.update({measurement_keys[i]: data_class.coarsened_variogram_measurements.get(keys).get('coarsen_variogram')})                   
-        dict_list[0].update(dict)
-    #checks for global variogram study
-    if hasattr(data_class, 'global_variogram_fitting'):
-        dict_list[0].update({'global_variogram_fit': data_class.global_variogram_fitting})
-    #checks for local variogram study
-    if hasattr(data_class, 'local_variogram_measurements'): 
-        measurement_keys = ['_avg_local_variogram', '_std_local_variogram'] 
-        dict = {}
-        for i in [8, 16, 32]:
-            for keys in measurement_keys:
-                dict.update({'H'+str(i)+keys: data_class.local_variogram_measurements.get('H'+str(i)+keys)})   
-        dict_list[0].update(dict)
+    for i, metric in enumerate(data_class.info):
+        dict_list[0].update({metric:data_class.info.get(metric)})
+
+    if len(data_class.stat_methods):
+        for i, metric in enumerate(data_class.stat_methods):
+            dict_list[0].update({metric:data_class.stat_methods.get(metric)})
+
     #checks for compression measurments 
-    if len(data_class.compression_measurements) > 0:
+    if len(data_class.compression_measurements):
         for i, keys in enumerate(data_class.compression_measurements):
-            if i > 0:
-                #the new dictionary has all the quantities of the previous dict_list. This will just result in different compression 
-                #measurements. This will result in another row being added.
+            if i:
+                #the new dictionary has all the quantities of the previous dict_list. 
+                #This will just result in different compression measurements. 
+                #This will result in another row being added.
                 #Two copies were required since it was a dictionary within a list
                 copy = dict_list[i-1].copy()
-                dict_list.append(copy.copy())
-                
-            dict_list[i].update({'compressor':data_class.compression_measurements.get(keys).get('compressor'), 
-                                 'bound':data_class.compression_measurements.get(keys).get('bound'), 
-                                 'size:compression_ratio':data_class.compression_measurements.get(keys).get('size:compression_ratio'),
-                                 'error_stat:ssim':data_class.compression_measurements.get(keys).get('error_stat:ssim'),
-                                 #'error_stat:open_cv_ssim':data_class.compression_measurements.get(keys).get('error_stat:open_cv_ssim'),
-                                 'error_stat:psnr':data_class.compression_measurements.get(keys).get('error_stat:psnr'), 
-                                 'error_stat:rmse':data_class.compression_measurements.get(keys).get('error_stat:rmse'),
-                                 'error_stat:mse':data_class.compression_measurements.get(keys).get('error_stat:mse'), 
-                                 'error_stat:average_difference':data_class.compression_measurements.get(keys).get('error_stat:average_difference'), 
-                                 'error_stat:average_error':data_class.compression_measurements.get(keys).get('error_stat:average_error'),
-                                 'error_stat:value_range': data_class.compression_measurements.get(keys).get('error_stat:value_range'),
-                                 'sz:regression_blocks': data_class.compression_measurements.get(keys).get('sz:regression_blocks'),
-                                 'sz:lorenzo_blocks': data_class.compression_measurements.get(keys).get('sz:lorenzo_blocks'),
-                                })
+                dict_list.append(copy)
+            temp = data_class.compression_measurements.get(keys)
+            for j, stat in enumerate(data_class.global_data.compress_metrics_needed):
+                dict_list[i].update({stat:temp.get(stat)})
 
     # Open CSV file in append mode
     # Create a file object for this file
@@ -489,7 +446,7 @@ def export_class(data_class, output_name):
             #only write head first time
             new.writeheader()
         for i, element in enumerate(dict_list):
-            new.writerow(dict_list[i])
+            new.writerow(element)
         f_object.close()
 
 '''
@@ -510,16 +467,19 @@ def import_class(input_name, global_class=False):
         csv_file = DictReader(f_object)
         for lines in csv_file:
             #only happens due to multiple compressor bounds/ compressors used
-            if lines['filename']==prev_filename:
+            if lines['info:filename']==prev_filename:
                 #append to a dataclass
-                metrics = {'compressor':lines['compressor'],'bound':lines['bound'],'error_stat:ssim':np.float64(lines['error_stat:ssim'])}
+                metrics = {}
                 for measurement in class_list[index-1].global_data.compress_metrics_needed:
-                    if lines[measurement] == '':
-                        metrics.update({measurement:np.nan})
-                    elif lines[measurement] == '#NAME?':
-                        metrics.update({measurement:np.inf})
+                    if measurement == 'info:bound' or measurement == 'info:compressor':
+                        metrics.update({measurement:lines[measurement]})
                     else:
-                        metrics.update({measurement:np.float64(lines[measurement])})
+                        if lines[measurement] == '':
+                            metrics.update({measurement:np.nan})
+                        elif lines[measurement] == '#NAME?':
+                            metrics.update({measurement:np.inf})
+                        else:
+                            metrics.update({measurement:np.float64(lines[measurement])})
                 class_list[index-1].set_compression_measurements(f"{lines['compressor']}_bound_{lines['bound']}", metrics)
             else:
                 #new dataclass
@@ -528,42 +488,45 @@ def import_class(input_name, global_class=False):
                 else:
                     global_data_class = global_data()
                     class_list.append(data(global_data_class))
-                class_list[index].set_filename(lines['filename'])
-                class_list[index].set_dataset_name(lines['dataset_name'])
-                class_list[index].set_data_folder(lines['dataset_folder'])
-                class_list[index].set_dimensions(eval(lines['dimensions']))
-                if not lines['slice'] == '':
-                    class_list[index].set_slice(np.int(lines['slice']))
+                class_list[index].set_filename(lines['info:filename'])
+                class_list[index].set_dataset_name(lines['info:dataset_name'])
+                class_list[index].set_data_folder(lines['info:dataset_folder'])
+                class_list[index].set_dimensions(eval(lines['info:dimensions']))
+                if not lines['info:slice'] == '':
+                    class_list[index].set_slice(np.int(lines['info:slice']))
                 #if has first element, it will have all elements in list
-                if not lines['a_range_secondary'] == '':
+                if not lines['info:a_range_secondary'] == '':
                     class_list[index].set_gaussian_attributes({
-                        'a_range': np.float64(lines['a_range']),
-                        'a_range_secondary': np.float64(lines['a_range_secondary']),
-                        'K_points': int(lines['K_points']),
-                        'Sample' : int(lines['Sample'])
+                        'info:a_range': np.float64(lines['info:a_range']),
+                        'info:a_range_secondary': np.float64(lines['info:a_range_secondary']),
+                        'info:k_points': int(lines['info:k_points']),
+                        'info:sample' : int(lines['info:sample'])
                     })
-                elif not lines['a_range'] == '':
+                elif not lines['info:a_range'] == '':
                     class_list[index].set_gaussian_attributes({
-                        'a_range': np.float64(lines['a_range']),
-                        'K_points': int(lines['K_points']),
-                        'Sample' : int(lines['Sample'])
+                        'info:a_range': np.float64(lines['info:a_range']),
+                        'info:k_points': int(lines['info:k_points']),
+                        'info:sample' : int(lines['info:sample'])
                     })
-                if not lines['n100'] == '':
+                if not lines['stat:n100'] == '':
                     class_list[index].set_global_svd_measurements({
-                        'n100': np.float64(lines['n100']), 'n9999': np.float64(lines['n9999']),
-                        'n999': np.float64(lines['n999']), 'n99': np.float64(lines['n99'])})
+                        'stat:n100': np.float64(lines['stat:n100']), 'stat:n9999': np.float64(lines['stat:n9999']),
+                        'stat:n999': np.float64(lines['stat:n999']), 'stat:n99': np.float64(lines['stat:n99'])})
                 if not lines['H8_mean_singular_mode'] == '':
                     for H in [8,16,32,64]:
                         class_list[index].set_tiled_svd_measurements({
-                            'H'+str(H)+'_mean_singular_mode':np.float64(lines['H'+str(H)+'_mean_singular_mode']), 
-                            'H'+str(H)+'_median_singular_mode':np.float64(lines['H'+str(H)+'_median_singular_mode']), 
-                            'H'+str(H)+'_std_singular_mode':np.float64(lines['H'+str(H)+'_std_singular_mode'])
+                            'stat:H'+str(H)+'_mean_singular_mode'   :np.float64(lines['stat:H'+str(H)+'_mean_singular_mode']), 
+                            'stat:H'+str(H)+'_median_singular_mode' :np.float64(lines['stat:H'+str(H)+'_median_singular_mode']), 
+                            'stat:H'+str(H)+'_std_singular_mode'    :np.float64(lines['stat:H'+str(H)+'_std_singular_mode'])
                         })
                 if not lines['H8_avg_local_variogram'] == '':
                     class_list[index].set_local_variogram_measurements({
-                        'H8_avg_local_variogram':np.float64(lines['H8_avg_local_variogram']), 'H8_std_local_variogram':np.float64(lines['H8_std_local_variogram']), 
-                        'H16_avg_local_variogram':np.float64(lines['H16_avg_local_variogram']),'H16_std_local_variogram':np.float64(lines['H16_std_local_variogram']), 
-                        'H32_avg_local_variogram':np.float64(lines['H32_avg_local_variogram']), 'H32_std_local_variogram':np.float64(lines['H32_std_local_variogram'])
+                        'stat:H8_avg_local_variogram'   :np.float64(lines['stat:H8_avg_local_variogram']), 
+                        'stat:H8_std_local_variogram'   :np.float64(lines['stat:H8_std_local_variogram']), 
+                        'stat:H16_avg_local_variogram'  :np.float64(lines['stat:H16_avg_local_variogram']),
+                        'stat:H16_std_local_variogram'  :np.float64(lines['stat:H16_std_local_variogram']), 
+                        'stat:H32_avg_local_variogram'  :np.float64(lines['stat:H32_avg_local_variogram']),
+                        'stat:H32_std_local_variogram'  :np.float64(lines['stat:H32_std_local_variogram'])
                         })
 
                 #check what resolutions were used based on size
@@ -575,30 +538,30 @@ def import_class(input_name, global_class=False):
                     #checks res list with to see if it fits the model
                     if (dims[0]*dims[1])/res**2 >= 16:
                         N.append(res)
-                if not lines['res4_coarsen_std'] == '':
+                if not lines['stat:res4_coarsen_std'] == '':
                     for res in N:
-                        coarsen_data_measurements = {"resolution_"+str(res): {"standard_deviation":np.float64(lines[f'res{res}_coarsen_std'])}}
+                        coarsen_data_measurements = {"stat:res_"+str(res)+"_coarsen_std":np.float64(lines[f'stat:res{res}_coarsen_std'])}
                         class_list[index].set_coarsened_attributes(coarsen_data_measurements)
-                if not lines['res4_coarsen_variogram'] == '':
+                if not lines['stat:res4_coarsen_variogram'] == '':
                     for res in N:
-                        coarsen_variogram_measurements = {'resolution_'+str(res):{'coarsen_variogram':np.float64(lines[f'res{res}_coarsen_variogram'])}}
+                        coarsen_variogram_measurements = {'stat:res_'+str(res)+'_coarsen_variogram':np.float64(lines[f'stat:res{res}_coarsen_variogram'])}
                         class_list[index].set_coarsened_variogram_measurements(coarsen_variogram_measurements)      
-                if not lines['global_variogram_fit'] == '':
-                    if lines['global_variogram_fit'] == 'NA':
-                        class_list[index].set_global_variogram_fitting(lines['global_variogram_fit'])
+                if not lines['stat:global_variogram_fit'] == '':
+                    if lines['stat:global_variogram_fit'] == 'NA':
+                        class_list[index].set_global_variogram_fitting(lines['stat:global_variogram_fit'])
                     else:
-                        class_list[index].set_global_variogram_fitting(np.float64(lines['global_variogram_fit']))
+                        class_list[index].set_global_variogram_fitting(np.float64(lines['stat:global_variogram_fit']))
 
-                if not lines['compressor'] == '':
-                    metrics = {'compressor':lines['compressor'],'bound':lines['bound'],'error_stat:ssim':np.float64(lines['error_stat:ssim'])}
+                if not lines['info:compressor'] == '':
+                    metrics = {}
                     for measurement in class_list[index].global_data.compress_metrics_needed:
                         if lines[measurement] == '':
                             metrics.update({measurement:lines[measurement]})
                         else:
                             metrics.update({measurement:np.float64(lines[measurement])})
-                    class_list[index].set_compression_measurements(f"{lines['compressor']}_bound_{lines['bound']}", metrics)
+                    class_list[index].set_compression_measurements(f"{lines['info:compressor']}_bound_{lines['info:bound']}", metrics)
                 #increases the class index
                 index += 1
-            prev_filename = lines['filename']
+            prev_filename = lines['info:filename']
         f_object.close()       
     return class_list

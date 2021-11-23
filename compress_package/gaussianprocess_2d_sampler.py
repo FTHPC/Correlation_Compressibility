@@ -75,13 +75,13 @@ def create_samples(global_class, a_range=[.5], n_samples=2, K_points=128, plot =
             #writes a new class for new sample0
             sample_classes.append(setup.data(global_class))
             #write z as temporary file
-            binary_filename = 'sample_gp_K'+str(K_points)+'_a'+str(a)+'_Sample'+str(j+1)
+            binary_filename = 'sample_gp_K'+str(K_points)+'_a'+str(a)+'_sample'+str(j+1)
             sample_dataset_name = binary_filename+'.dat'
             sample_filename = sample_dataset_name+".h5"
 
             sample_full_path = slice_data.custom_slice(reshaped_z[position], binary_filename, sample_dataset_name, global_class.dataset_directory, new_folder_path, 'float64')
 
-            sample_data_attributes = {"a_range":a, "K_points":K_points, "Sample": j+1}
+            sample_data_attributes = {"info:a_range":a, "info:k_points":K_points, "info:sample": j+1}
 
             #sets attributes of new class
             #for each coarsened resolution, a new class will be created.
