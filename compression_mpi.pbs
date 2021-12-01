@@ -1,5 +1,5 @@
 #PBS -N compression_mpi
-#PBS -q fthpc -l select=1:ncpus=32:mpiprocs=32:mem=372gb:interconnect=25ge,walltime=16:30:00
+#PBS -q fthpc -l select=1:ncpus=32:mpiprocs=32:mem=372gb:interconnect=25ge,walltime=64:30:00
 
 source /home/dkrasow/spack/share/spack/setup-env.sh
 
@@ -15,6 +15,6 @@ cd compression
 spack env activate . 
 
 #mpiexec -n 32 python -m mpi4py single_stat_script.py
-mpiexec -n 32 python -m mpi4py process_script_mpi.py
-#python import_script.py
+#mpiexec -n 32 python -m mpi4py process_script_mpi.py
+python import_script.py
 

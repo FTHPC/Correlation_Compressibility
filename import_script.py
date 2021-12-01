@@ -5,8 +5,11 @@ reads in csv file and graphs data
 import compress_package as cp
 import json
 
-sample_data_classes = cp.setup.import_class('output_dim_high_bound_oct17.csv')
-# sample_data_classes = cp.setup.import_class('outputsdim.csv')
+sample_data_miranda = cp.setup.import_class('output_miranda_nov22.csv')
+sample_data_gaussian = cp.setup.import_class('output_gaussian_nov22.csv')
+sample_data_gaussian_multi = cp.setup.import_class('output_multiscale_nov22.csv')
+
+sample_data_classes = sample_data_miranda + sample_data_gaussian + sample_data_gaussian_multi
 
 
 for data_class in sample_data_classes:
@@ -35,9 +38,11 @@ for data_class in sample_data_classes:
 
 # cp.plot.sdrbench_comparison(sample_data_classes, fit='log', separate_by_file=True)
 # cp.plot.sdrbench_comparison(sample_data_classes, fit='linear', separate_by_file=True)
-# cp.plot.gaussian_comparison(sample_data_classes, K_points=1028, multi_gaussian=False, fit='log')
-# cp.plot.gaussian_comparison(sample_data_classes, K_points=1028, multi_gaussian=False, fit='linear')
-# cp.plot.gaussian_comparison(sample_data_classes, K_points=1028, multi_gaussian=True, fit='log')
-# cp.plot.gaussian_comparison(sample_data_classes, K_points=1028, multi_gaussian=True, fit='linear')
+
+cp.plot.gaussian_comparison(sample_data_classes, K_points=1028, multi_gaussian=False, fit='log')
+cp.plot.gaussian_comparison(sample_data_classes, K_points=1028, multi_gaussian=False, fit='linear')
+
+cp.plot.gaussian_comparison(sample_data_classes, K_points=1028, multi_gaussian=True, fit='log')
+cp.plot.gaussian_comparison(sample_data_classes, K_points=1028, multi_gaussian=True, fit='linear')
 
 

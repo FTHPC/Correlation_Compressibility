@@ -6,7 +6,7 @@ a specified output file.
 process_script.py with mpi
 '''
 #indicated output file
-output_file = 'testtest.csv'
+output_file = 'output_miranda_oct17.csv'
 
 import compress_package as cp
 import pandas as pd
@@ -50,12 +50,13 @@ if not rank:
         #gaussian_multi is a multi correlation range file   sample_gp_K1028_multiscale_a01_a5_Sample2.d64
         
 
-    
+    '''
     dimensions = [1028,1028]
     data_folder = 'Gaussian_2D_Samples_K1028'
     sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
             dataset_name = 'Z', parse = 'gaussian')
     
+    '''
     '''
     dimensions = [1028,1028]
     data_folder = 'Gaussian_2D_Samples_K1028_multiscale'
@@ -64,12 +65,12 @@ if not rank:
     '''
 
     # This shows how to setup a single slice for import to be used by other functions
-    '''
+    
     dimensions = [3072,3072]
     data_folder = 'Density-3072x3072-slices'
     sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions, 
             dtype='float32', parse = 'slice')
-    '''
+    
 else:
     sample_data_classes = []
 # parent rank shares with all other proccesses 
@@ -87,12 +88,17 @@ while i<len(sample_data_classes):
     # #stores the output in coarsen_class.tiled_svd_measurments
     cp.svd_coarsen.tiled_multiple(data_class, plot=True)
 
+
     # #data_import.coarsened_attributes will store the different resolution stats 
     cp.svd_coarsen.coarsen_multiple_resolution(data_class, plot=True, variogram_study=True)
+
     cp.compress.run_compressors(data_class, ["sz", "zfp", "mgard", "tthresh"], start=-5, stop=-2)
+
     
     cp.variogram.global_variogram_study(data_class, plot=True)
+
     cp.variogram.local_variogram_study(data_class, plot=True)
+
     
     #plot original 
     cp.plot.original_data(data_class)

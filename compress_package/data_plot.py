@@ -44,9 +44,19 @@ inputs: gaussian                    : bool determine if gaussian
 
 '''
 def _set_variable(gaussian):
-    independent_names = ["a_range"] if gaussian else []
-    independent_names.extend(["global_variogram","n99","H16_std_singular_mode","H16_mean_singular_mode","H16_std_local_variogram",
-                         "H16_avg_local_variogram","H32_std_singular_mode","H32_mean_singular_mode","H32_std_local_variogram","H32_avg_local_variogram",])
+    independent_names = ["info:a_range"] if gaussian else []
+    independent_names.extend([
+        "stat:global_variogram",
+        "stat:n99",
+        "stat:H16_std_singular_mode",
+        "stat:H16_mean_singular_mode",
+        "stat:H16_std_local_variogram",
+        "stat:H16_avg_local_variogram",
+        "stat:H32_std_singular_mode",
+        "stat:H32_mean_singular_mode",
+        "stat:H32_std_local_variogram",
+        "stat:H32_avg_local_variogram",
+    ])
     #must be in the same order
     independent_labels = ["Smoothness Correlation Range"] if gaussian else []
     independent_labels.extend([
@@ -61,7 +71,13 @@ def _set_variable(gaussian):
         "Std of estimated of local variogram range (H=32)",
         "Mean of estimated of local variogram range (H=32)",
     ])
-    dependent_names = ["ssim","psnr","compression_ratio", "mse", "value_range"]
+    dependent_names = [
+        "error_stat:ssim",
+        "error_stat:psnr",
+        "size:compression_ratio",
+        "error_stat:mse",
+        "error_stat:value_range"
+    ]
     dependent_labels = [
         "SSIM",
         "PSNR",
@@ -75,36 +91,36 @@ def _update_variable_storage(
     gaussian, bounds, bound_title, loc, legend_slices, independent_names, dependent_names):
     for bound in bounds:
         if not bound in legend_slices:
-            names = {'K_points':[]} if gaussian else {}
+            names = {'info:k_points':[]} if gaussian else {}
             names_list = independent_names + dependent_names
             for each in names_list:
                 names.update({each:[]})
             legend_slices.update({bound:names})   
         loc_comp = loc.compression_measurements.get(bound)
-        bound_title.append(str(loc_comp.get('compressor'))+'_'+str(loc_comp.get('bound')))
-        legend_slices[bound]['compression_ratio'].append(loc_comp.get('size:compression_ratio')) 
-        legend_slices[bound]['psnr'].append(loc_comp.get('error_stat:psnr'))
-        legend_slices[bound]['ssim'].append(loc_comp.get('error_stat:ssim'))
-        legend_slices[bound]['mse'].append(loc_comp.get('error_stat:mse'))
-        legend_slices[bound]['value_range'].append(loc_comp.get('error_stat:value_range'))
+        bound_title.append(str(loc_comp.get('info:compressor'))+'_'+str(loc_comp.get('info:bound')))
+        legend_slices[bound]['size:compression_ratio'].append(loc_comp.get('size:compression_ratio')) 
+        legend_slices[bound]['error_stat:psnr'].append(loc_comp.get('error_stat:psnr'))
+        legend_slices[bound]['error_stat:ssim'].append(loc_comp.get('error_stat:ssim'))
+        legend_slices[bound]['error_stat:mse'].append(loc_comp.get('error_stat:mse'))
+        legend_slices[bound]['error_stat:value_range'].append(loc_comp.get('error_stat:value_range'))
         if gaussian:
-            legend_slices[bound]['K_points'].append(loc.gaussian_attributes.get('K_points'))
-            if 'a_range_secondary' in loc.gaussian_attributes: 
-                if loc.gaussian_attributes.get('a_range') > loc.gaussian_attributes.get('a_range_secondary'):
-                    a_value = loc.gaussian_attributes.get('a_range')
+            legend_slices[bound]['info:k_points'].append(loc.gaussian_attributes.get('info:k_points'))
+            if 'info:a_range_secondary' in loc.gaussian_attributes: 
+                if loc.gaussian_attributes.get('info:a_range') > loc.gaussian_attributes.get('info:a_range_secondary'):
+                    a_value = loc.gaussian_attributes.get('info:a_range')
                 else:
-                    a_value = loc.gaussian_attributes.get('a_range_secondary')
-                legend_slices[bound]['a_range'].append(a_value)
+                    a_value = loc.gaussian_attributes.get('info:a_range_secondary')
+                legend_slices[bound]['info:a_range'].append(a_value)
             else:   
-                legend_slices[bound]['a_range'].append(loc.gaussian_attributes.get('a_range'))
+                legend_slices[bound]['info:a_range'].append(loc.gaussian_attributes.get('info:a_range'))
 
-        variogram_append = loc.global_variogram_fitting if hasattr(loc, 'global_variogram_fitting') else 'NA'
-        legend_slices[bound]['global_variogram'].append(variogram_append)   
-        legend_slices[bound]['n99'].append(loc.global_svd_measurements.get('n99'))
+        variogram_append = loc.global_variogram_fitting if hasattr(loc, 'stat:global_variogram_fitting') else 'NA'
+        legend_slices[bound]['stat:global_variogram'].append(variogram_append)   
+        legend_slices[bound]['stat:n99'].append(loc.global_svd_measurements.get('stat:n99'))
 
-        for mode in ['H16_std_singular_mode', 'H16_mean_singular_mode', 'H32_std_singular_mode', 'H32_mean_singular_mode']:
+        for mode in ['stat:H16_std_singular_mode', 'stat:H16_mean_singular_mode', 'stat:H32_std_singular_mode', 'stat:H32_mean_singular_mode']:
             legend_slices[bound][mode].append(loc.tiled_svd_measurements.get(mode))
-        for mode in ['H16_std_local_variogram', 'H16_avg_local_variogram', 'H32_std_local_variogram', 'H32_avg_local_variogram']:
+        for mode in ['stat:H16_std_local_variogram', 'stat:H16_avg_local_variogram', 'stat:H32_std_local_variogram', 'stat:H32_avg_local_variogram']:
             legend_slices[bound][mode].append(loc.local_variogram_measurements.get(mode)) 
 
 
@@ -139,7 +155,7 @@ def sdrbench_comparison(sample_data_classes, fit='log', separate_by_file=True):
         # folder_name = data_class.data_folder
         folder_name = 'SDRBENCH-Miranda-256x384x384'
         #check slice, will skip slice if the std of the slice is lower than the threshold.
-        if data_class.coarsened_attributes.get('resolution_4').get('standard_deviation') > 1e-02:
+        if data_class.stat_methods.get('stat:res4_coarsen_std') > 1e-02:
             if not separate_by_file:
                 reduced_filename = folder_name
         
@@ -191,15 +207,15 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
         #only obtain gaussian classes
         if not hasattr(data_class, 'gaussian_attributes'):  
             continue
-        if multi_gaussian and not 'a_range_secondary' in data_class.gaussian_attributes:
+        if multi_gaussian and not 'info:a_range_secondary' in data_class.gaussian_attributes:
             continue
-        elif not multi_gaussian and 'a_range_secondary' in data_class.gaussian_attributes:
+        elif not multi_gaussian and 'info:a_range_secondary' in data_class.gaussian_attributes:
             continue
         #get filename without the slice addition
         reduced_filename = data_class.filename.split('_Sample')[0] 
-        if data_class.gaussian_attributes.get('K_points') != K_points:
+        if data_class.gaussian_attributes.get('info:k_points') != K_points:
             continue
-        if data_class.coarsened_attributes.get('resolution_4').get('standard_deviation') > 1e-02:
+        if data_class.stat_methods.get('stat:res4_coarsen_std') > 1e-02:
             if reduced_filename in sorted_classes:
                 sorted_classes[reduced_filename].append(data_class)
             else:
@@ -222,55 +238,11 @@ def gaussian_comparison(sample_data_classes, K_points, multi_gaussian=True, fit 
             #these are affected by different bounds and compressors
             _update_variable_storage(True, bounds, bound_title, loc, legend_slices, independent_names, dependent_names)
 
-            # #these are not affected by different bounds and compressors
-            # stats_sample['n100'].append(loc.global_svd_measurements.get('n100'))
-            # stats_sample['n9999'].append(loc.global_svd_measurements.get('n9999'))
-            # stats_sample['n999'].append(loc.global_svd_measurements.get('n999'))
-            # stats_sample['n99'].append(loc.global_svd_measurements.get('n99'))
-            # stats_sample['H8_svd_H8_avg'].append(loc.tiled_svd_measurements.get('H8_std_singular_mode') /
-            #                                                 loc.tiled_svd_measurements.get('H8_mean_singular_mode'))
-            # stats_sample['H16_svd_H16_avg'].append(loc.tiled_svd_measurements.get('H16_std_singular_mode') /
-            #                                                 loc.tiled_svd_measurements.get('H16_mean_singular_mode'))
-            # stats_sample['H32_svd_H32_avg'].append(loc.tiled_svd_measurements.get('H32_std_singular_mode') /
-            #                                                 loc.tiled_svd_measurements.get('H32_mean_singular_mode'))
-            # stats_sample['H64_svd_H64_avg'].append(loc.tiled_svd_measurements.get('H64_std_singular_mode') /
-            #                                                 loc.tiled_svd_measurements.get('H64_mean_singular_mode'))
-            # stats_sample['K_points'].append(loc.gaussian_attributes.get('K_points'))
-            # stats_sample['a_range'].append(loc.gaussian_attributes.get('a_range'))
 
     #plot function
     _plot_private(True, multi_gaussian, fit, legend_slices, bounds, independent_names, 
                 independent_labels, dependent_names, dependent_labels, 0, reduced_filename_store)
-    '''
-    #other depnedents that don't rely on compressors or bounds
-    #correlation range vs dependents
-    dependent_names = ["H8_svd_H8_avg","H16_svd_H16_avg","H32_svd_H32_avg","H64_svd_H64_avg","n100","n9999","n999","n99"]
-    dependent_labels = [
-        "Std/avg of truncation level of local SVD (H=8)",
-        "Std/avg of truncation level of local SVD (H=16)",
-        "Std/avg of truncation level of local SVD (H=32)",
-        "Std/avg of truncation level of local SVD (H=64)",
-        "SVD truncation level for 100% of variance",
-        "SVD truncation level for 99.99% of variance",
-        "SVD truncation level for 99.9% of variance",
-        "SVD truncation level for 99% of variance",
-    ]
-    for j, each in enumerate(dependent_names):
-        plt.scatter(stats_sample['a_range'], stats_sample[each], s=32, marker='.')
-        linear_model = np.polyfit(np.log10(stats_sample['a_range']),stats_sample[each],1)
-        linear_model_fn=np.poly1d(linear_model)
-        x_s=np.arange(0.02,9,.04)
-        if fit=='log':
-            plt.plot(x_s,linear_model_fn(np.log10(x_s)))  
-        elif fit=='linear':
-            plt.plot(x_s,linear_model_fn(x_s))
-        plt.title(f"K ={stats_sample['K_points'][0]}")
-        plt.xlabel('Smoothness Correlation Range')
-        plt.ylabel(f'{dependent_labels[j]}')
-        multi = '_multi' if multi_gaussian else ''
-        plt.savefig('image_results/gaussian_comparisons/gaussian'+multi+'_'+str(stats_sample['K_points'][0])+'_'+each+'_correl_'+fit+'.png',facecolor='w', edgecolor='w')
-        plt.close()
-    '''
+
 
 '''
 @type function
@@ -425,7 +397,7 @@ def _plot_private(
                         plt.tight_layout()
                         if gaussian:
                             multi = '_multi' if multi_gaussian else ''
-                            plt.savefig('image_results/gaussian_comparisons/gaussian'+multi+'_'+str(legend_slices[bound]['K_points'][0])+'_'+
+                            plt.savefig('image_results/gaussian_comparisons/gaussian'+multi+'_'+str(legend_slices[bound]['info:k_points'][0])+'_'+
                             compressor_list[created]+'_'+each_ind+'_'+each_dep+'_correl_'+fit+'.png',facecolor='w', edgecolor='w')
                         else:
                             plt.savefig('image_results/sdrbench_comparisons/'+str(reduced_filename_store[filename_iteration])+'_'+compressor_list[created]+
