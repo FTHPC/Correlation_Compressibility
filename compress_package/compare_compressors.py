@@ -18,7 +18,7 @@ import itertools
 import libpressio
 import subprocess
 import numpy as np
-import cv2 as cv
+#import cv2 as cv
 '''
 @type function
 Finds the ssim between two matrices of data

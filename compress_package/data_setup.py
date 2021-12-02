@@ -16,6 +16,7 @@ functions:
     export_class(data_class, output_name)
     import_class(input_name, global_class=False)
 '''
+import re
 import os
 import numpy as np
 from csv import DictWriter, DictReader
@@ -318,8 +319,15 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
                         a1 = a1[:1] + '.' + a1[1:]
                     if a2.startswith('0'):
                         a2 = a2[:1] + '.' + a2[1:]
-                step = os.path.splitext(files)[0]
-                sample = step.split('Sample')[1]
+                elif parse == "scalarweight_random_sum":
+                    m = re.compile(r"sample_gp_K(?P<dim>\d+)_sum_scalarweight_(?P<num_ranges>\d+)_sample(?P<sample_num>\d+)")
+                    K_points = m.match(files).group("dim")
+                    a1 = m.match(files).group("num_ranges")
+                    sample = m.match(files).group("sample_num")
+
+                if parse != "scalarweight_random_sum":
+                    step = os.path.splitext(files)[0]
+                    sample = step.split('Sample')[1]
                 
                 sample_data_attributes = {"info:a_range":float(a1), "info:k_points":int(K_points), "info:sample": int(sample)}
                 if parse == 'gaussian_multi':

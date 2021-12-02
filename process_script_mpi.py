@@ -49,14 +49,17 @@ if not rank:
         #gaussian is a single correlation range file        sample_gp_K128_a1_Sample1.d64
         #gaussian_multi is a multi correlation range file   sample_gp_K1028_multiscale_a01_a5_Sample2.d64
         
-
+    dimensions = [1028,1028]
+    data_folder = 'scalarweight_random_sum'
+    sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
+            dataset_name = 'Z', parse = 'scalarweight_random_sum')
     '''
     dimensions = [1028,1028]
     data_folder = 'Gaussian_2D_Samples_K1028'
     sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
             dataset_name = 'Z', parse = 'gaussian')
-    
     '''
+    
     '''
     dimensions = [1028,1028]
     data_folder = 'Gaussian_2D_Samples_K1028_multiscale'
@@ -90,15 +93,12 @@ while i<len(sample_data_classes):
 
 
     # #data_import.coarsened_attributes will store the different resolution stats 
-    cp.svd_coarsen.coarsen_multiple_resolution(data_class, plot=True, variogram_study=True)
-
+    cp.svd_coarsen.coarsen_multiple_resolution(data_class, plot=True, variogram_study=False)
     cp.compress.run_compressors(data_class, ["sz", "zfp", "mgard", "tthresh"], start=-5, stop=-2)
 
     
-    cp.variogram.global_variogram_study(data_class, plot=True)
-
-    cp.variogram.local_variogram_study(data_class, plot=True)
-
+    # cp.variogram.global_variogram_study(data_class, plot=True)
+    # cp.variogram.local_variogram_study(data_class, plot=True)
     
     #plot original 
     cp.plot.original_data(data_class)
