@@ -6,7 +6,7 @@ a specified output file.
 process_script.py with mpi
 '''
 #indicated output file
-output_file = 'output_miranda_oct17.csv'
+output_file = 'output_scalarweight_random_sum_julie_dec10.csv'
 
 import compress_package as cp
 import pandas as pd
@@ -69,10 +69,12 @@ if not rank:
 
     # This shows how to setup a single slice for import to be used by other functions
     
+    """
     dimensions = [3072,3072]
     data_folder = 'Density-3072x3072-slices'
     sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions, 
             dtype='float32', parse = 'slice')
+    """
     
 else:
     sample_data_classes = []

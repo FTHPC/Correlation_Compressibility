@@ -16,3 +16,8 @@ compression_mpi.e*
 compression_mpi.o*
 .Rhistory
 .spack-env
+*.error
+*.out
+*.pbs
+__MACOSX
+*.log

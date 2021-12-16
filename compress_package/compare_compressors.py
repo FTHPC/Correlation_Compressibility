@@ -121,7 +121,11 @@ def make_config(compressor_id: str, bound: float):
     elif compressor_id == "zfp":
         return {"zfp:accuracy": bound}
     elif compressor_id == "mgard":
-        return {"mgard:tolerance": bound}
+        return {"mgard:tolerance": bound} 
+    elif compressor_id == "bit_grooming":
+        return {"bit_grooming:n_sig_digits": bound,"bit_grooming:error_control_mode_str": "NSD", "bit_grooming:mode_str": "BITGROOM"}    
+    elif compressor_id == "digit_rounding":
+        return {"digit_rounding:prec": bound}   
     elif compressor_id == "tthresh":
         ctypes.cdll.LoadLibrary('liblibpressio_tthresh.so')
         return {"tthresh:target_value": bound}

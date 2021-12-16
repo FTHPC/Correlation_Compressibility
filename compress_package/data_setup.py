@@ -254,7 +254,7 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
     #goes through every file in the given parent path
     for i, files in enumerate(os.listdir(full_parent_path)):
         print(files)
-        if files.startswith('.'):
+        if files.startswith('.') or files.endswith(".txt") or files.endswith(".md"):
             continue
         if files.endswith('.h5'):
             #if it finds a file ending with .h5, the file is going to be read 
@@ -301,7 +301,7 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
                 data_slice_classes[location].set_slice(step[0])
 
             #Gaussian files have have the style: sample_gp_K64_a05_Sample1.dat.h5 
-            if parse == 'gaussian' or parse == 'gaussian_multi':
+            if parse in ['gaussian','gaussian_multi', 'scalarweight_random_sum']:
                 step = files.split('K')[1].split('_')
                 K_points = step[0]
                 if parse == 'gaussian':
@@ -320,7 +320,7 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
                     if a2.startswith('0'):
                         a2 = a2[:1] + '.' + a2[1:]
                 elif parse == "scalarweight_random_sum":
-                    m = re.compile(r"sample_gp_K(?P<dim>\d+)_sum_scalarweight_(?P<num_ranges>\d+)_sample(?P<sample_num>\d+)")
+                    m = re.compile(r"sample_gp_K(?P<dim>\d+)_sum_scalarweight_(?P<num_ranges>\d+)ranges_sample(?P<sample_num>\d+)")
                     K_points = m.match(files).group("dim")
                     a1 = m.match(files).group("num_ranges")
                     sample = m.match(files).group("sample_num")
