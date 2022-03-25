@@ -9,7 +9,7 @@ __pycache__
 .DS_Store
 *.ipynb
 *.r 
-*.Rdata
+*.RData
 *.txt
 *.csv
 *.tgz
