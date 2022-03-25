@@ -1,0 +1,164 @@
+{
+    "setup" :
+    {
+        "dataset_dir" : "$HOME/compression/datasets",
+        "temp_dir" : "$TMPDIR"
+    },
+
+    "datasets" :
+    {
+        "_comment" : 
+        {
+            "folder"            : "folder containing h5 or binary files",
+            "data_dimensions"   : "dimensions of the datasets within dataset_folder. Either 1x2 or 1x3. EX: '1028, 1028'",
+            "slice_dimensions"  : "list of the dimensions wanted: EX: 'None' or 'X, Y, Z'",
+            "output"            : "name of the output csv file: EX: 'test.csv'",
+            "dtype"             : "data type. can be 'float32' or 'float64'",
+            "parse_info"        : "type of parsing needed: 'None', 'slice', 'gaussian', 'gaussian_multi', 'spatialweight_fixed', 'spatialweight_random', or 'scalarweight_random'",
+            "dataset_name"      : "necessary accessing 2D HDF5 files: 'standard' if not custom. custom EX: 'Z'"
+        }, 
+
+        "TEST" : 
+        {   
+            "folder"            : "test",
+            "data_dimensions"   : "1028, 1028",
+            "slice_dimensions"  : "None",
+            "output"            : "test.csv",
+            "dtype"             : "float64",
+            "parse_info"        : "gaussian",
+            "dataset_name"      : "Z"
+        },
+
+        "MIRANDA" : 
+        {   
+            "folder"            : "SDRBENCH-Miranda-256x384x384",
+            "data_dimensions"   : "256, 384, 384",
+            "slice_dimensions"  : "X, Y, Z",
+            "output"            : "output_miranda.csv",
+            "dtype"             : "float64",
+            "parse_info"        : "None",
+            "dataset_name"      : "standard"
+        },
+
+        "GAUSSIAN" : 
+        {   
+            "folder"            : "Gaussian_2D_Samples_K1028",
+            "data_dimensions"   : "1028, 1028",
+            "slice_dimensions"  : "None",
+            "output"            : "output_gaussian.csv",
+            "dtype"             : "float64",
+            "parse_info"        : "gaussian",
+            "dataset_name"      : "Z"
+        },
+
+        "MULTISCALE" : 
+        {   
+            "folder"            : "Gaussian_2D_Samples_K1028_multiscale",
+            "data_dimensions"   : "1028, 1028",
+            "slice_dimensions"  : "None",
+            "output"            : "output_multiscale.csv",
+            "dtype"             : "float64",
+            "parse_info"        : "gaussian_multi",
+            "dataset_name"      : "Z"
+        },
+
+        "SPATIAL_FIXED" : 
+        {   
+            "folder"            : "spatialweight_fixed_sum",
+            "data_dimensions"   : "1028, 1028",
+            "slice_dimensions"  : "None",
+            "output"            : "output_spatialweight_fixed_sum.csv",
+            "dtype"             : "float64",
+            "parse_info"        : "spatialweight_fixed",
+            "dataset_name"      : "Z"
+        },
+
+        "SPATIAL_RANDOM" : 
+        {   
+            "folder"            : "spatialweight_random_sum",
+            "data_dimensions"   : "1028, 1028",
+            "slice_dimensions"  : "None",
+            "output"            : "output_spatialweight_random_sum.csv",
+            "dtype"             : "float64",
+            "parse_info"        : "spatialweight_random",
+            "dataset_name"      : "Z"
+        },
+
+        "SCALAR_RANDOM" : 
+        {   
+            "folder"            : "scalarweight_random_sum",
+            "data_dimensions"   : "1028, 1028",
+            "slice_dimensions"  : "None",
+            "output"            : "output_scalarweight_random_sum.csv",
+            "dtype"             : "float64",
+            "parse_info"        : "scalarweight_random",
+            "dataset_name"      : "Z"
+        },
+
+        "HURRICANE" : 
+        {   
+            "folder"            : "SDRBENCH-Hurricane-ISABEL-100x500x500",
+            "data_dimensions"   : "100, 500, 500",
+            "slice_dimensions"  : "X, Y, Z",
+            "output"            : "output_hurricane.csv",
+            "dtype"             : "float32",
+            "parse_info"        : "None",
+            "dataset_name"      : "standard"
+        },
+
+        "NYX" : 
+        {   
+            "folder"            : "SDRBENCH-EXASKY-NYX-512x512x512",
+            "data_dimensions"   : "512, 512, 512",
+            "slice_dimensions"  : "X, Y, Z",
+            "output"            : "output_exasky_nyx.csv",
+            "dtype"             : "float32",
+            "parse_info"        : "None",
+            "dataset_name"      : "standard"
+        },
+
+        "SCALE" : 
+        {   
+            "folder"            : "SDRBENCH-SCALE-98x1200x1200",
+            "data_dimensions"   : "98, 1200, 1200",
+            "slice_dimensions"  : "X",
+            "output"            : "output_scale.csv",
+            "dtype"             : "float32",
+            "parse_info"        : "None",
+            "dataset_name"      : "standard"
+        },
+
+        "CESM" : 
+        {   
+            "folder"            : "SDRBENCH-CESM-ATM-26x1800x3600-red",
+            "data_dimensions"   : "26, 1800, 3600",
+            "slice_dimensions"  : "X",
+            "output"            : "output_cesm.csv",
+            "dtype"             : "float32",
+            "parse_info"        : "None",
+            "dataset_name"      : "standard"
+        },
+        
+        "CESM2D" : 
+        {   
+            "folder"            : "SDRBENCH-CESM-ATM-1800x3600-red",
+            "data_dimensions"   : "1800, 3600",
+            "slice_dimensions"  : "X",
+            "output"            : "output_cesm2d.csv",
+            "dtype"             : "float32",
+            "parse_info"        : "None",
+            "dataset_name"      : "standard"
+        },
+
+        "DENSITY" : 
+        {   
+            "folder"            : "Density-3072x3072-slices",
+            "data_dimensions"   : "3072, 3072",
+            "slice_dimensions"  : "None",
+            "output"            : "output_density.csv",
+            "dtype"             : "float32",
+            "parse_info"        : "slice",
+            "dataset_name"      : "standard"
+        }
+    }
+}
