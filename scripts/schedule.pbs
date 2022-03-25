@@ -1,5 +1,5 @@
 #PBS -N compression_mpi
-#PBS -q fthpc -l select=1:ncpus=$PROCS:mpiprocs=$PROCS:mem=200gb:interconnect=25ge,walltime=16:30:00
+#PBS -q fthpc -l select=1:ncpus=32:mpiprocs=32:mem=200gb:interconnect=25ge,walltime=16:30:00
 
 
 source $SPACK
@@ -20,12 +20,12 @@ if [[ $job = "serial" ]]; then
             do
                 echo "bound: $bound";
                 echo "bound type: $type";
-                mpiexec -n $PROCS python -m mpi4py process_script_mpi.py $configf $dataset $bound $type
+                mpiexec -n 32 python -m mpi4py process_script_mpi.py $configf $dataset $bound $type
             done 
         done 
 
 else 
     echo "bound: $bound";
     echo "bound type: $type";
-    mpiexec -n $PROCS python -m mpi4py process_script_mpi.py $configf $dataset $bound $type
+    mpiexec -n 32 python -m mpi4py process_script_mpi.py $configf $dataset $bound $type
 fi

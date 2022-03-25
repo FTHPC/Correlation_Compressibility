@@ -1,6 +1,7 @@
 #!/bin/sh
-#MPIPROCS
-PROCS=32
+#MPIPROCS on local system
+#this will not change PROCS for PBS scheduler
+MPIPROCS=32
 #Spack install location
 SPACK=$HOME/spack/share/spack/setup-env.sh
 #Compress statistic package location
@@ -53,7 +54,7 @@ if [[ -z "$serial" && -z "$parallel" ]]; then
         do
             for type in ${QTYPE[@]}
             do
-                mpiexec -n $PROCS python -m mpi4py process_script_mpi.py $configf $dataset $bound $type
+                mpiexec -n $MPIPROCS python -m mpi4py process_script_mpi.py $configf $dataset $bound $type
             done
         done
 
@@ -66,11 +67,11 @@ else
             do
                 for type in ${QTYPE[@]}
                 do
-                    qsub -v "configf=$configf,dataset=$dataset,bound=$bound,type=$type,job=parallel,PROCS=$PROCS,SPACK=$SPACK,PACKAGE=$PACKAGE" scripts/schedule.pbs
+                    qsub -v "configf=$configf,dataset=$dataset,bound=$bound,type=$type,job=parallel,SPACK=$SPACK,PACKAGE=$PACKAGE" scripts/schedule.pbs
                 done 
             done 
     else
         #single job // serial mode
-        qsub -v "configf=$configf,dataset=$dataset,job=serial,PROCS=$PROCS,SPACK=$SPACK,PACKAGE=$PACKAGE,QBOUNDS=$QBOUNDS,QTYPE=$QTYPE" scripts/schedule.pbs
+        qsub -v "configf=$configf,dataset=$dataset,job=serial,SPACK=$SPACK,PACKAGE=$PACKAGE,QBOUNDS=$QBOUNDS,QTYPE=$QTYPE" scripts/schedule.pbs
     fi
 fi
