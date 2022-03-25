@@ -1,7 +1,7 @@
 # Correlation_Compressibility
 ## First time setup:
 
-Clone the repo
+Clone the repo:
 ```bash
 git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/compression
 ```
@@ -12,12 +12,12 @@ There are two options when using docker. The first option is creating the image 
 docker build -t compress_docker .
 ```
 
-The second option is downloading the image from the hosting site.
+The second option is downloading the image from the hosting site:
 ```bash
 wget placeholder.tar.gz
 ```
 
-Start a container from the image
+Start a container from the image:
 ```bash
 docker run --publish 8000:8000 compress_docker
 ```
@@ -77,7 +77,7 @@ sh scripts/run.sh -c config.json -d TEST
 ```
 
 The command above performs the analysis an writes output to the output file specified in the configuration file.
-This will use local hardware without a scheduler. Use ```-n``` to specify the MPI Processors on your local system. 
+This will use local hardware without a scheduler. Use ```-n``` to specify the MPI processes on your local system. 
 It is recommended that this value to match your CPU core count.
 
 If one has the PBS scheduler, feel free to use flags ```-p``` or ```-s``` for job execution.
