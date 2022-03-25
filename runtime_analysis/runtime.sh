@@ -6,18 +6,18 @@ PACKAGE=$HOME/compression
 
 while getopts d:h flag
 do
-    case "$flag" in
-        d) dataset=$OPTARG ;;
-        h)  	echo ""
-		echo "-d [DATASET]	: dataset wanting to simulate: [NYX] OR [SCALE]"
-        echo "-h 		: help"
-        exit 1 ;;
-    esac
+	case "$flag" in
+		d) dataset=$OPTARG ;;
+		h)  	echo ""
+			echo "-d [DATASET]	: dataset wanting to simulate: [NYX] OR [SCALE]"
+			echo "-h 		: help"
+			exit 1 ;;
+	esac
 done
-if [[ -z "$dataset" = NYX || -z "$dataset" = SCALE ]]; then
-    echo "ERROR: Must configure a dataset properly" 
-    echo "Use -h for help"
-    exit 1
+if [[ "$dataset" != "NYX" && "$dataset" != "SCALE" ]]; then
+	echo "ERROR: Must configure a dataset properly" 
+	echo "Use -h for help"
+	exit 1
 fi
 
 
@@ -34,9 +34,11 @@ cd $PACKAGE/runtime_analysis
 
 
 # runs rscript based on dataset specified 
-if [[ "$dataset" = NYX]]; then
-    Rscript runtime_analysis_nyx.R
+if [[ "$dataset" == "NYX" ]]; then
+	echo "Performing NYX runtime analysis"
+	Rscript runtime_analysis_nyx.R
 
-else [[ "$dataset" = SCALE ]]; then
-    Rscript runtime_analysis_scale.R
+elif [[ "$dataset" == "SCALE" ]]; then
+	echo "Performing SCALE runtime analysis"
+	Rscript runtime_analysis_scale.R
 fi

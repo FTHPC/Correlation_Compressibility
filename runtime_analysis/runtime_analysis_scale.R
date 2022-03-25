@@ -1,9 +1,9 @@
 
 rm(list=ls())
 
-install.packages('microbenchmark')
-install.packages('mgcv')
-install.packages('glmnet')
+install.packages('microbenchmark', repos = "http://cran.us.r-project.org")
+install.packages('mgcv', repos = "http://cran.us.r-project.org")
+install.packages('glmnet', repos = "http://cran.us.r-project.org")
 
 library('microbenchmark')
 library('mgcv')
