@@ -9,7 +9,8 @@ __pycache__
 .DS_Store
 *.ipynb
 *.r 
-*.RData
+prediction_benchmark_*
+training_benchmark_*
 *.txt
 *.csv
 *.tgz
