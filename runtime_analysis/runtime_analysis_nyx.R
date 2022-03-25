@@ -1,9 +1,9 @@
 
 rm(list=ls())
 
-#install.packages('microbenchmark')
-#install.packages('mgcv')
-#install.packages('glmnet')
+install.packages('microbenchmark')
+install.packages('mgcv')
+install.packages('glmnet')
 
 library('microbenchmark')
 library('mgcv')

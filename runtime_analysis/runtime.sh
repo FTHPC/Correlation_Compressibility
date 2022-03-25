@@ -1,15 +1,42 @@
 #!/bin/bash
-while getopts tpd:h flag
+#Spack install location
+SPACK=$HOME/spack/share/spack/setup-env.sh
+#Compress statistic package location
+PACKAGE=$HOME/compression
+
+while getopts d:h flag
 do
     case "$flag" in
         d) dataset=$OPTARG ;;
-        p) predict=1 ;;
-        t) train=1 ;;
         h)  	echo ""
 		echo "-d [DATASET]	: dataset wanting to simulate: [NYX] OR [SCALE]"
-		echo "-p		: time measurement for simulating the prediction model for specified dataset"
-		echo "-t		: time measurement for simulating the training model for specified dataset"	
-            	echo "-h 		: help"
-            	exit 1 ;;
+        echo "-h 		: help"
+        exit 1 ;;
     esac
 done
+if [[ -z "$dataset" = NYX || -z "$dataset" = SCALE ]]; then
+    echo "ERROR: Must configure a dataset properly" 
+    echo "Use -h for help"
+    exit 1
+fi
+
+
+# activate spack and spack packages
+echo "Spack location: $SPACK"
+source $SPACK
+
+cd $PACKAGE
+echo "Package location: $PACKAGE"
+#load env
+spack env activate .
+
+cd $PACKAGE/runtime_analysis
+
+
+# runs rscript based on dataset specified 
+if [[ "$dataset" = NYX]]; then
+    Rscript runtime_analysis_nyx.R
+
+else [[ "$dataset" = SCALE ]]; then
+    Rscript runtime_analysis_scale.R
+fi

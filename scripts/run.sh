@@ -11,17 +11,19 @@ QBOUNDS=(0 1e-2 1e-4 1e-5)
 QTYPE=(abs rel)
 
 
-while getopts d:c:sph flag
+while getopts d:c:spn:h flag
 do
     case "$flag" in
         d) dataset=$OPTARG ;;
         c) configf=$OPTARG ;;
         s) serial=1 ;;
         p) parallel=1 ;;
+        n) PROCS=$OPTARG ;;
         h)  echo "-d [DATASET]      : dataset wanting to run"
             echo "-c [CONFIG]       : config file in .json format"
             echo "-s                : serial mode (only 1 job). PBS scheduler MUST be configured"
             echo "-p                : parallel mode (multiple job(s)). PBS scheduler MUST be configured"
+            echo "-n                : number of MPI procs to be used; default is 32"
             echo "-h                : help"
             echo "if -s AND -p are not set, the program enters local hardware mode"
             exit 1 ;;
