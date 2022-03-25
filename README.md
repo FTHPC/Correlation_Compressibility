@@ -54,7 +54,7 @@ Once Spack is installed, there is a ```spack.yaml``` configuration file containi
 ```
 These commands will install the environment. The environment only needs to be installed once.
 
-## To run the training and prediction timing analysis demonstration.
+## To run the training and prediction timing analysis demonstration
 
 In order to run the timing analysis, a dataset must be specified.
 There are two datasets setup within this demonstration. 
