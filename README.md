@@ -1,15 +1,13 @@
 # Correlation_Compressibility
 ## First time setup:
 
-Clone the repo:
-```bash
-git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/compression
-cd $HOME/compression
-```
 
 ### Using Docker
-There are two options when using docker. The first option is creating the image with the following command:
+There are two options when using docker. The first option is creating the image with the following commands:
 ```bash
+#clone the repo
+git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/compression
+cd $HOME/compression
 docker build -t compress_docker .
 ```
 
@@ -38,6 +36,12 @@ $HOME/compression/
 A dataset folder called 'datasets' is recommended to be in the following location:
 ```bash
 $HOME/compression/datasets
+```
+
+Clone the repo:
+```bash
+git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/compression
+cd $HOME/compression
 ```
 
 Once Spack is installed, there is a ```spack.yaml``` configuration file containing the Spack environment necessary to run the program.
