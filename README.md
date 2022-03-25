@@ -4,6 +4,7 @@
 Clone the repo:
 ```bash
 git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/compression
+cd $HOME/compression
 ```
 
 ### Using Docker
