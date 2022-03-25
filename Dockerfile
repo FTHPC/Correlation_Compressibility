@@ -15,7 +15,7 @@ RUN git clone --depth=1 https://github.com/spack/spack &&\
     source ./spack/share/spack/setup-env.sh &&\
     spack compiler find &&  \
     spack external find && \
-    spack repo add --scope=site ./spack_packages  
+    spack repo add --scope=site ./spack_packages  && \
     spack env activate /app && \
     spack install
 ENV foo=bar
