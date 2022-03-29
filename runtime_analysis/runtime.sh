@@ -32,7 +32,6 @@ spack env activate .
 
 cd $PACKAGE/runtime_analysis
 
-
 # runs rscript based on dataset specified 
 if [[ "$dataset" == "NYX" ]]; then
 	echo "Performing NYX runtime analysis"
