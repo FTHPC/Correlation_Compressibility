@@ -24,7 +24,7 @@ do
             echo "-c [CONFIG]       : config file in .json format"
             echo "-s                : serial mode (only 1 job). PBS scheduler MUST be configured"
             echo "-p                : parallel mode (multiple job(s)). PBS scheduler MUST be configured"
-            echo "-n                : number of MPI procs to be used; default is 32"
+            echo "-n                : number of MPI procs to be used on a local machine; default is 32"
             echo "-h                : help"
             echo "if -s AND -p are not set, the program enters local hardware mode"
             exit 1 ;;
