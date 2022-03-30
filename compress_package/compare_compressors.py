@@ -1,14 +1,8 @@
 '''
 compare_compressors.py
-Produce statistics using specified compressors. 
+Produce statistics using specified compressors with libpressio. 
 Thanks to robertu94 providing example code snippets.
 
-funtions:
-    get_qcat_ssim(data_class, full_original_path, full_decomp_path)
-    get_open_cv_ssim(data_class, decomp_data)
-    get_input_data(data_class)
-    make_config(compressor_id: str, bound: float)
-    run_compressors(data_class, compressors, start=-5, stop=-3)
 '''
 from compress_package.convert import slice_data
 import os
@@ -200,9 +194,10 @@ inputs:
     compressors             : A list of str of the compressors to be used ex: ["sz", "zfp"]
     start                   : the start of the np.logspace, default=-5
     stop                    : the stop of the np.logspace, default=-3
+    bound_type              : the bound type to be run, default ['rel', 'abs']
 no return
 '''
-def run_compressors(data_class, compressors, start=-5, stop=-3):
+def run_compressors(data_class, compressors, start=-5, stop=-3, bound_type=['rel', 'abs']):
     input_data = data_class.data
     decomp_data = input_data.copy()
     independent_metrics={}
@@ -216,7 +211,7 @@ def run_compressors(data_class, compressors, start=-5, stop=-3):
     
     #bound/compressor dependent
     comp_count = 0 
-    for compressor_id, bound, boundmode in itertools.product(compressors, np.logspace(start=start, stop=stop, num=-1*(start-stop-1)), ["abs", "rel"]):
+    for compressor_id, bound, boundmode in itertools.product(compressors, np.logspace(start=start, stop=stop, num=-1*(start-stop-1)), bound_type):
         sz_opt = None
      
         if compressor_id in ["fpzip", "digit_rounding", "bit_grooming"] and boundmode == "rel":

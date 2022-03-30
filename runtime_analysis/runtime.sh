@@ -8,7 +8,7 @@ while getopts d:h flag
 do
 	case "$flag" in
 		d) dataset=$OPTARG ;;
-		h)  	echo ""
+		h)  echo ""
 			echo "-d [DATASET]	: dataset wanting to simulate: [NYX] OR [SCALE]"
 			echo "-h 		: help"
 			exit 1 ;;
@@ -32,12 +32,14 @@ spack env activate .
 
 cd $PACKAGE/runtime_analysis
 
-# runs rscript based on dataset specified 
+# runs script based on dataset specified 
 if [[ "$dataset" == "NYX" ]]; then
 	echo "Performing NYX runtime analysis"
 	Rscript runtime_analysis_nyx.R
+	python timing_test_runtime.py NYX > statistic_benchmark_runtime_nyx.txt
 
 elif [[ "$dataset" == "SCALE" ]]; then
 	echo "Performing SCALE runtime analysis"
 	Rscript runtime_analysis_scale.R
+	python timing_test_runtime.py SCALE > statistic_benchmark_runtime_scale.txt
 fi

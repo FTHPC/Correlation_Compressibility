@@ -2,17 +2,6 @@
 data_setup.py 
 contains classes that help store the data organized for all functions within the module
 functions help setup the data to be read, stored, and outputted
-
-classes:
-    global_data 
-    data
-functions:
-    setup_slice_file(data_class)
-    read_slice_folder(global_class, data_folder, dimensions, dtype='float64', dataset_name='standard', 
-                      parse='', slices_needed=[])
-    create_folder(folder_name:str)
-    remove_folder(folder_name:str)
-    export_class(data_class, output_name)
 '''
 import os
 import numpy as np

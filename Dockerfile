@@ -18,4 +18,5 @@ RUN git clone --depth=1 https://github.com/spack/spack &&\
     spack repo add --scope=site ./spack_packages  && \
     spack env activate /app && \
     spack install
+RUN Rscript setup.R
 ENV foo=bar

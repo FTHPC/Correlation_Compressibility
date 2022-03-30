@@ -4,7 +4,6 @@ Visualization file of the data. This will graph different relationships found in
 computed metrics. Some of the questions answered:
     How compression ratios relate to the overall correlation range?
     How compression ratios relate to local correlation ranges?
-
 '''
 from compress_package.convert import slice_data
 import matplotlib.pyplot as plt

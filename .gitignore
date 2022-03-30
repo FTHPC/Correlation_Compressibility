@@ -1,7 +1,7 @@
 temp
 outputs
 *_outputs
-datasets
+datasets_all
 notes
 image_results*
 test_code
@@ -11,6 +11,8 @@ __pycache__
 *.r 
 prediction_benchmark_*
 training_benchmark_*
+*.h5
+*_h5
 *.txt
 *.csv
 *.tgz

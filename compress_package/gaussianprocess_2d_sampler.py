@@ -1,9 +1,6 @@
 '''
 gaussianprocess_2d_sampler.py
 creates 2d guassian samples based on certain smoothness paramters
-
-functions:
-    create_samples(global_class, a_range=[.5], n_samples=2, K_points=128, plot = False)
 '''
 import numpy as np
 import matplotlib.pyplot as plt

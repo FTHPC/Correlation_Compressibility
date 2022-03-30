@@ -2,16 +2,6 @@
 svd_coarsen.py
 global and local svd statistics are produced and plotted, if specified
 coarsened resolution statistics are also produced
-
-functions:
-    global_svd(data_class, plot = False)
-    map_svd_rank(X, H=16, lvar=0.99)
-    tiled_singular(data_class, H = 16, plot = False)
-    tiled_multiple(data_class, plot = False)
-    plot_tiled(data_class, map_res, H, K1, K2)
-    coarsen(X, N)
-    coarsen_multiple_resolution(data_class, new_data_classes = False, plot = False)
-    plot_resolution(data_class, N)
 '''
 import pathlib
 import numpy as np
@@ -34,20 +24,17 @@ no return, global_svd_measurements are updated
 def global_svd(data_class, plot = False):
     #if want u, s, and v - use the line below:
     #svd_res_u, svd_res_s, svd_res_v = np.linalg.svd(Vx)
-    #saves memory just storing 1 array
     X = data_class.data
-
-
     #look at the cumulative sum of the squared singular values, they give a proxy for the variance of the field X
     try:
         svd0_s = np.linalg.svd(X, compute_uv = False)
         ev0 = np.double(np.nancumsum((svd0_s**2))/np.nansum((svd0_s**2)))
-    #pick a threshold to recover amount of the original variance (here 99%) and find the number of singular modes required to reach that threshold 
-        ev_threshold = np.nanmin(np.where(ev0 >= .99)) + 1
+        #pick a threshold to recover amount of the original variance (here 99%) and find the number of singular modes required to reach that threshold 
+        # ev_threshold = np.nanmin(np.where(ev0 >= .99)) + 1
     except:
         svd0_s = None
         ev0 = None
-        ev_threshold = None
+        # ev_threshold = None
         plot = False
 
     n = X[0].shape[0]
@@ -146,7 +133,6 @@ def tiled_multiple(data_class, plot = False):
     #A list of multiple 2-d arrays based on the size of the tiles
     H = [8,16,32,64]
     map_res=[]
-    tiled_data=[]
     X = data_class.data
     for i, item in enumerate(H):
         map_res.append(map_svd_rank(X, H = item))
@@ -179,13 +165,6 @@ def plot_tiled(data_class, map_res, H, K1, K2):
     slice_data.create_folder('image_results/percentage_singular_modes')
     plt.savefig('image_results/percentage_singular_modes/'+data_class.filename+'_percent_singular_H_'+str(H)+'.png',facecolor='w', edgecolor='w')
     plt.close()
-    #this is the tiled plots that currently don't work at all
-
-    #plot tiled sub-windows
-    #plt.imshow(np.transpose(X), origin='lower')
-    #plt.title('Vx[,,100] - H='+str(H))
-    #plt.text(x=rep(seq((H/2),K1,by=H),(K1/H)),y=rep(seq((H/2),K2,by=H),each=(K2/H)), labels=c(round(map_res)),cex=.4)
-    #plt.imsave('image_results/Tiled_SVD_Data.png', np.transpose(X))
 
 '''
 @type function
@@ -221,17 +200,14 @@ returns : if new_data_classes is True, a list of coarsened data classes
 '''
 def coarsen_multiple_resolution(data_class, new_data_classes = False, plot = False, variogram_study = False):
     # coarsen the data for various resolution grain N
-    res_list = [4, 8, 12, 16, 24, 32, 48, 64]
     N = []
+    res_list = [4, 8, 12, 16, 24, 32, 48, 64]
     dims = data_class.data.shape
     #dim1*dim2/resolution_tocheck^2 >= 16
     for res in res_list:
         #checks res list with to see if it fits the model
         if (dims[0]*dims[1])/res**2 >= 16:
             N.append(res)
-
-    # a list of standard deviations of each resolution 
-    sd1 = np.empty(len(N))
 
     #this will store a list of coarsened data classes. The length = len(N)
     coarsened_data_classes = []
@@ -240,7 +216,7 @@ def coarsen_multiple_resolution(data_class, new_data_classes = False, plot = Fal
 
     X = data_class.data 
     # slice_data.create_folder(f"{data_class.dataset_temp_folder}")
-    # decompressed_data_path = data_class.full_sliced_file_path
+
     
     for i, item in enumerate(N):
         Xc.append(coarsen(X, N[i]))
@@ -253,36 +229,13 @@ def coarsen_multiple_resolution(data_class, new_data_classes = False, plot = Fal
                 vgm_coarsen=None
             coarsen_variogram_measurements = {"stat:res"+str(N[i])+"_coarsen_variogram":vgm_coarsen} 
 
-        #this will create new classes with each coarsened resolution as a new data file. this will allow one entry within the data_class.coarsened_attributes 
-        #per each class created. Creating the classes will allow the information to be manipulated later (ex: sz or other methods)
-        if new_data_classes:
-            coarsened_data_classes.append(setup.data(data_class.global_data))
-            binary_filename = str(splitext(splitext(data_class.filename)[0])[0])+"_coarse_data_res_"+str(N[i])
-            coarse_dataset_name = binary_filename+".dat"
-            coarse_filename = coarse_dataset_name+".h5" 
-            coarse_full_path = slice_data.custom_slice(Xc[i], binary_filename, coarse_dataset_name, data_class.dataset_directory, data_class.temp_folder, data_class.dtype)
-
-            #sets attributes of new class
-            #for each coarsened resolution, a new class will be created.
-            coarsened_data_classes[i].setup_slice(coarse_filename, coarse_dataset_name, data_class.temp_folder, coarse_full_path, Xc[i].shape, data_class.dtype)
-            coarsened_data_classes[i].set_data(Xc[i])
-            #setup coarsened_attributes
-            coarsened_data_classes[i].set_coarsened_attributes(coarsen_data_measurements)
-            if variogram_study:
-                coarsened_data_classes[i].set_coarsened_variogram_measurements(coarsen_variogram_measurements)
-            if plot:
-                plot_resolution(coarsened_data_classes[i], N[i])
-        #if new_data_classes is False, the data will not be stored, only stats of the coarsened matrices will be calculated
-        #results in multiple entries within the dictionary data_class.coarsened_attributes with each entry containing the 
-        #standard deviation. Also data_class.coarsened_variogram_measurements will store the coarsened variogram study metrics
-        else:
-            data_class.set_coarsened_attributes(coarsen_data_measurements)
-            coarsened_data_classes.append(data_class)
-            #occurs if variogram_study is set to True
-            if variogram_study:
-                data_class.set_coarsened_variogram_measurements(coarsen_variogram_measurements)
-            if plot:
-                plot_resolution(data_class, N[i])
+        data_class.set_coarsened_attributes(coarsen_data_measurements)
+        coarsened_data_classes.append(data_class)
+        #occurs if variogram_study is set to True
+        if variogram_study:
+            data_class.set_coarsened_variogram_measurements(coarsen_variogram_measurements)
+        if plot:
+            plot_resolution(data_class, N[i])
 
     return coarsened_data_classes
 
