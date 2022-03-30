@@ -310,7 +310,7 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
                 data_slice_classes[location].set_slice(step[0])
 
             #Gaussian files have have the style: sample_gp_K64_a05_Sample1.dat.h5 
-            if parse in ('gaussian', 'gaussian_multi', 'scalarweight_random', 'spatialweight_fixed', 'spatialweight_random'):
+            if parse in ('gaussian', 'gaussian_multi', 'scalarweight', 'spatialweight'):
                 step = files.split('sample_gp_K')[1].split('_')
                 K_points = step[0]
                 if parse == 'gaussian':
@@ -326,9 +326,9 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
                         a1 = a1[:1] + '.' + a1[1:]
                     if a2.startswith('0'):
                         a2 = a2[:1] + '.' + a2[1:]
-                elif parse == "spatialweight_fixed" or parse == "spatialweight_random":
+                elif parse == "spatialweight" or parse == "spatialweight":
                     weight = files.split("_multirange")[1].split("_nonstat")[0]
-                elif parse == "scalarweight_random":
+                elif parse == "scalarweight":
                     weight = files.split("_sum")[1].split("ranges")[0]
 
                 try:
@@ -341,7 +341,7 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
                     sample_data_attributes = {"info:a_range":float(a1)}
                     if parse == 'gaussian_multi':
                         sample_data_attributes.update({"info:a_range_secondary":float(a2)})
-                elif parse in ('scalarweight_random', 'spatialweight_fixed', 'spatialweight_random'):
+                elif parse in ('scalarweight', 'spatialweight'):
                         sample_data_attributes.update({"info:weight":int(weight)})
                 data_slice_classes[location].set_gaussian_attributes(sample_data_attributes)
             location += 1

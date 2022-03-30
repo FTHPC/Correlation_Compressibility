@@ -103,7 +103,7 @@ The following options must be followed when adding another dataset in the config
     "slice_dimensions"  : "list of the dimensions wanted: EX: 'None' or 'X, Y, Z'",
     "output"            : "name of the output csv file: EX: 'test.csv'",
     "dtype"             : "data type. can be 'float32' or 'float64'",
-    "parse_info"        : "type of parsing needed: 'None', 'slice', 'gaussian', 'gaussian_multi', 'spatialweight_fixed', 'spatialweight_random', or 'scalarweight_random'",
+    "parse_info"        : "type of parsing needed: 'None', 'slice', 'gaussian', 'gaussian_multi', 'spatialweight', or 'scalarweight'",
     "dataset_name"      : "necessary accessing 2D HDF5 files: 'standard' if not custom. custom EX: 'Z'"
 } 
 ```

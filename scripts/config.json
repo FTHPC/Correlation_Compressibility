@@ -14,7 +14,7 @@
             "slice_dimensions"  : "list of the dimensions wanted: EX: 'None' or 'X, Y, Z'",
             "output"            : "name of the output csv file: EX: 'test.csv'",
             "dtype"             : "data type. can be 'float32' or 'float64'",
-            "parse_info"        : "type of parsing needed: 'None', 'slice', 'gaussian', 'gaussian_multi', 'spatialweight_fixed', 'spatialweight_random', or 'scalarweight_random'",
+            "parse_info"        : "type of parsing needed: 'None', 'slice', 'gaussian', 'gaussian_multi', 'spatialweight', or 'scalarweight'",
             "dataset_name"      : "necessary accessing 2D HDF5 files: 'standard' if not custom. custom EX: 'Z'"
         }, 
 
@@ -69,7 +69,7 @@
             "slice_dimensions"  : "None",
             "output"            : "output_spatialweight_fixed_sum.csv",
             "dtype"             : "float64",
-            "parse_info"        : "spatialweight_fixed",
+            "parse_info"        : "spatialweight",
             "dataset_name"      : "Z"
         },
 
@@ -80,7 +80,7 @@
             "slice_dimensions"  : "None",
             "output"            : "output_spatialweight_random_sum.csv",
             "dtype"             : "float64",
-            "parse_info"        : "spatialweight_random",
+            "parse_info"        : "spatialweight",
             "dataset_name"      : "Z"
         },
 
@@ -91,7 +91,19 @@
             "slice_dimensions"  : "None",
             "output"            : "output_scalarweight_random_sum.csv",
             "dtype"             : "float64",
-            "parse_info"        : "scalarweight_random",
+            "parse_info"        : "scalarweight",
+            "dataset_name"      : "Z"
+        },
+
+        
+        "SCALAR_FIXED" : 
+        {   
+            "folder"            : "scalarweight_fixed_sum",
+            "data_dimensions"   : "1028, 1028",
+            "slice_dimensions"  : "None",
+            "output"            : "output_scalarweight_fixed_sum.csv",
+            "dtype"             : "float64",
+            "parse_info"        : "scalarweight",
             "dataset_name"      : "Z"
         },
 
