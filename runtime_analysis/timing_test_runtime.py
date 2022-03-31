@@ -36,8 +36,12 @@ print(timeit.timeit("cp.compress.quantize(sample, quantize_bound, quantize_mode)
 print('Performing SVD analysis')
 print(timeit.timeit("cp.svd_coarsen.global_svd(sample)", number=100, globals=globals()))
 
-print('Performing tiled SVD analysis with a size of 64x64')
+print('Performing tiled SVD analysis with a size of 32x32')
 print(timeit.timeit("cp.svd_coarsen.tiled_singular(sample, 64)", number=100, globals=globals()))
+
+
+print('Performing local variogram analysis with a size of 32x32')
+print(timeit.timeit("cp.variogram.local_variogram_study(sample)", number=100, globals=globals()))
 
 
 # compressing with just SZ at 1e-5

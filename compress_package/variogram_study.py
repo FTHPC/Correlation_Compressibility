@@ -106,7 +106,7 @@ def local_variogram_study(data_class, plot=False):
                 library('gstat')
                 graphics.off()
                 ## local variogram fitting through tiling 
-                H <- c(8,16,32)
+                H <- c(32)
                 K1 <- dim(X)[1]
                 K2 <- dim(X)[2]
                 map_vgm_range <- NULL

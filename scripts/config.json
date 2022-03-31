@@ -69,7 +69,7 @@
             "slice_dimensions"  : "None",
             "output"            : "output_spatialweight_fixed_sum.csv",
             "dtype"             : "float64",
-            "parse_info"        : "spatialweight",
+            "parse_info"        : "scalarweight",
             "dataset_name"      : "Z"
         },
 
@@ -80,7 +80,7 @@
             "slice_dimensions"  : "None",
             "output"            : "output_spatialweight_random_sum.csv",
             "dtype"             : "float64",
-            "parse_info"        : "spatialweight",
+            "parse_info"        : "scalarweight",
             "dataset_name"      : "Z"
         },
 
