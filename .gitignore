@@ -28,3 +28,4 @@ spack.lock
 __MACOSX
 *.log
 .vscode
+testsz3.py

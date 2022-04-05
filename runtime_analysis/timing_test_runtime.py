@@ -40,12 +40,12 @@ print('Performing tiled SVD analysis with a size of 32x32')
 print(timeit.timeit("cp.svd_coarsen.tiled_singular(sample, 64)", number=100, globals=globals()))
 
 
-print('Performing local variogram analysis with a size of 32x32')
-print(timeit.timeit("cp.variogram.local_variogram_study(sample)", number=100, globals=globals()))
+#print('Performing local variogram analysis with a size of 32x32')
+#print(timeit.timeit("cp.variogram.local_variogram_study(sample)", number=100, globals=globals()))
 
 
-# compressing with just SZ at 1e-5
-print('Compression using SZ lossy compressor at a abs 1e-5 error bound')
-print(timeit.timeit("cp.compress.run_compressors(sample, ['sz'], start=-5, stop=-5, bound_type=['abs'])", number=100, globals=globals()))
-
+# compressors
+for comp in ['sz', 'zfp', 'fpzip', 'mgard']:
+    print(f'Compression using {comp} lossy compressor at a abs 1e-5 error bound')
+    print(timeit.timeit("cp.compress.run_compressors(sample, [comp], start=-5, stop=-5, bound_type=['abs'])", number=100, globals=globals()))
 
