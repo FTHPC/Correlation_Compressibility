@@ -17,10 +17,10 @@ global_data = cp.setup.global_data(dataset_directory='datasets', compress_metric
 
 if (dataset == 'NYX'):
     dimensions = [512, 512, 512]
-    data_folder = 'nyx'
+    data_folder = 'SDRBENCH-EXASKY-NYX-512x512x512'
 elif (dataset == 'SCALE'):
     dimensions = [98, 1200, 1200]
-    data_folder = 'scale'
+    data_folder = 'SDRBENCH-SCALE-98x1200x1200'
 else:
     raise RuntimeError(print("invalid dataset option"))
 
@@ -28,7 +28,10 @@ else:
 sample = cp.setup.read_slice_folder(global_data, data_folder, dimensions, slices_needed=[0], slice_dimensions='X', dtype = dtype)
 
 #reduce list to first element
-sample = sample[0]
+for i, each in enumerate(sample):
+    if each.filename in ["U-98x1200x1200.f32_slice_0_X.dat.h5", "velocity_x.f32_slice_0_X.dat.h5"]:
+        sample = sample[i]
+        break
 
 print(f'Quantizing {dataset} at a {quantize_mode} {quantize_bound} error bound')
 print(timeit.timeit("cp.compress.quantize(sample, quantize_bound, quantize_mode)", number=100, globals=globals()))

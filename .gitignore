@@ -13,7 +13,6 @@ prediction_benchmark_*
 training_benchmark_*
 *_h5
 *.txt
-*.csv
 *.tgz
 *.png
 compression_mpi.e*
