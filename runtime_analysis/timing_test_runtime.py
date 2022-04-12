@@ -12,7 +12,7 @@ quantize_mode  = 'abs'
 dtype = 'float32'
 
 #required for compress package
-global_data = cp.setup.global_data(dataset_directory='runtime_analysis', compress_metrics_needed=[])
+global_data = cp.setup.global_data(dataset_directory='datasets', compress_metrics_needed=[])
 
 
 if (dataset == 'NYX'):
