@@ -1,7 +1,6 @@
 from fedora:35 as builder
 
-RUN dnf update -y && \
-    dnf install -y gcc-g++ gfortran glib-devel libtool findutils file pkg-config lbzip2 git tar zip patch xz python3-devel coreutils m4 automake autoconf cmake openssl-devel openssh-server openssh bison bison-devel gawk && \
+RUN dnf install -y gcc-g++ gfortran glib-devel libtool findutils file pkg-config lbzip2 git tar zip patch xz python3-devel coreutils m4 automake autoconf cmake openssl-devel openssh-server openssh bison bison-devel gawk && \
     dnf clean all -y && \
     groupadd demo && \
     useradd demo -d /home/demo -g demo
@@ -14,6 +13,8 @@ RUN su demo -c "git clone --depth=1 https://github.com/robertu94/spack_packages 
 WORKDIR /app
 USER demo
 RUN source /etc/profile &&\
+    source /app/spack/share/spack/setup-env.sh &&\
+    spack env activate /app &&\
     spack external find && \
     spack repo add /app/robertu94_packages && \
     spack install && \
