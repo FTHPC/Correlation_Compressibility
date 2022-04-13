@@ -15,7 +15,7 @@ set.seed(1234)
 ###################################
 ## GRAPH 1 - introduction scatterplots of CR prediction
 
-source('functions_paper.r')
+source('functions_paper.R')
 
 # loading data
 dataset <- 'miranda_vx'
@@ -36,7 +36,7 @@ res_gam_mir_dr <- cr_regression_gam(list_df$df[['bit_grooming']], kf=8, graph=1,
 ###################################
 ## GRAPH 3  - predictors for Miranda and CESM
 
-source('functions_paper.r')
+source('functions_paper.R')
 
 error_mode <- 'abs'
 dataset <- 'miranda_vx'
