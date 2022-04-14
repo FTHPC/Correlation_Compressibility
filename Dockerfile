@@ -28,11 +28,21 @@ RUN find -L /app/.spack-env/view/* -type f -exec readlink -f '{}' \; | \
     grep 'charset=binary' | \
     grep 'x-executable\|x-archive\|x-sharedlib' | \
     awk -F: '{print $1}' | xargs strip -s
+COPY --chown=demo:demo process_script_mpi.py README.md  /app
+COPY --chown=demo:demo scripts /app/scripts
+COPY --chown=demo:demo runtime_analysis /app/runtime_analysis
+COPY --chown=demo:demo compress_package /app/compress_package
+COPY --chown=demo:demo related_work /app/related_work 
+COPY --chown=demo:demo datasets /app/datasets 
+RUN sudo dnf install -y zlib-devel
+RUN source /app/spack/share/spack/setup-env.sh &&\
+  spack env activate /app && \
+  Rscript scripts/setup.R
 
 
 from fedora:35 as final
 RUN dnf update -y && \
-    dnf install -y libgfortran python3-devel libstdc++ openssh-clients which && \
+    dnf install -y libgfortran python3-devel libstdc++ openssh-clients which zlib-devel && \
     dnf clean all -y && \
     groupadd demo && \
     useradd demo -d /home/demo -g demo && \
@@ -40,13 +50,5 @@ RUN dnf update -y && \
 RUN echo "demo    ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers.d/demo
 COPY container_startup.sh /etc/profile.d/
 COPY --from=builder --chown=demo:demo /app /app
-COPY --chown=demo:demo process_script_mpi.py README.md  /app
-COPY --chown=demo:demo scripts /app/scripts
-COPY --chown=demo:demo runtime_analysis /app/runtime_analysis
-COPY --chown=demo:demo compress_package /app/compress_package
-COPY --chown=demo:demo related_work /app/related_work 
-COPY --chown=demo:demo datasets /app/datasets 
 WORKDIR /app
-RUN source /etc/profile && \
-RUN Rscript scripts/setup.R
 USER demo
