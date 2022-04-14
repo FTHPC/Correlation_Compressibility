@@ -17,7 +17,7 @@ RUN source /etc/profile &&\
     spack env activate /app &&\
     spack external find && \
     spack repo add /app/robertu94_packages && \
-    spack install && \
+    spack install -j 2 && \
     spack gc -y && \
     spack clean -a
 
