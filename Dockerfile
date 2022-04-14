@@ -47,5 +47,6 @@ COPY --chown=demo:demo compress_package /app/compress_package
 COPY --chown=demo:demo related_work /app/related_work 
 COPY --chown=demo:demo datasets /app/datasets 
 WORKDIR /app
+RUN source /etc/profile && \
 RUN Rscript scripts/setup.R
 USER demo
