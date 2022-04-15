@@ -25,7 +25,7 @@ These nodes have:
 
 We provide a container for `x86_64` image for ease of installation.
 
-This container differs from our experimental setup in slightly. The production build used `-march=native -mtune=native` for architecture optimized builds where as the container does not use these flags to maximize compatibility across `x86_64` hardware.
+This container differs from our experimental setup slightly. The production build used `-march=native -mtune=native` for architecture optimized builds where as the container does not use these flags to maximize compatibility across `x86_64` hardware.
 
 NOTE this file is >= 11 GB , download with caution.
 
@@ -82,7 +82,7 @@ docker build . -t correlation_compressibility
 
 ### Manual Install
 
-By default, it is recommended to to follow the install locations that are indicated on the top of ```scripts/run.sh```
+By default, it is recommended to follow the install locations that are indicated on the top of ```scripts/run.sh```
 and the top of ```config.json```. These two files provide the configuration options to get the program running.
 
 Spack should be installed in the following location:
@@ -95,7 +95,7 @@ This Github repo should be cloned in the following location:
 ```bash
 $HOME/compression/
 ```
-A dataset folder called 'datasets' is should be in the following location:
+A dataset folder called 'datasets' should be in the following location:
 
 ```bash
 $HOME/compression/datasets
@@ -150,19 +150,19 @@ sh runtime_analysis/runtime.sh -d [DATASET]
 After running the above script, an *.RData file(s) will be produced giving the approprirate timing information of 
 the training and prediction models.
 
-## To run the statistical analysis on datasets
+## To compute statistical predictors on datasets
 
 
-In order to run the statistical analysis, a dataset and a configuration file must be specified.
+In order to run the statistical analysis that computes the statistical predictors of compression ratios, a dataset and a configuration file must be specified.
 TEST is a dataset that is specified within the config.json file. 
 
 ```bash
 sh scripts/run.sh -c config.json -d TEST
 ```
 
-The command above performs the analysis an writes output to the output file specified in the configuration file.
+The command above performs the computation of statistical predictors and writes output to the output file specified in the configuration file.
 This will use local hardware without a scheduler. Use ```-n``` to specify the MPI processes on your local system. 
-It is recommended that this value to match your CPU core count.
+It is recommended that this value matches your CPU core count.
 
 If one has the PBS scheduler, feel free to use flags ```-p``` or ```-s``` for job execution.
 ```-p``` will schedule multiple jobs based on the quantized error bounds and error bound types for a specififed dataset.
