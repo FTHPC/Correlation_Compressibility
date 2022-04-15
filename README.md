@@ -113,7 +113,7 @@ spack install git-lfs; spack load git-lfs # using spack
 
 # clone this repository
 git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/Correlation_Compressibility
-cd $HOME/correlation_compressibility
+cd $HOME/Correlation_Compressibility
 ```
 
 If you forgot to install `git-lfs` before and have an empty files in the  `datasets` folder, you should install `git-lfs`
@@ -138,7 +138,7 @@ spack repo add --scope=site ./spack_packages
 cd $HOME/Correlation_Compressibility 
 spack env activate .
 spack install
-source scripts/manual_install.sh
+export COMPRESS_HOME=$HOME/Correlation_Compressibility 
 ```
 These commands will install the environment. The environment only needs to be installed once.
 
