@@ -9,9 +9,9 @@ The extracted relationships between compression ratios and statistical predictor
 This repo contains an automatic framework of scripts that perform the compression of scientific datasets from 8 compressors (SZ2, ZFP, MGARD, FPZIP, Digit Rounding and Bit Grooming), the derivation of the statistical predictors of compression ratios (SVD, standard deviation, quantized entropy), and scripts to perform the training of the regression models (linear and spline regressions) as well as the validation of the regression predictions. 
 A runtime analysis is also performed and associated codes are provided. 
 
-Main code structures: compression (), derivation of statistical predictors (SVD, standard deviation, quantized entropy) (), linear and spline regressions training and validation (functions: `cr_regression_linreg` and `cr_regression_gam` in script `functions_paper.R`). 
-running time: compression (SZ2, ZFP, MAGRD, FPZIP), data quantization, SVD, local (tiled) variogram and local (tiled) variogram. 
-replicates figures from the paper 
+Main code structures: compression (), derivation of statistical predictors (SVD, standard deviation, quantized entropy) (), linear and spline regressions training and validation (functions `cr_regression_linreg` and `cr_regression_gam` from the script `replicate_figures/functions_paper.R`). 
+Codes for the different runtime analysis are found in the folder `runtime_analysis` and are automated with the script `runtime.sh`, the study includes compression time for SZ2, ZFP, MAGRD, FPZIP, data quantization, SVD, local (tiled) variogram and local (tiled) variogram, and runtime for training and prediction of the regressions.   
+Finally, the script `replicate_figures/graphs_paper_container.R` replicates and saves all the figures from the paper ad as well as numbers from the tables. 
 
 ## System Information
 
