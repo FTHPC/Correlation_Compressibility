@@ -1,4 +1,12 @@
-# Correlation_Compressibility
+# Compressibility Analysis (Correlation_Compressibility)
+
+## Statement of Purpose
+This repo contains scripts to perform compressibility analysis on several leading lossy compressors. 
+The compressibility analysis relies ... 
+
+main components of study: compression, derivation of statistical predcitos (SVD, standard deviation, quantized entropy)), regression training, validation  of prediction from regression 
+running time: compression (SZ2, ZFP, MAGRD, FPZIP)data quantization, SVD, locol(tiled) variogram and local (tiled variogram)
+replicates figures from the paper 
 
 ## System Information
 
@@ -63,9 +71,9 @@ You can build the container yourself as follows:
 NOTE this process takes 3+ hours on a modern laptop, and most clusters do not
 provide sufficient permissions to run container builds on the cluster.
 
-Additionally compiling MGRAD -- one of the compressors we use takes >= 4GB ram per core, be cautious
+Additionally compiling MGRAD -- one of the compressors we use takes >= 4GB RAM per core, be cautious
 with systems with low RAM.  You may be able compensate by using fewer cores by changing the spack install
-Instruction in the Dockerfile to have a `-j N` where `N` is the number of cores you wish to use
+instruction in the Dockerfile to have a `-j N` where `N` is the number of cores you wish to use
 
 ```bash
 # install/module load git-lfs, needed to download example_data for building the container
@@ -129,21 +137,7 @@ These commands will install the environment. The environment only needs to be in
 
 ## Replication of Results
 
-
-### To run the training and prediction timing analysis demonstration
-
-In order to run the timing analysis, a dataset must be specified.
-There are two datasets setup within this demonstration. 
-
-```bash
-sh runtime_analysis/runtime.sh -d [DATASET]
-```
-[DATASET] can be either [NYX] or [SCALE]
-
-After running the above script, an *.RData file(s) will be produced giving the approprirate timing information of 
-the training and prediction models.
-
-### To compute statistical predictors on datasets
+### How to compute statistical predictors on datasets
 
 In order to run the statistical analysis that computes the statistical predictors of compression ratios, a dataset and a configuration file must be specified.
 TEST is a dataset that is specified within the config.json file. 
@@ -178,8 +172,20 @@ The following options must be followed when adding another dataset in the config
 } 
 ```
 
+### To run the training and prediction timing analysis demonstration
 
-### To run statistical prediction of compression ratios and the prediction validation 
+In order to run the timing analysis, a dataset must be specified.
+There are two datasets setup within this demonstration. 
+
+```bash
+sh runtime_analysis/runtime.sh -d [DATASET]
+```
+[DATASET] can be either [NYX] or [SCALE]
+
+After running the above script, an *.RData file(s) will be produced giving the approprirate timing information of 
+the training and prediction models.
+
+### Replication of figures: how to run statistical prediction of compression ratios and the prediction validation 
 
 The script ```graphs_paper_container.R```  saves the graphs presented in the paper and provides associated validation metrics (correlation and median absolute error percentage). 
 
@@ -190,7 +196,7 @@ The script ```graphs_paper_container.R```  is run via the command:
 ```bash sh replicate.sh```
 
 From running the script once, it will save all Figures 1, 3, 4 and 5 into .png files from the paper as well as corresponding validation metrics. 
-Figure 2  is not saved as it only shows the data. 
+Figure 2  is not saved as it only shows the data. same folder as r script and filename strcutrue figX_*.png with X the figure number reference in the paper
 Numbers for Tables 2, 3 and 5 are printed. 
 All printed validation metrics are save into a file named ```figure_replication.log```
 
