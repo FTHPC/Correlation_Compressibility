@@ -97,11 +97,11 @@ docker build . -t correlation_compressibility
 By default, it is recommended to follow the install locations that are indicated on the top of ```scripts/run.sh```
 and the top of ```config.json```. These two files provide the configuration options to get the program running.
 
-Spack should be installed in the following location: ```bash $HOME/spack/```
+Spack should be installed in the following location: ```$HOME/spack/```
 
-This Github repo should be cloned in the following location: ```bash $HOME/correlation_compressibility/```
+This Github repo should be cloned in the following location: ```$HOME/Correlation_Compressibility/```
 
-A dataset folder called 'datasets' should be in the following location: ```bash$HOME/correlation_compressibility/datasets/```
+A dataset folder called 'datasets' should be in the following location: ```$HOME/Correlation_Compressibility/datasets/```
 
 Clone the repo.  Make sure to install/load git-lfs first
 
@@ -112,7 +112,7 @@ sudo apt-get install git-lfs # Ubuntu
 spack install git-lfs; spack load git-lfs # using spack
 
 # clone this repository
-git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/correlation_compressibility
+git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/Correlation_Compressibility
 cd $HOME/correlation_compressibility
 ```
 
@@ -135,8 +135,10 @@ source ./spack/share/spack/setup-env.sh
 spack compiler find
 spack external find 
 spack repo add --scope=site ./spack_packages 
-spack env activate $HOME/correlation_compressibility 
+cd $HOME/Correlation_Compressibility 
+spack env activate .
 spack install
+source scripts/manual_install.sh
 ```
 These commands will install the environment. The environment only needs to be installed once.
 
