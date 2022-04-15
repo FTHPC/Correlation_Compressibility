@@ -2,6 +2,6 @@
 #PBS -q fthpc -l select=1:ncpus=32:mpiprocs=32:mem=200gb:interconnect=25ge,walltime=16:30:00
 
 
-cd $HOME/compression/runtime_analysis
+cd $SPACK_ENV/runtime_analysis
 sh runtime.sh -d SCALE
 sh runtime.sh -d NYX

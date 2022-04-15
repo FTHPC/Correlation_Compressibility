@@ -1,17 +1,14 @@
 #!/bin/bash
 #Spack install location
-SPACK=$HOME/spack/share/spack/setup-env.sh
+
 #Compress statistic package location
-PACKAGE=$HOME/compression
+PACKAGE=$SPACK_ENV/compression
 
 # activate spack and spack packages
-echo "Spack location: $SPACK"
-source $SPACK
+echo "Spack location: $SPACK_ROOT"
+source $SPACK_ROOT
 
-cd $PACKAGE
 echo "Package location: $PACKAGE"
-#load env
-spack env activate .
 
 cd $PACKAGE/replicate_figures
 
