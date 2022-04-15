@@ -1,8 +1,10 @@
 # Compressibility Analysis (Correlation_Compressibility)
 
 ## Statement of Purpose
+
 This repo contains scripts to perform compressibility analysis on several leading lossy compressors. 
-The compressibility analysis relies ... 
+The compressibility analysis relies on deriving statistics on scientific data and explore their relationships to their compression ratios from various lossy compressors (based on various compresison scheme). 
+The extracted relationships between compression ratios and statistical predictors are modeled via regression models, which provides a statistical framework to predict compression ratios 
 
 main components of study: compression, derivation of statistical predcitos (SVD, standard deviation, quantized entropy)), regression training, validation  of prediction from regression 
 running time: compression (SZ2, ZFP, MAGRD, FPZIP)data quantization, SVD, locol(tiled) variogram and local (tiled variogram)
@@ -27,7 +29,7 @@ These nodes have:
 | LibPressio  | 0.83.4                      |                |          |
 
 
-## First time setup:
+## First time setup                         
 
 ### Container Install (for ease of setup)
 
@@ -139,7 +141,7 @@ These commands will install the environment. The environment only needs to be in
 
 ### How to compute statistical predictors on datasets
 
-In order to run the statistical analysis that computes the statistical predictors of compression ratios, a dataset and a configuration file must be specified.
+In order to run the statistical analysis that computes the statistical predictors (SVD, standard deviation, quantized entropy) of compression ratios, a dataset and a configuration file must be specified.
 TEST is a dataset that is specified within the config.json file. 
 
 ```bash
@@ -172,6 +174,9 @@ The following options must be followed when adding another dataset in the config
 } 
 ```
 
+** descrobe outputs in csv files and how they are used to build figures 
+
+
 ### To run the training and prediction timing analysis demonstration
 
 In order to run the timing analysis, a dataset must be specified.
@@ -198,5 +203,9 @@ The script ```graphs_paper_container.R```  is run via the command:
 From running the script once, it will save all Figures 1, 3, 4 and 5 into .png files from the paper as well as corresponding validation metrics. 
 Figure 2  is not saved as it only shows the data. same folder as r script and filename strcutrue figX_*.png with X the figure number reference in the paper
 Numbers for Tables 2, 3 and 5 are printed. 
+Refer to table 4 *david 
 All printed validation metrics are save into a file named ```figure_replication.log```
+
+In order to limit the container size to aid reproducibility, we only added a restrcited number of scientific datasets in the container and we rely on csv files from our porduction runs (saved as described above in the Section "How to compute statistical predictors on datasets"). 
+More datasets are available on [SDRBench](https://sdrbench.github.io). 
 
