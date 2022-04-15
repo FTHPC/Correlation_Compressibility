@@ -4,9 +4,12 @@
 
 This repo contains scripts to perform compressibility analysis on several leading lossy compressors. 
 The compressibility analysis relies on deriving statistics on scientific data and explore their relationships to their compression ratios from various lossy compressors (based on various compresison scheme). 
-The extracted relationships between compression ratios and statistical predictors are modeled via regression models, which provides a statistical framework to predict compression ratios 
+The extracted relationships between compression ratios and statistical predictors are modeled via regression models, which provide a statistical framework to predict compression ratios for the different studied lossy compressors. 
 
-main components of study: compression, derivation of statistical predcitos (SVD, standard deviation, quantized entropy)), regression training, validation  of prediction from regression 
+This repo contains an automatic framework of scripts that perform the compression of scientific datasets from 8 compressors (SZ2, ZFP, MGARD, FPZIP, Digit Rounding and Bit Grooming), the derivation of the statistical predictors of compression ratios (SVD, standard deviation, quantized entropy), and scripts to perform the training of the regression models (linear and spline regressions) as well as the validation of the regression predictions. 
+A runtime analysis is also performed and associated codes are provided. 
+
+Code structures: compression (), derivation of statistical predictors (SVD, standard deviation, quantized entropy), linear and spline regressions training (functions: cr_regression_linreg and cr_regression_gam in functions_paper.R), validation  of prediction from regression 
 running time: compression (SZ2, ZFP, MAGRD, FPZIP)data quantization, SVD, locol(tiled) variogram and local (tiled variogram)
 replicates figures from the paper 
 
