@@ -30,7 +30,7 @@ This container differs from our experimental setup slightly. The production buil
 NOTE this file is >= 11 GB , download with caution.
 
 
-### Singularity
+#### Singularity
 
 You can install and start the container on many super computers using singularity.
 
@@ -127,10 +127,10 @@ spack install
 ```
 These commands will install the environment. The environment only needs to be installed once.
 
-### Replication of Results
+## Replication of Results
 
 
-## To run the training and prediction timing analysis demonstration
+### To run the training and prediction timing analysis demonstration
 
 In order to run the timing analysis, a dataset must be specified.
 There are two datasets setup within this demonstration. 
@@ -143,7 +143,7 @@ sh runtime_analysis/runtime.sh -d [DATASET]
 After running the above script, an *.RData file(s) will be produced giving the approprirate timing information of 
 the training and prediction models.
 
-## To compute statistical predictors on datasets
+### To compute statistical predictors on datasets
 
 In order to run the statistical analysis that computes the statistical predictors of compression ratios, a dataset and a configuration file must be specified.
 TEST is a dataset that is specified within the config.json file. 
@@ -179,7 +179,7 @@ The following options must be followed when adding another dataset in the config
 ```
 
 
-## To run statistical prediction of compression ratios and the prediction validation 
+### To run statistical prediction of compression ratios and the prediction validation 
 
 The script ```graphs_paper_container.R```  saves the graphs presented in the paper and provides associated validation metrics (correlation and median absolute error percentage). 
 
