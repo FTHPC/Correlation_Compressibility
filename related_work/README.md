@@ -1,4 +1,4 @@
-# Related Work: Estimating the compress-ability of SZ
+# Related Work: Estimating the compressibility of SZ
 
 Example of calling the estimate code
 
