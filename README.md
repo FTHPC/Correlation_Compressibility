@@ -30,7 +30,7 @@ This container differs from our experimental setup slightly. The production buil
 NOTE this file is >= 11 GB , download with caution.
 
 
-#### Singularity
+### Singularity
 
 You can install and start the container on many super computers using singularity.
 
@@ -58,7 +58,6 @@ docker run -it --rm --security-opt label=disable ghcr.io/fthpc/correlation_compr
 ```
 
 ### Building the Container
-
 
 You can build the container yourself as follows:
 NOTE this process takes 3+ hours on a modern laptop, and most clusters do not
@@ -92,6 +91,7 @@ This Github repo should be cloned in the following location: ```bash $HOME/corre
 A dataset folder called 'datasets' should be in the following location: ```bash$HOME/correlation_compressibility/datasets/```
 
 Clone the repo.  Make sure to install/load git-lfs first
+
 ```bash
 # install/module load git-lfs, needed to download example_data for building the container
 sudo dnf install git-lfs #Fedora/CentOS Stream 8
@@ -145,7 +145,6 @@ the training and prediction models.
 
 ## To compute statistical predictors on datasets
 
-
 In order to run the statistical analysis that computes the statistical predictors of compression ratios, a dataset and a configuration file must be specified.
 TEST is a dataset that is specified within the config.json file. 
 
@@ -194,5 +193,4 @@ From running the script once, it will save all Figures 1, 3, 4 and 5 into .png f
 Figure 2  is not saved as it only shows the data. 
 Numbers for Tables 2, 3 and 5 are printed. 
 All printed validation metrics are save into a file named ```figure_replication.log```
-
 
