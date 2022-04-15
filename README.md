@@ -186,3 +186,20 @@ The following options must be followed when adding another dataset in the config
     "dataset_name"      : "necessary accessing 2D HDF5 files: 'standard' if not custom. custom EX: 'Z'"
 } 
 ```
+
+## To run statistical prediction of compression ratios and the prediction validation 
+
+The script ```graphs_paper_container.R```  saves the graphs presented in the paper and provides associated validation metrics (correlation and median absolute error percentage). 
+
+The script ```graphs_paper_container.R``` will source the scripts  ```load_dataset_paper.R``` and ```functions_paper.R``` that respectively load the dataset of interest and perform the regression analysis (training and prediction in cross-validation). 
+As a consequence the scripts  ```load_dataset_paper.R``` and ```functions_paper.R``` do not need to be run by the user. 
+
+The script ```graphs_paper_container.R```  is run via the command:
+### David, can you please type the command you use here###
+
+From running the script once, it will save all Figures 1, 3, 4 and 5 into .png files from the paper as well as corresponding validation metrics. 
+Figure 2  is not saved as it only shows the data. 
+Numbers for Tables 2, 3 and 5 are printed. 
+All printed validation metrics are save into a file named ### David, can you please write down the  name of the file in which you write all the prints from R###. 
+
+
