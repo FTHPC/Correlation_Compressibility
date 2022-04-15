@@ -164,7 +164,7 @@ The command above performs the computation of statistical predictors and writes 
 This will use local hardware without a scheduler. Use ```-n``` to specify the MPI processes on your local system. 
 It is recommended that this value matches your CPU core count.
 
-If one has the PBS scheduler, feel free to use flags ```-p``` or ```-s``` for job execution.
+If one has the PBS scheduler and run outside of the container, feel free to use flags ```-p``` or ```-s``` for job execution.
 ```-p``` will schedule multiple jobs based on the quantized error bounds and error bound types for a specififed dataset.
 ```-s``` will schedule a single job grouping all the analysis for a specified dataset.
 
