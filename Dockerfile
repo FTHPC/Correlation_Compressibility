@@ -28,16 +28,19 @@ RUN find -L /app/.spack-env/view/* -type f -exec readlink -f '{}' \; | \
     grep 'charset=binary' | \
     grep 'x-executable\|x-archive\|x-sharedlib' | \
     awk -F: '{print $1}' | xargs strip -s
-COPY --chown=demo:demo process_script_mpi.py README.md  /app
+
+
+
+RUN sudo dnf install -y zlib-devel
 COPY --chown=demo:demo scripts /app/scripts
+RUN source /app/spack/share/spack/setup-env.sh &&\
+  spack env activate /app && \
+  Rscript scripts/setup.R
+COPY --chown=demo:demo process_script_mpi.py README.md  /app
 COPY --chown=demo:demo runtime_analysis /app/runtime_analysis
 COPY --chown=demo:demo compress_package /app/compress_package
 COPY --chown=demo:demo related_work /app/related_work 
 COPY --chown=demo:demo datasets /app/datasets 
-RUN sudo dnf install -y zlib-devel
-RUN source /app/spack/share/spack/setup-env.sh &&\
-  spack env activate /app && \
-  Rscript scripts/setup.R
 
 
 from fedora:35 as final

@@ -2,10 +2,8 @@
 #MPIPROCS on local system
 #this will not change PROCS for PBS scheduler
 MPIPROCS=32
-#Spack install location
-SPACK=$HOME/spack/share/spack/setup-env.sh
 #Compress statistic package location
-PACKAGE=$HOME/compression
+PACKAGE=$SPACK_ENV
 #Quantize bounds for analysis
 QBOUNDS=(0 1e-2 1e-4 1e-5)
 #Quantize bound types for analysis
@@ -42,13 +40,11 @@ if [[ -z "$serial" && -z "$parallel" ]]; then
     echo "Running locally without a scheduler"
 
     #must have the spack installed
-    echo "Spack location: $SPACK"
-    source $SPACK
+    echo "Spack location: $SPACK_ROOT"
+    source $SPACK_ROOT
 
     cd $PACKAGE
     echo "Package location: $PACKAGE"
-    #load env
-    spack env activate .
 
     for bound in ${QBOUNDS[@]}
         do
@@ -67,11 +63,11 @@ else
             do
                 for type in ${QTYPE[@]}
                 do
-                    qsub -v "configf=$configf,dataset=$dataset,bound=$bound,type=$type,job=parallel,SPACK=$SPACK,PACKAGE=$PACKAGE" scripts/schedule.pbs
+                    qsub -v "configf=$configf,dataset=$dataset,bound=$bound,type=$type,job=parallel,SPACK=$SPACK_ROOT,PACKAGE=$PACKAGE" scripts/schedule.pbs
                 done 
             done 
     else
         #single job // serial mode
-        qsub -v "configf=$configf,dataset=$dataset,job=serial,SPACK=$SPACK,PACKAGE=$PACKAGE,QBOUNDS=$QBOUNDS,QTYPE=$QTYPE" scripts/schedule.pbs
+        qsub -v "configf=$configf,dataset=$dataset,job=serial,SPACK=$SPACK_ROOT,PACKAGE=$PACKAGE,QBOUNDS=$QBOUNDS,QTYPE=$QTYPE" scripts/schedule.pbs
     fi
 fi

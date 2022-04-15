@@ -1,8 +1,6 @@
 #!/bin/bash
-#Spack install location
-SPACK=$HOME/spack/share/spack/setup-env.sh
 #Compress statistic package location
-PACKAGE=$HOME/compression
+PACKAGE=$SPACK_ENV
 
 while getopts d:h flag
 do
@@ -22,15 +20,12 @@ fi
 
 
 # activate spack and spack packages
-echo "Spack location: $SPACK"
-source $SPACK
+echo "Spack location: $SPACK_ROOT"
 
 cd $PACKAGE
 echo "Package location: $PACKAGE"
-#load env
-spack env activate .
 
-cd $PACKAGE/runtime_analysis
+cd $SPACK_ENV/runtime_analysis
 
 # runs script based on dataset specified 
 if [[ "$dataset" == "NYX" ]]; then

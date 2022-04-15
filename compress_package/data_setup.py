@@ -379,7 +379,7 @@ no return, exports a .csv file
 def export_class(data_class, output_name):
     # # list of column names 
                 # common file attributes
-    field_names = ['info:filename','info:dtype', 'info:dataset_name','info:dataset_folder',
+    field_names = ['info:filename', 'dim1', 'dim2', 'info:dtype', 'info:dataset_name','info:dataset_folder',
                 # 'a_range', 'a_range_secondary','K_points', and 'Sample' realte to 2D Guassian sample created
                 'info:dimensions','info:slice','info:weight','info:a_range','info:a_range_secondary','info:k_points','info:sample',
                 # n values are global SVD
@@ -410,7 +410,15 @@ def export_class(data_class, output_name):
     dict_list.append({})
 
     for i, metric in enumerate(data_class.info):
-        dict_list[0].update({metric:data_class.info.get(metric)})
+        update = data_class.info.get(metric)
+        if (metric == 'info:filename'):
+            # reduce update
+            update = update.split(".")[0]
+        elif (metric == 'info:dimensions'):
+            dict_list[0].update({"dim1":update[0]})
+            dict_list[0].update({"dim2":update[1]})
+
+        dict_list[0].update({metric:update})
 
     if len(data_class.stat_methods):
         for i, metric in enumerate(data_class.stat_methods):

@@ -1,7 +1,7 @@
 {
     "setup" :
     {
-        "dataset_dir" : "$HOME/compression/datasets",
+        "dataset_dir" : "$HOME/app/datasets",
         "temp_dir" : "$TMPDIR"
     },
 
