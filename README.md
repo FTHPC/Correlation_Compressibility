@@ -85,21 +85,11 @@ docker build . -t correlation_compressibility
 By default, it is recommended to follow the install locations that are indicated on the top of ```scripts/run.sh```
 and the top of ```config.json```. These two files provide the configuration options to get the program running.
 
-Spack should be installed in the following location:
+Spack should be installed in the following location: ```bash $HOME/spack/```
 
-```bash
-$HOME/spack/
-```
-This Github repo should be cloned in the following location: 
+This Github repo should be cloned in the following location: ```bash $HOME/correlation_compressibility/```
 
-```bash
-$HOME/compression/
-```
-A dataset folder called 'datasets' should be in the following location:
-
-```bash
-$HOME/compression/datasets
-```
+A dataset folder called 'datasets' should be in the following location: ```bash$HOME/correlation_compressibility/datasets/```
 
 Clone the repo.  Make sure to install/load git-lfs first
 ```bash
@@ -109,8 +99,8 @@ sudo apt-get install git-lfs # Ubuntu
 spack install git-lfs; spack load git-lfs # using spack
 
 # clone this repository
-git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/compression
-cd $HOME/compression
+git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/correlation_compressibility
+cd $HOME/correlation_compressibility
 ```
 
 If you forgot to install `git-lfs` before and have an empty files in the  `datasets` folder, you should install `git-lfs`
@@ -132,10 +122,13 @@ source ./spack/share/spack/setup-env.sh
 spack compiler find
 spack external find 
 spack repo add --scope=site ./spack_packages 
-spack env activate $HOME/compression 
+spack env activate $HOME/correlation_compressibility 
 spack install
 ```
 These commands will install the environment. The environment only needs to be installed once.
+
+### Replication of Results
+
 
 ## To run the training and prediction timing analysis demonstration
 
@@ -171,7 +164,6 @@ If one has the PBS scheduler and run outside of the container, feel free to use 
 See ```-h``` for more options or help with syntax.
 
 
-
 If a dataset is wanted to run, the config.json file provides options to add datasets.
 The following options must be followed when adding another dataset in the configuration file:
 ```json
@@ -187,6 +179,7 @@ The following options must be followed when adding another dataset in the config
 } 
 ```
 
+
 ## To run statistical prediction of compression ratios and the prediction validation 
 
 The script ```graphs_paper_container.R```  saves the graphs presented in the paper and provides associated validation metrics (correlation and median absolute error percentage). 
@@ -195,11 +188,11 @@ The script ```graphs_paper_container.R``` will source the scripts  ```load_datas
 As a consequence the scripts  ```load_dataset_paper.R``` and ```functions_paper.R``` do not need to be run by the user. 
 
 The script ```graphs_paper_container.R```  is run via the command:
-### David, can you please type the command you use here###
+```bash sh replicate.sh```
 
 From running the script once, it will save all Figures 1, 3, 4 and 5 into .png files from the paper as well as corresponding validation metrics. 
 Figure 2  is not saved as it only shows the data. 
 Numbers for Tables 2, 3 and 5 are printed. 
-All printed validation metrics are save into a file named ### David, can you please write down the  name of the file in which you write all the prints from R###. 
+All printed validation metrics are save into a file named ```figure_replication.log```
 
 
