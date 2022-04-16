@@ -1,4 +1,3 @@
-
 rm(list=ls())
 
 library('dplyr')
@@ -25,7 +24,8 @@ source('load_dataset_paper.R')
 list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian)
 
 # saving each panel graph
-print('saving figure 1 panels and printing corresponding statistics')
+print('#############################################')
+print('Saving figure 1 panels and printing corresponding validation statistics')
 res_gam_mir_sz <- cr_regression_gam(list_df$df[['sz']], kf=8, graph=1, fig_nm='fig1', data_nm='Miranda Vx',compressor_nm='SZ2', error_mode, error_bnd)
 res_gam_mir_zfp <- cr_regression_gam(list_df$df[['zfp']], kf=8, graph=1, fig_nm='fig1', data_nm='Miranda Vx',compressor_nm='ZFP', error_mode, error_bnd)
 res_gam_mir_mgard <- cr_regression_gam(list_df$df[['mgard']], kf=8, graph=1, fig_nm='fig1', data_nm='Miranda Vx',compressor_nm='MGARD', error_mode, error_bnd)
@@ -45,7 +45,8 @@ source('load_dataset_paper.R')
 list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian)
 dat_sz <- list_df$df[['sz']]
 
-print('saving left panel of figure 3')
+print('#############################################')
+print('Saving left panel of figure 3 (SZ - Miranda Vx)')
 graphics.off()
 png('fig3_predictors_miranda_vx_sz_abs1e5.png', width=300,  height = 900)
 par(mfcol=c(3,1), tcl=-0.2, mai=c(0.55,0.55,.55,1.2), mar=c(5.1, 4.1, 4.1, 6))
@@ -59,9 +60,9 @@ colq <- rbPal(nc)[as.numeric(cut(dat_sz$qent,breaks = nc))]
 plot(dat_sz$vrgstd, dat_sz$y, pch=20, xlab='Log(SVD-trunc / Std dev.)', ylab='Compression ratio', cex=1.7, cex.lab=1.9, cex.axis=1.7, cex.main=1.7, col=colq, main='', mgp=c(2,0.5,0), ylim=c(0,100))
 image.plot(legend.only = TRUE, zlim=range(sort(dat_sz$qent), na.rm=TRUE), col=rbPal(20)[as.numeric(cut(sort(dat_sz$qent),breaks = 20))], axis.args=c(cex.axis=1.7),legend.args=list( text='quantized entropy', cex=1.8, side=2))
 dev.off()
-#
 
 
+##
 error_mode <- 'abs'
 error_bnd <- 1e-5
 dataset <- 'cesm_cl'
@@ -69,7 +70,8 @@ source('load_dataset_paper.R')
 list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian)
 dat_sz <- list_df$df[['zfp']]
 
-print('saving right panel of figure 3')
+print('#############################################')
+print('Saving right panel of figure 3 (ZFP - CESM-cloud)')
 graphics.off()
 png('fig3_predictors_cesm_cl_zfp_abs1e5.png', width=300,  height = 900)
 par(mfcol=c(3,1), tcl=-0.2, mai=c(0.55,0.55,.55,1.2), mar=c(5.1, 4.1, 4.1, 6))
@@ -95,9 +97,9 @@ source('functions_paper.R')
 error_mode <- 'abs'
 error_bnd <- 1e-3
 
-
+print('#############################################')
+print('Printing validation statistics for Table 2 ')
 dataset <- 'gaussian_singlescale'
-print(dataset)
 source('load_dataset_paper.R')
 list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian,sz3=FALSE)
 gam_res <- NULL
@@ -106,7 +108,6 @@ for (k in  1:length(comp_red)){
 
 ##
 dataset <- 'gaussian_type1'
-print(dataset)
 source('load_dataset_paper.R')
 list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian,sz3=FALSE)
 gam_res <- NULL
@@ -115,7 +116,6 @@ for (k in  1:length(comp_red)){
 
 ##
 dataset <- 'gaussian_type2'
-print(dataset)
 source('load_dataset_paper.R')
 list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian, sz3=FALSE)
 gam_res <- NULL
@@ -123,8 +123,7 @@ for (k in  1:length(comp_red)){
   gam_res[[k]] <- cr_regression_gam(df=list_df$df[[comp_red[k]]], kf=8, graph=0, fig_nm='', data_nm = 'Gaussian type 2', compressor_nm=comp_red[k], error_mode, error_bnd)    }
 
 ##
-dataset <- 'gaussian_type3'
-print(dataset)
+dataset <- 'gaussian_type3' 
 source('load_dataset_paper.R')
 list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian, sz3=FALSE)
 gam_res <- NULL
@@ -141,6 +140,8 @@ for (k in  1:length(comp_red)){
 comp_red <- c('sz','interpolation','lorenzo','regression')
 source('functions_paper.R')
 
+print('#############################################')
+print('Saving figure 4 and printing corresponding validation statistics')
 error_mode <- 'abs'
 error_bnd <- 1e-5
 dataset <- 'miranda_vx'
@@ -151,6 +152,9 @@ for (k in  1:length(comp_red)){
   gam_res[[k]] <- cr_regression_gam(df=list_df$df[[comp_red[k]]], kf=8, fig_nm='fig4', graph=0, data_nm = 'Miranda-Vx', error_mode, error_bnd)    }
 ##
 scatterplot_sz_3modes_prediction(gam_res, fig_nm='fig4', data_nm = 'Miranda-Vx', error_bnd, error_mode)
+##
+print('Median (min, max) percentage usage of regression mode in SZ2:')
+print(paste(median(list_df$df[['sz']]$reg_per),' (',min(list_df$df[['sz']]$reg_per),',', max(list_df$df[['sz']]$reg_per),')',sep=''))
 
 
 ###
@@ -164,6 +168,9 @@ for (k in  1:length(comp_red)){
   gam_res[[k]] <- cr_regression_gam(df=list_df$df[[comp_red[k]]], kf=8, fig_nm='fig4', graph=0, data_nm='CESM-cloud', compressor_nm=comp_red[k], error_mode, error_bnd)    }
 ##
 scatterplot_sz_3modes_prediction(gam_res, fig_nm='fig4', data_nm='CESM-cloud', error_bnd, error_mode)
+##
+print('Median (min, max) percentage usage of regression mode in SZ2:')
+print(paste(median(list_df$df[['sz']]$reg_per),' (',min(list_df$df[['sz']]$reg_per),',', max(list_df$df[['sz']]$reg_per),')',sep=''))
 
 
 ###
@@ -177,6 +184,9 @@ for (k in  1:length(comp_red)){
   gam_res[[k]] <- cr_regression_gam(df=list_df$df[[comp_red[k]]], kf=8, graph=0, fig_nm='fig4',  data_nm = 'Gaussian-single-scale', compressor_nm=comp_red[k], error_mode, error_bnd)    }
 ##
 scatterplot_sz_3modes_prediction(gam_res, fig_nm='fig4', data_nm = 'Gaussian-single-scale', error_bnd, error_mode)
+##
+print('Median (min, max) percentage usage of regression mode in SZ2:')
+print(paste(median(list_df$df[['sz']]$reg_per),' (',min(list_df$df[['sz']]$reg_per),',', max(list_df$df[['sz']]$reg_per),')',sep=''))
 
 
 ###
@@ -190,10 +200,14 @@ for (k in  1:length(comp_red)){
   gam_res[[k]] <- cr_regression_gam(df=list_df$df[[comp_red[k]]], kf=8, graph=0, fig_nm='fig4', data_nm='SCALE-pressure', compressor_nm=comp_red[k], error_mode, error_bnd)    }
 ##
 scatterplot_sz_3modes_prediction(gam_res, fig_nm='fig4', data_nm='SCALE-pressure', error_bnd, error_mode)
+##
+print('Median (min, max) percentage usage of regression mode in SZ2:')
+print(paste(median(list_df$df[['sz']]$reg_per),' (',min(list_df$df[['sz']]$reg_per),',', max(list_df$df[['sz']]$reg_per),')',sep=''))
 
 
 
-###### Predictor importance with LASSO regression
+print('#############################################')
+print('Predictor importance associated with figure 4')
 
 comp_red <- c('sz','interpolation','lorenzo','regression')
 source('functions_paper.R')
@@ -201,17 +215,40 @@ source('functions_paper.R')
 error_mode <- 'abs'
 error_bnd <- 1e-5
 dataset <- 'miranda_vx'
+print(dataset)
 source('load_dataset_paper.R')
 list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian)
 for (k in  1:length(comp_red)){
   print(comp_red[k])
   lasso_selection(df=list_df$df[[comp_red[k]]],  print=1)  }
 
+##
+error_mode <- 'abs'
+error_bnd <- 1e-3
+dataset <- 'scale_pres'
+print(dataset)
+source('load_dataset_paper.R')
+list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian)
+for (k in  1:length(comp_red)){
+  print(comp_red[k])
+  lasso_selection(df=list_df$df[[comp_red[k]]],  print=1)  }
 
 ##
 error_mode <- 'abs'
 error_bnd <- 1e-3
 dataset <- 'gaussian_singlescale'
+print(dataset)
+source('load_dataset_paper.R')
+list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian)
+for (k in  1:length(comp_red)){
+  print(comp_red[k])
+  lasso_selection(df=list_df$df[[comp_red[k]]],  print=1)  }
+
+##
+error_mode <- 'abs'
+error_bnd <- 1e-5
+dataset <- 'cesm_cl'
+print(dataset)
 source('load_dataset_paper.R')
 list_df <- extract_cr_predictors(data, error_mode, error_bnd, gaussian_corr=gaussian)
 for (k in  1:length(comp_red)){
@@ -220,14 +257,17 @@ for (k in  1:length(comp_red)){
 
 
 
+
 ###################################
-## Table 4 - different compressors and datasets
+## Table 3 - different compressors and datasets
 
 source('functions_paper.R')
 
 comp_red <- c('sz','zfp','mgard','digit_rounding')
 
-###### table 1: prediction metrics 
+print('#############################################')
+print('Printing  validation statistics of Table  3')
+##
 error_mode <- 'abs'
 error_bnd <- 1e-5
 dataset <- 'miranda_vx'
@@ -290,7 +330,7 @@ for (cmp in  comp_red){
 
 
 ###
-error_mode <- 'abs' # 'rel' is a valid mode 
+error_mode <- 'abs' 
 error_bnd <- 1e-2
 dataset <- 'hurricane_qg'
 source('load_dataset_paper.R')
@@ -307,8 +347,10 @@ for (cmp in  comp_red){
 
 
 ###################################
-## GRAPH 6: regression coefficients across compressors and error bound 
+## GRAPH 5: regression coefficients across compressors and error bound
 
+print('#############################################')
+print('Saving figure 5')
 error_mode <- 'abs'
 dataset <- 'gaussian_singlescale'
 source('load_dataset_paper.R')
@@ -320,16 +362,18 @@ res_coeff <- cr_regression_coeffcient(data, graph_nm=graph_nm, error_mode)
 ###################################
 ## Table 5: runtime performance for training and prediction of regression models 
 
-load('training_benchmark_runtime_nyx.RData')
+print('#############################################')
+print('Printing runtimes from table 5')
+load('../runtime_analysis/training_benchmark_runtime_nyx.RData')
 print(summary(training_bench))
 
-load('prediction_benchmark_runtime_nyx.RData')
+load('../runtime_analysis/prediction_benchmark_runtime_nyx.RData')
 print(summary(prediction_bench))
 
-load('training_benchmark_runtime_scale.RData')
+load('../runtime_analysis/training_benchmark_runtime_scale.RData')
 print(summary(training_bench))
 
-load('prediction_benchmark_runtime_scale.RData')
+load('../runtime_analysis/prediction_benchmark_runtime_scale.RData')
 print(summary(prediction_bench))
 
 
