@@ -43,19 +43,6 @@ This container differs from our experimental setup slightly. The production buil
 NOTE this file is >= 11 GB , download with caution.
 
 
-#### Singularity
-
-You can install and start the container on many super computers using singularity.
-
-```bash
-# this first commmand may issue a ton of warnings regarding xattrs depending on your filesystem on your container host; these were benign in our testing.
-singularity pull corr.sif ghcr.io/fthpc/correlation_compressibility:latest
-
-# -c enables additional confinement than singularity uses by default to prevent polution from /home
-singularity run -c  corr.sif bash
-```
-
-
 #### Docker
 
 Many other systems can use podman or docker.
