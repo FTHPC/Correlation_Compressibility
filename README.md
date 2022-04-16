@@ -153,11 +153,11 @@ In order to run the statistical analysis that computes the statistical predictor
 TEST is a dataset that is specified within the `config.json` file. 
 
 ```bash
-sh scripts/run.sh -c config.json -d TEST
+sh scripts/run.sh -c config.json -d TEST -n 2
 ```
 
 The command above performs the computation of statistical predictors and writes output to the output file specified in the configuration file.
-This will use local hardware without a scheduler. Use ```-n``` to specify the MPI processes on your local system. 
+This will use local hardware without a scheduler. Use ```-n``` to specify the MPI processes on your local system. Default value is 32.
 It is recommended that this value matches your CPU core count.
 
 If one has the PBS scheduler and runs outside of the container, feel free to use flags ```-p``` or ```-s``` for job execution.
