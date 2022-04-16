@@ -9,13 +9,15 @@ The extracted relationships between compression ratios and statistical predictor
 This repo contains an automatic framework of scripts that perform the compression of scientific datasets from 8 compressors (SZ2, ZFP, MGARD, FPZIP, Digit Rounding and Bit Grooming), the derivation of the statistical predictors of compression ratios (SVD, standard deviation, quantized entropy), and scripts to perform the training of the regression models (linear and spline regressions) as well as the validation of the regression predictions. 
 A runtime analysis is also performed and associated codes are provided. 
 
-Main code structures: compression (), derivation of statistical predictors (SVD, standard deviation, quantized entropy) (), linear and spline regressions training and validation (functions `cr_regression_linreg` and `cr_regression_gam` from the script `replicate_figures/functions_paper.R`). 
+### Main code structures
+Compression metrics, including compression ratios, and derivation of statistical predictors (SVD, standard deviation, quantized entropy) codes are found in `compress_package` and are run via `scripts/run.sh` as described in the section "How to compute statistical predictors and compression analysis on datasets". 
+Linear and spline regressions training and validation (functions `cr_regression_linreg` and `cr_regression_gam` from the script `replicate_figures/functions_paper.R`). 
 Codes for the different runtime analysis are found in the folder `runtime_analysis` and are automated with the script `runtime.sh`, the study includes compression time for SZ2, ZFP, MAGRD, FPZIP, data quantization, SVD, local (tiled) variogram and local (tiled) variogram, and runtime for training and prediction of the regressions.   
 Finally, the script `replicate_figures/graphs_paper_container.R` replicates and saves all the figures from the paper ad as well as numbers from the tables. 
 
 For each dataset in the `dataset` folder, slicing is performed for each variable field (e.g. density in Miranda), each slice is stored in a class. The class is updated as compressions with the 8 compressors is performed and updated as the statistical predictors are derived. Results of each class are stored in a .csv file (example of csv files can be found at `replicate_figures/generated_data/`). 
-All the datasets stored in the `dataset` folder can be analyzed with the given set of codes, one needs to source `scripts/config.json` with the appropriate dataset name as described in the below section ("How to compute statistical predictors and compression analysis on datasets"). 
-The regression analysis and its prediction is then performed from dataframes based on the aforementioned .csv files. 
+All the datasets stored in the `dataset` folder can be analyzed with the given set of codes, one needs to source `scripts/config.json` with the appropriate dataset name as described in the below section "How to compute statistical predictors and compression analysis on datasets". 
+The regression analysis and its prediction is then performed on R dataframes based on the aforementioned .csv files. 
 
 
 ## System Information
