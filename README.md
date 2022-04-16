@@ -100,6 +100,7 @@ and the top of ```config.json```. These two files provide the configuration opti
 Spack should be installed in the following location: ```$HOME/spack/```
 
 This Github repo should be cloned in the following location: ```$HOME/Correlation_Compressibility/```
+This location is also referenced as the ```COMPRESS_HOME``` environment variable.
 
 A dataset folder called 'datasets' should be in the following location: ```$HOME/Correlation_Compressibility/datasets/```
 
@@ -194,6 +195,13 @@ sh runtime_analysis/runtime.sh -d [DATASET]
 
 After running the above script, an *.RData file(s) will be produced giving the approprirate timing information of 
 the training and prediction models.
+Note: A quicker and more efficient quantized entropy method is demonstrated in ```qentropy.cc```
+
+#### The following below runs ```qentropy.cc```
+```bash 
+g++ -std=c++2a -O3 qentropy.cc -o qentropy -march=native -mtune=native
+./qentropy
+```
 
 ### Replication of figures: how to run statistical prediction of compression ratios and the prediction validation 
 
