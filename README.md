@@ -34,7 +34,7 @@ These nodes have:
 
 ## First time setup                         
 
-### Container Install (for ease of setup)
+### Container Installation (for ease of setup)
 
 We provide a container for `x86_64` image for ease of installation.
 
@@ -92,7 +92,7 @@ cd Correlation_Compressibility
 docker build . -t correlation_compressibility
 ```
 
-### Manual Install
+### Manual Installation
 
 By default, it is recommended to follow the install locations that are indicated on the top of ```scripts/run.sh```
 and the top of ```config.json```. These two files provide the configuration options to get the program running.
@@ -102,9 +102,9 @@ Spack should be installed in the following location: ```$HOME/spack/```
 This Github repo should be cloned in the following location: ```$HOME/Correlation_Compressibility/```
 This location is also referenced as the ```COMPRESS_HOME``` environment variable.
 
-A dataset folder called 'datasets' should be in the following location: ```$HOME/Correlation_Compressibility/datasets/```
+A dataset folder called 'datasets' should be in the following location: ```$HOME/Correlation_Compressibility/datasets/```.
 
-Clone the repo.  Make sure to install/load git-lfs first
+Clone the repo but make sure to install or load `git-lfs` first. 
 
 ```bash
 # install/module load git-lfs, needed to download example_data for building the container
@@ -117,7 +117,7 @@ git clone https://github.com/FTHPC/Correlation_Compressibility $HOME/Correlation
 cd $HOME/Correlation_Compressibility
 ```
 
-If you forgot to install `git-lfs` before and have an empty files in the  `datasets` folder, you should install `git-lfs`
+If you forgot to install `git-lfs` before and have an empty file in the  `datasets` folder, you should install `git-lfs`
 and then run the following:
 
 ```
@@ -143,12 +143,14 @@ export COMPRESS_HOME=$HOME/Correlation_Compressibility
 ```
 These commands will install the environment. The environment only needs to be installed once.
 
+
+
 ## Replication of Results
 
 ### How to compute statistical predictors on datasets
 
 In order to run the statistical analysis that computes the statistical predictors (SVD, standard deviation, quantized entropy) of compression ratios, a dataset and a configuration file must be specified.
-TEST is a dataset that is specified within the config.json file. 
+TEST is a dataset that is specified within the `config.json` file. 
 
 ```bash
 sh scripts/run.sh -c config.json -d TEST
@@ -165,8 +167,8 @@ If one has the PBS scheduler and run outside of the container, feel free to use 
 See ```-h``` for more options or help with syntax.
 
 
-If a dataset is wanted to run, the config.json file provides options to add datasets.
-The following options must be followed when adding another dataset in the configuration file:
+If a dataset is wanted to run, the `config.json` file provides options to add datasets.
+The following options must be added when adding another dataset in the configuration file:
 ```json
 "_comment" : 
 {
@@ -194,7 +196,7 @@ sh runtime_analysis/runtime.sh -d [DATASET]
 [DATASET] can be either [NYX] or [SCALE]
 
 After running the above script, an *.RData file(s) will be produced giving the approprirate timing information of 
-the training and prediction models.
+the training and prediction for the regression models.
 
 Note: A quicker and more efficient quantized entropy method is demonstrated in ```qentropy.cc```
 #### The following below runs ```qentropy.cc```
@@ -214,11 +216,13 @@ The script ```graphs_paper_container.R```  is run via the command:
 ```bash sh replicate.sh```
 
 From running the script once, it will save all Figures 1, 3, 4 and 5 into .png files from the paper as well as corresponding validation metrics. 
-Figure 2  is not saved as it only shows the data. same folder as r script and filename strcutrue figX_*.png with X the figure number reference in the paper
-Numbers for Tables 2, 3 and 5 are printed. 
-Refer to table 4 *david 
-All printed validation metrics are save into a file named ```figure_replication.log```
+Figure 2 is not saved as it provides a simple vizualization of slices of the datasets. 
+Slices of the datasets are generated in the Section *** 
+Numbers for Tables 2, 3 and 5 are printed in the R console. 
+All printed validation metrics are save into a file named ```figure_replication.log```.
+Figures and the log-file are saved in the same folder as the one where R script is run and the filename structure is `figY_*.png` with Y is the figure number reference in the paper and `*` provides additional informnation about the data and the compressor.  
+Numbers for Table 4 are saved in the last section in .txt files `statistic_benchmark_runtime_X.txt` with X the studied dataset (NYX or SCALE). 
 
-In order to limit the container size to aid reproducibility, we only added a restrcited number of scientific datasets in the container and we rely on csv files from our porduction runs (saved as described above in the Section "How to compute statistical predictors on datasets"). 
+In order to limit the container size to aid reproducibility, we only added a restricted number of scientific datasets in the container and we rely on csv files from our production runs (saved as described above in the Section "How to compute statistical predictors on datasets"). 
 More datasets are available on [SDRBench](https://sdrbench.github.io). 
 
