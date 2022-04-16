@@ -41,6 +41,7 @@ COPY --chown=demo:demo runtime_analysis /app/runtime_analysis
 COPY --chown=demo:demo compress_package /app/compress_package
 COPY --chown=demo:demo related_work /app/related_work 
 COPY --chown=demo:demo datasets /app/datasets 
+COPY --chown=demo:demo replicate_figures /app/replicate_figures
 
 
 from fedora:35 as final
@@ -51,7 +52,9 @@ RUN dnf update -y && \
     useradd demo -d /home/demo -g demo && \
     ln -s /usr/lib64/libpthread.so.0 /usr/lib64/libpthread.so
 RUN echo "demo    ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers.d/demo
+RUN mkdir /app && chown demo:demo /app
 COPY container_startup.sh /etc/profile.d/
 COPY --from=builder --chown=demo:demo /app /app
 WORKDIR /app
 USER demo
+ENV COMPRESS_HOME=/app 

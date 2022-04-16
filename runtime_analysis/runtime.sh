@@ -1,6 +1,5 @@
 #!/bin/bash
 #Compress statistic package location
-PACKAGE=$SPACK_ENV
 
 while getopts d:h flag
 do
@@ -22,8 +21,8 @@ fi
 # activate spack and spack packages
 echo "Spack location: $SPACK_ROOT"
 
-cd $PACKAGE
-echo "Package location: $PACKAGE"
+cd $COMPRESS_HOME
+echo "Package location: $COMPRESS_HOME"
 
 cd $SPACK_ENV/runtime_analysis
 
