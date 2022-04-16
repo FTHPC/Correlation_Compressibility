@@ -13,6 +13,11 @@ Main code structures: compression (), derivation of statistical predictors (SVD,
 Codes for the different runtime analysis are found in the folder `runtime_analysis` and are automated with the script `runtime.sh`, the study includes compression time for SZ2, ZFP, MAGRD, FPZIP, data quantization, SVD, local (tiled) variogram and local (tiled) variogram, and runtime for training and prediction of the regressions.   
 Finally, the script `replicate_figures/graphs_paper_container.R` replicates and saves all the figures from the paper ad as well as numbers from the tables. 
 
+For each dataset in the `dataset` folder, slicing is performed for each variable field (e.g. density in Miranda), each slice is stored in a class. The class is updated as compressions with the 8 compressors is performed and updated as the statistical predictors are derived. Results of each class are stored in a .csv file (example of csv files can be found at `replicate_figures/generated_data/`). 
+All the datasets stored in the `dataset` folder can be analyzed with the given set of codes, one needs to source `scripts/config.json` with the appropriate dataset name as described in the below section ("How to compute statistical predictors and compression analysis on datasets"). 
+The regression analysis and its prediction is then performed from dataframes based on the aforementioned .csv files. 
+
+
 ## System Information
 
 The hardware and software versions used for the performance evaluations can be found in the table below. These nodes come from Clemson University's Palmetto Cluster.
@@ -134,7 +139,7 @@ These commands will install the environment. The environment only needs to be in
 
 ## Replication of Results
 
-### How to compute statistical predictors on datasets
+### How to compute statistical predictors and compression analysis on datasets
 
 In order to run the statistical analysis that computes the statistical predictors (SVD, standard deviation, quantized entropy) of compression ratios, a dataset and a configuration file must be specified.
 TEST is a dataset that is specified within the `config.json` file. 
