@@ -195,8 +195,8 @@ sh runtime_analysis/runtime.sh -d [DATASET]
 
 After running the above script, an *.RData file(s) will be produced giving the approprirate timing information of 
 the training and prediction models.
-Note: A quicker and more efficient quantized entropy method is demonstrated in ```qentropy.cc```
 
+Note: A quicker and more efficient quantized entropy method is demonstrated in ```qentropy.cc```
 #### The following below runs ```qentropy.cc```
 ```bash 
 g++ -std=c++2a -O3 qentropy.cc -o qentropy -march=native -mtune=native
