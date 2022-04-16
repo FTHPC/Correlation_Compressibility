@@ -5,7 +5,7 @@ install.packages('png', repos = "http://cran.us.r-project.org")
 
 BiocManager::install("rhdf5")
 
-
+install.packages('gstat', repos = "http://cran.us.r-project.org")
 install.packages('microbenchmark', repos = "http://cran.us.r-project.org")
 install.packages('mgcv', repos = "http://cran.us.r-project.org")
 install.packages('glmnet', repos = "http://cran.us.r-project.org")

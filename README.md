@@ -136,8 +136,11 @@ spack install
 export COMPRESS_HOME=$HOME/Correlation_Compressibility 
 ```
 These commands will install the environment. The environment only needs to be installed once.
-
-
+If you are using an older < gcc11, then you will need to add the following to the ```spack.yaml``` file:
+```
+^libstdcompat+boost
+```
+after ```^mgard@robertu94+cuda``` but before the ```,```.
 
 ## Replication of Results
 

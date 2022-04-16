@@ -58,3 +58,4 @@ COPY --from=builder --chown=demo:demo /app /app
 WORKDIR /app
 USER demo
 ENV COMPRESS_HOME=/app 
+ENV TMPDIR=/tmp

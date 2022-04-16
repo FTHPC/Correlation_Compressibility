@@ -15,7 +15,7 @@ do
         c) configf=$OPTARG ;;
         s) serial=1 ;;
         p) parallel=1 ;;
-        n) PROCS=$OPTARG ;;
+        n) MPIPROCS=$OPTARG ;;
         h)  echo "-d [DATASET]      : dataset wanting to run"
             echo "-c [CONFIG]       : config file in .json format"
             echo "-s                : serial mode (only 1 job). PBS scheduler MUST be configured"

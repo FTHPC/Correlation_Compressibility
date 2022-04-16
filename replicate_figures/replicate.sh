@@ -1,5 +1,4 @@
 #!/bin/bash
-# activate spack and spack packages
 echo "Spack location: $SPACK_ROOT"
 
 echo "Package location: $COMPRESS_HOME"
