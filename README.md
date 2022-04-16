@@ -3,7 +3,7 @@
 ## Statement of Purpose
 
 This repo contains scripts to perform compressibility analysis on several leading lossy compressors. 
-The compressibility analysis relies on deriving statistics on scientific data and explore their relationships to their compression ratios from various lossy compressors (based on various compresison scheme). 
+The compressibility analysis relies on deriving statistics on scientific data and explore their relationships to their compression ratios from various lossy compressors (based on various compression scheme). 
 The extracted relationships between compression ratios and statistical predictors are modeled via regression models, which provide a statistical framework to predict compression ratios for the different studied lossy compressors. 
 
 This repo contains an automatic framework of scripts that perform the compression of scientific datasets from 8 compressors (SZ2, ZFP, MGARD, FPZIP, Digit Rounding and Bit Grooming), the derivation of the statistical predictors of compression ratios (SVD, standard deviation, quantized entropy), and scripts to perform the training of the regression models (linear and spline regressions) as well as the validation of the regression predictions. 
@@ -160,8 +160,8 @@ The command above performs the computation of statistical predictors and writes 
 This will use local hardware without a scheduler. Use ```-n``` to specify the MPI processes on your local system. 
 It is recommended that this value matches your CPU core count.
 
-If one has the PBS scheduler and run outside of the container, feel free to use flags ```-p``` or ```-s``` for job execution.
-```-p``` will schedule multiple jobs based on the quantized error bounds and error bound types for a specififed dataset.
+If one has the PBS scheduler and runs outside of the container, feel free to use flags ```-p``` or ```-s``` for job execution.
+```-p``` will schedule multiple jobs based on the quantized error bounds and error bound types for a specified dataset.
 ```-s``` will schedule a single job grouping all the analysis for a specified dataset.
 
 See ```-h``` for more options or help with syntax.
@@ -182,7 +182,7 @@ The following options must be added when adding another dataset in the configura
 } 
 ```
 
-** descrobe outputs in csv files and how they are used to build figures 
+From this section, csv files are generated for each dataset and contains all the statistical predictors described in the paper as well as compression 
 
 
 ### To run the training and prediction timing analysis demonstration
