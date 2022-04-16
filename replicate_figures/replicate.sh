@@ -1,9 +1,4 @@
 #!/bin/bash
-#Spack install location
-
-#Compress statistic package location
-PACKAGE=$SPACK_ENV/correlation_compressibility
-
 # activate spack and spack packages
 echo "Spack location: $SPACK_ROOT"
 source $SPACK_ROOT
