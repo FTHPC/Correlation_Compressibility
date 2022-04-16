@@ -141,7 +141,7 @@ These commands will install the environment. The environment only needs to be in
 
 ## Replication of Results
 
-### How to compute statistical predictors and compression analysis on datasets
+### How to compute statistical predictors and compression metrics on datasets
 
 In order to run the statistical analysis that computes the statistical predictors (SVD, standard deviation, quantized entropy) of compression ratios, a dataset and a configuration file must be specified.
 TEST is a dataset that is specified within the `config.json` file. 
@@ -176,8 +176,7 @@ The following options must be added when adding another dataset in the configura
 } 
 ```
 
-From this section, csv files are generated for each dataset and contains all the statistical predictors described in the paper as well as compression 
-
+From this section, .csv files are generated for each dataset and contain all the statistical predictors described in the paper as well as compression metrcis including compresison ratios for the 8 lossy compressors and 4 error bounds. 
 
 ### To run the training and prediction timing analysis demonstration
 
@@ -199,6 +198,9 @@ g++ -std=c++2a -O3 qentropy.cc -o qentropy -march=native -mtune=native
 ./qentropy
 ```
 
+Note: Please run the runtime analysis for both datasets before running the following section. 
+
+
 ### Replication of figures: how to run statistical prediction of compression ratios and the prediction validation 
 
 The script ```graphs_paper_container.R```  saves the graphs presented in the paper and provides associated validation metrics (correlation and median absolute error percentage). 
@@ -211,7 +213,7 @@ The script ```graphs_paper_container.R```  is run via the command:
 
 From running the script once, it will save all Figures 1, 3, 4 and 5 into .png files from the paper as well as corresponding validation metrics. 
 Figure 2 is not saved as it provides a simple vizualization of slices of the datasets. 
-Slices of the datasets are generated in the Section *** 
+Slices of the datasets are generated in the Section "How to compute statistical predictors and compression metrics" and can be stored, however we do not save them here to save space in the container. 
 Numbers for Tables 2, 3 and 5 are printed in the R console. 
 All printed validation metrics are save into a file named ```figure_replication.log```.
 Figures and the log-file are saved in the same folder as the one where R script is run and the filename structure is `figY_*.png` with Y is the figure number reference in the paper and `*` provides additional informnation about the data and the compressor.  
