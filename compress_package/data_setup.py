@@ -265,6 +265,8 @@ def read_slice_folder(global_class, data_folder, dimensions, dtype='float64', da
             continue
         if files.endswith('.txt'):
             continue
+        if files.endswith('.py'):
+            continue
         if files.endswith('.h5'):
             #if it finds a file ending with .h5, the file is going to be read 
             filename = files

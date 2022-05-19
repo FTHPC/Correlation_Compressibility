@@ -28,7 +28,29 @@
             "parse_info"        : "gaussian",
             "dataset_name"      : "Z"
         },
+        
+        "EXAFEL"  :
+        {
+            "folder"            : "exafel",
+            "data_dimensions"   : "388, 5837120",
+            "slice_dimensions"  : "None",
+            "output"            : "output_exafel.csv",
+            "dtype"             : "uint16",
+            "parse_info"        : "None",
+            "dataset_name"      : "standard"
+        },
 
+        "QMCPACK" :
+        {
+            "folder"            : "qmcpack",
+            "data_dimensions"   : "115, 69, 69",
+            "slice_dimensions"  : "X, Y, Z",
+            "output"            : "output_qmcpack.csv",
+            "dtype"             : "float32",
+            "parse_info"        : "None",
+            "dataset_name"      : "standard"
+        },
+    
         "MIRANDA" : 
         {   
             "folder"            : "SDRBENCH-Miranda-256x384x384",

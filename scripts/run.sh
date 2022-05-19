@@ -39,7 +39,6 @@ if [[ -z "$serial" && -z "$parallel" ]]; then
 
     #must have the spack installed
     echo "Spack location: $SPACK_ROOT"
-    source $SPACK_ROOT
 
     cd $COMPRESS_HOME
     echo "Package location: $COMPRESS_HOME"
@@ -55,6 +54,7 @@ if [[ -z "$serial" && -z "$parallel" ]]; then
 
 else
     #using pbs scheduler
+    source $HOME/spack/share/spack/setup-env.sh
     if [[ "$parallel" ]]; then
         #multiple jobs // parallel mode
         for bound in ${QBOUNDS[@]}
