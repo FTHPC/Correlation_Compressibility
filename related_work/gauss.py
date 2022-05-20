@@ -40,16 +40,12 @@ for i in dic:
 
 print('singular rate', singular * 1.0 / len(data1))
 print('singular rate prediction node #', singular * 1.0 / len(data1) * int(sys.argv[2]))
-
-
 print('geometric progression')
 r1 = singular * 1.0 / len(data1)
 r2 = dup * 1.0 / len(data1)
 print('r1, r2', r1, r2)
 est = len(dic) + len(data1) * (1 - pow(r1-r2, 99)/(1-r1+r2))
 print('est', est)
-
-
 #mid = 0
 #for i in data:
 #    if i == 10000:
