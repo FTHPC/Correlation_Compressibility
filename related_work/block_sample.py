@@ -3,18 +3,23 @@ import random
 import numpy as np
 import libpressio
 import statistics
+import argparse
 import csv
 import os
 import time
 
-csv_file = 'block_sample_cesm_CLOUD_1_26_1800_3600.csv'
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--dtype", type=np.dtype, default=np.dtype("float32"))
+parser.add_argument("--output_file", "-o", type=str, default="klasky_CLOUDf48.csv")
+parser.add_argument("--dims", "-d", type=int, action="append", default=[])
+parser.add_argument("--filename", type=str, default="/home/runderwood/git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32")
+args = parser.parse_args()
+
 
 # d = np.linspace(0.0, 1.0, num=384 * 384 * 256).reshape(384, 384, 256)
 
-d = np.fromfile(
-    "/home/dkrasow/compression/datasets/SDRBENCH-CESM-ATM-26x1800x3600/CLOUD_1_26_1800_3600.f32",
-    dtype=np.float32,
-).reshape(26, 1800, 3600)
+d = np.fromfile(args.filename,dtype=args.dtype).reshape(args.dims)
 
 block_size = 8
 
@@ -30,14 +35,12 @@ samples = []
 starts = [[random.randint(i, j) for (i, j) in random_start] for count in range(counts)]
 
 
-
-# now run compression
-if os.path.exists(csv_file):
+if os.path.exists(args.output_file):
     mode = 'a'
 else:
     mode = 'w'
 
-csvfile = open(csv_file, mode)
+csvfile = open(args.output_file, mode)
 
 csv_columns = [ 'size:error_bound',
                 'info:slice',
@@ -65,8 +68,8 @@ csv_columns = [ 'size:error_bound',
 writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
 writer.writeheader()
 
-for slice_ok in range(0, 25, 1):
-    new = d[slice_ok, :, :]
+for slice_dim in range(0, args.dims[0]-1, 5):
+    new = d[slice_dim, :, :]
     samples = []
     for start in starts:
         samples.append(new[from_start_to_slice(start, block_size=block_size)])
@@ -85,7 +88,7 @@ for slice_ok in range(0, 25, 1):
         b = c.encode(s)
         c.decode(b, o)
         m = c.get_metrics()
-        m.update({"size:error_bound" : bound, "info:slice" : slice_ok, "info:is_sample" : False})
+        m.update({"size:error_bound" : bound, "info:slice" : slice_dim, "info:is_sample" : False})
         cr = m["size:compression_ratio"]
  
         writer.writerow(m)
@@ -96,13 +99,13 @@ for slice_ok in range(0, 25, 1):
             b = c.encode(s)
             c.decode(b, o)
             m = c.get_metrics()
-            m.update({"size:error_bound" : bound, "info:slice" : slice_ok, "info:is_sample" : True})
+            m.update({"size:error_bound" : bound, "info:slice" : slice_dim, "info:is_sample" : True})
             crs.append(m["size:compression_ratio"])
             # print(m)
             writer.writerow(m)
 
         n = time.perf_counter()
-        print("slice : ", slice_ok, bound)
+        print("slice : ", slice_dim, bound)
         print("sample_time ", str(n - begin))
         print("mean of crs", statistics.mean(crs))
         print("actual cr", cr)

@@ -6,7 +6,7 @@ Example of calling the estimate code
 ./gauss.py gauss.txt 97104
 ```
 
-Alternatively, one can run for a specific 3D dataset provided by a filename
+Alternatively, one can provide the following arguments to run a specified dataset using the method in the paper below.
 ```bash 
 python klasky.py --filename [FILENAME] --dtype [DTYPE] -o [OUTPUT].csv -d [DIM0] -d [DIM1] -d [DIM2] 
 ```
@@ -20,3 +20,11 @@ T. Lu et al., “Understanding and Modeling Lossy Compression Schemes on HPC Sci
 Changes:
 
 + Converted to Python-3 using 2to3.py
+
+
+# Related Work: Estimating compressibility using a Block Sampling approach
+
+One can provide the following arguments to run a specified dataset using a block sampling approach to estimate compression ratios
+```bash 
+python block_sample.py --filename [FILENAME] --dtype [DTYPE] -o [OUTPUT].csv -d [DIM0] -d [DIM1] -d [DIM2] 
+```
