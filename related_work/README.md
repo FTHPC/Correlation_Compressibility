@@ -6,6 +6,11 @@ Example of calling the estimate code
 ./gauss.py gauss.txt 97104
 ```
 
+Alternatively, one can run for a specific 3D dataset provided by a filename
+```bash 
+python klasky.py --filename [FILENAME] --dtype [DTYPE] -o [OUTPUT].csv -d [DIM0] -d [DIM1] -d [DIM2] 
+```
+
 Then use the results from the output with the formula from the paper
 
 Used with Permission from authors.  Code adopted from:

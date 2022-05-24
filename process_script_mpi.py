@@ -85,7 +85,7 @@ if not rank:
             #reduces slices if too many
             iterations = 5 if dimensions[i] > 64 else 1
             sample_data_classes = sample_data_classes.copy() + cp.setup.read_slice_folder(global_data, data_folder, dimensions,
-                            slices_needed=range(0, dimensions[i]-1, iterations), slice_dimensions = dim, dtype = dtype)
+                            slices_needed=list(range(0, dimensions[i]-1, iterations)), slice_dimensions = dim, dtype = dtype)
          
     else:
         sample_data_classes = cp.setup.read_slice_folder(global_data, data_folder, dimensions,
@@ -124,7 +124,7 @@ while i<len(sample_data_classes):
     cp.svd_coarsen.tiled_multiple(data_class, plot=False)
 
     # #data_import.coarsened_attributes will store the different resolution stats 
-    cp.svd_coarsen.coarsen_multiple_resolution(data_class, plot=False, variogram_study=True)
+    cp.svd_coarsen.coarsen_multiple_resolution(data_class, plot=False, variogram_study=False)
     compressors = [
         "sz",
         #"sz:high",

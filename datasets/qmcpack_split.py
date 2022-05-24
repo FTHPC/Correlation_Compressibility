@@ -1,5 +1,6 @@
 # split einspline_288_115_69_69.pre.f32 (4D) into 288 3D datasets
 import numpy as np
+import pandas as pd
 
 def main():
 
@@ -8,7 +9,7 @@ def main():
     
     for i in range(0, 288):
         filename = "obital_" + str(i) + ".f32"
-        Vx[i].astype('float32').tofile(filename)
+        Vx[i].reshape((115, 69, 69)).tofile(filename)
 
 
 
