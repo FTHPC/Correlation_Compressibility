@@ -33,15 +33,24 @@ if [[ -z "$dataset" || -z "$configf" ]]; then
     exit 1
 fi
 
+if [[ -z "$SPACK_ROOT" ]]; then
+    echo "ERROR: Must have Spack activated before running"
+    exit 1
+fi
+
+if [[ -z "$COMPRESS_HOME" ]]; then
+    echo "ERROR: COMPRESS_HOME env variable must be set before running"
+    echo "See README.md for more details"
+    exit 1
+fi
+
+echo "Spack location: $SPACK_ROOT"
+echo "Package location: $COMPRESS_HOME"
+
 if [[ -z "$serial" && -z "$parallel" ]]; then
     #using local hardware
     echo "Running locally without a scheduler"
-
-    #must have the spack installed
-    echo "Spack location: $SPACK_ROOT"
-
     cd $COMPRESS_HOME
-    echo "Package location: $COMPRESS_HOME"
 
     for bound in ${QBOUNDS[@]}
         do
@@ -53,8 +62,6 @@ if [[ -z "$serial" && -z "$parallel" ]]; then
 
 
 else
-    #using pbs scheduler
-    source $HOME/spack/share/spack/setup-env.sh
     if [[ "$parallel" ]]; then
         #multiple jobs // parallel mode
         for bound in ${QBOUNDS[@]}

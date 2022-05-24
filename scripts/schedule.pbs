@@ -2,8 +2,9 @@
 #PBS -q fthpc -l select=1:ncpus=32:mpiprocs=32:mem=200gb:interconnect=25ge,walltime=16:30:00
 
 
-source $SPACK
+source $SPACK/share/spack/setup-env.sh
 
+echo "$PACKAGE"
 cd $PACKAGE
 #load env
 spack env activate . 
