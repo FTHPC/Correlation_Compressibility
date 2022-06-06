@@ -28,3 +28,7 @@ One can provide the following arguments to run a specified dataset using a block
 ```bash 
 python block_sample.py --filename [FILENAME] --dtype [DTYPE] -o [OUTPUT].csv -d [DIM0] -d [DIM1] -d [DIM2] 
 ```
+
+Code adopted from:
+
+X. Liang, S. Di, D. Tao, S. Li, B. Nicolae, Z. Chen, and F. Cappello, 1040 “Improving performance of data dumping with lossy compression for scientific simulation,” p. 11, 2019
