@@ -8,7 +8,7 @@ Example of calling the estimate code
 
 Alternatively, one can provide the following arguments to run a specified dataset using the method in the paper below.
 ```bash 
-python klasky.py --filename [FILENAME] --dtype [DTYPE] -o [OUTPUT].csv -d [DIM0] -d [DIM1] -d [DIM2] 
+python ipdps2018.py --filename [FILENAME] --dtype [DTYPE] -o [OUTPUT].csv -d [DIM0] -d [DIM1] -d [DIM2] 
 ```
 
 Then use the results from the output with the formula from the paper
@@ -26,7 +26,7 @@ Changes:
 
 One can provide the following arguments to run a specified dataset using a block sampling approach to estimate compression ratios
 ```bash 
-python block_sample.py --filename [FILENAME] --dtype [DTYPE] -o [OUTPUT].csv -d [DIM0] -d [DIM1] -d [DIM2] 
+python tpds2018.py --filename [FILENAME] --dtype [DTYPE] -o [OUTPUT].csv -d [DIM0] -d [DIM1] -d [DIM2] 
 ```
 
 Code adopted from:
