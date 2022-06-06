@@ -32,3 +32,5 @@ python tpds2018.py --filename [FILENAME] --dtype [DTYPE] -o [OUTPUT].csv -d [DIM
 Code adopted from:
 
 X. Liang, S. Di, D. Tao, S. Li, B. Nicolae, Z. Chen, and F. Cappello, 1040 “Improving performance of data dumping with lossy compression for scientific simulation,” p. 11, 2019
+
+D. Tao, S. Di, X. Liang, Z. Chen, and F. Cappello, “Optimizing lossy compression rate-distortion from automatic online selection between SZ and ZFP,” IEEE Transactions on Parallel and Distributed Systems, vol. 30, no. 8, pp. 1857–1871, 2019.
