@@ -2,7 +2,7 @@
 
 ### extract data 
 
-extract_cr_predictors <- function(data, error_mode, error_bnd, gaussian_corr=0, sz3=TRUE){
+extract_cr_predictors <- function(data, error_mode, error_bnd, gaussian_corr=0, sz3=TRUE, comp_thresh=100){
   data_orig <- filter(data, info.bound_mode == error_mode)
   data_orig <- filter(data_orig, info.bound==error_bnd)
   data0 <-  filter(data_orig, info.quantized=='False' | info.quantized=='FALSE')
@@ -15,7 +15,7 @@ extract_cr_predictors <- function(data, error_mode, error_bnd, gaussian_corr=0, 
   list_df_cr <- NULL
   for(i in 1:length(compressor0)){
     vx_compressor <- filter(data0, info.compressor == compressor0[i])
-    indsz <- which(as.numeric(vx_compressor$size.compression_ratio)<=100)
+    indsz <- which(as.numeric(vx_compressor$size.compression_ratio)<=comp_thresh)
     #
     qent0 <- as.numeric(vx_compressor$stat.quantized_entropy)[indsz]
     qent0[qent0==0] <- 1e-8
@@ -35,7 +35,7 @@ extract_cr_predictors <- function(data, error_mode, error_bnd, gaussian_corr=0, 
   ###
   vxsz <- filter(data0, info.compressor == 'sz')
   vx_compressor <- filter(vxsz, sz.quantization_intervals=="default")
-  indsz <- which(as.numeric(vx_compressor$size.compression_ratio)<=100)
+  indsz <- which(as.numeric(vx_compressor$size.compression_ratio)<=comp_thresh)
   #indsz <- which(is.na(vx_compressor$sz.constant_flag[indsz]))
   #
   qent0 <- as.numeric(vx_compressor$stat.quantized_entropy)[indsz]
@@ -49,14 +49,16 @@ extract_cr_predictors <- function(data, error_mode, error_bnd, gaussian_corr=0, 
   vrgstd <- log(vrgstd0)
   #
   y <- as.numeric(vx_compressor$size.compression_ratio)[indsz]
+  indqna <- which(is.na(qent))
+  if (length(indqna)>1) {df <- df[-indqna,]}
+  #
   reg_per <- as.numeric(vx_compressor$sz.regression_blocks)[indsz]
   reg_per[is.na(reg_per)] <- 0
   lor_per <- as.numeric(vx_compressor$sz.lorenzo_blocks)[indsz]
   lor_per[is.na(lor_per)] <- 0
   reg_per <- round(100*reg_per/max(reg_per,lor_per),2)
   df <- data.frame(y, qent, vrgstd, vargm, std, reg_per) 
-  indqna <- which(is.na(qent))
-  if (length(indqna)>1) {df <- df[-indqna,]}
+  #
   list_df_cr[['sz']] <- df
   compressors <- c(compressor0, 'sz2')
   ### 
@@ -65,7 +67,7 @@ extract_cr_predictors <- function(data, error_mode, error_bnd, gaussian_corr=0, 
     sz_mode <- unique(vx3$sz.predictor_mode)
     for(i in 1:length(sz_mode)){
       vx_compressor <- filter(vx3, sz.predictor_mode == sz_mode[i])
-      indsz <- which(vx_compressor$size.compression_ratio<=100)
+      indsz <- which(vx_compressor$size.compression_ratio<=comp_thresh)
       #
       qent0 <- as.numeric(vx_compressor$stat.quantized_entropy)[indsz]
       qent0[qent0==0] <- 1e-8
@@ -97,13 +99,19 @@ extract_cr_predictors <- function(data, error_mode, error_bnd, gaussian_corr=0, 
 RelMAE <- function(pred,true){
   median(abs((pred-true)/true),na.rm=TRUE) }
 
+RelMeanAE <- function(pred,true){
+  median(abs((pred-true)/true),na.rm=TRUE) }
+
+RelMaxAE <- function(pred,true){
+  median(abs((pred-true)/true),na.rm=TRUE) }
+
 
 
 ### prediction functions
 
 
 cr_regression_linreg <- function(df, kf=8, graph=1, data_nm, compressor_nm, error_mode, error_bnd, fold_col=1){
-  indsz <- which(df$y<=100)
+  indsz <- which(df$y<=comp_thresh)
   df <- df[indsz,]
   qent0 <- df$qent
   qent <- (log(qent0)-min(log(qent0),na.rm=TRUE))/(max(log(qent0),na.rm=TRUE)-min(log(qent0),na.rm=TRUE))
@@ -148,9 +156,7 @@ cr_regression_linreg <- function(df, kf=8, graph=1, data_nm, compressor_nm, erro
     for (i in 1:kf){
       points(ytest_list[[i]], pred_list[[i]], pch=20, cex=1.2, col=Col[i]) }
     if (fold_col==1){ legend(x='topleft', fold_nm[1:kf], ncol=2, col=Col[1:kf], pch=20, bty='n', cex=1.4) }
-    dev.off()
-    
-  }
+    dev.off()  }
   
   stats_quantile <- function(x){ quantile(x, probs=c(0.10, 0.5, 0.9), na.rm = TRUE) } 
   res_cv <- cbind(stats_quantile(cv_cor), 100*stats_quantile(cv_mape))
@@ -164,9 +170,8 @@ cr_regression_linreg <- function(df, kf=8, graph=1, data_nm, compressor_nm, erro
 
 
 
-
-cr_regression_gam <- function(df, kf=8, graph=1, fig_nm, data_nm, compressor_nm, error_mode, error_bnd){
-  indsz <- which(df$y<=100)
+cr_regression_gam <- function(df, kf=8, graph=1, fig_nm, data_nm, compressor_nm, error_mode, error_bnd, print_stats=1){
+  indsz <- which(df$y<=comp_thresh)
   df <- df[indsz,]
   qent0 <- df$qent
   qent <- (log(qent0)-min(log(qent0),na.rm=TRUE))/(max(log(qent0),na.rm=TRUE)-min(log(qent0),na.rm=TRUE))
@@ -209,14 +214,15 @@ cr_regression_gam <- function(df, kf=8, graph=1, fig_nm, data_nm, compressor_nm,
     for (i in 1:kf){
       points(ytest_list[[i]], pred_list[[i]], pch=20, cex=1.2, col=Col[i]) }
     dev.off()
-    
-  }
+    }
 
   stats_quantile <- function(x){ quantile(x, probs=c(0.10, 0.5, 0.9), na.rm = TRUE) } 
   res_cv <- cbind(stats_quantile(cv_cor), 100*stats_quantile(cv_mape))
   colnames(res_cv) <- c('Corr','MedAPE')
-  print(paste('Cross-validation metrics -',compressor_nm,'-',data_nm))
-  print(round(res_cv, 4))
+  if (print_stats == 1){
+    print(paste('Cross-validation metrics -',compressor_nm,'-',data_nm))
+    print(round(res_cv, 4))
+  }
   
   return(list(pred=c(unlist(pred_list)), ytest=c(unlist(ytest_list)),res_cv=res_cv))
 }
@@ -224,8 +230,98 @@ cr_regression_gam <- function(df, kf=8, graph=1, fig_nm, data_nm, compressor_nm,
 
 
 
-scatterplot_sz_3modes_prediction <- function(gam_res, fig_nm, data_nm, error_bnd, error_mode){
+cr_regression_gam_cv <- function(df, kf=8, print_stats=1, comp_thresh=comp_thresh){
+  set.seed(1234)
   
+  indsz <- which( df$y <= comp_thresh )
+  df <- df[indsz,]
+  qent0 <- df$qent
+  qent <- (log(qent0)-min(log(qent0),na.rm=TRUE))/(max(log(qent0),na.rm=TRUE)-min(log(qent0),na.rm=TRUE))
+  vrgstd0 <- df$vrgstd
+  vrgstd <- ((vrgstd0)-min((vrgstd0),na.rm=TRUE))/(max((vrgstd0),na.rm=TRUE)-min((vrgstd0),na.rm=TRUE))
+  y <- log(df$y)
+  df_reg <- data.frame(y, qent, vrgstd)
+  indqna <- which(is.na(qent))
+  if (length(indqna)>1) {df_reg <- df_reg[-indqna,]}
+  
+  df_reg <- df_reg[sample(1:nrow(df_reg)), ]
+  fold <- rep(1:kf, each=floor(nrow(df_reg)/kf))
+  if (length(fold)<nrow(df_reg)){fold_end <- rep(kf,length.out=(nrow(df_reg)-length(fold))) ; fold <- c(fold,fold_end)}
+  df_reg$fold <- fold
+  cv_cor <- c() ; cv_mape <- c() 
+  pred_list <- c()
+  ytest_list <- c()
+  vtest_list <- c()
+  for (l in 1:kf){
+    test.set <- df_reg[df_reg$fold == l,]
+    train.set <- df_reg[df_reg$fold != l,]
+    mi <- gam(y~s(qent, k=3) + s(vrgstd, k=3) + ti(qent, vrgstd, k=3), data = train.set)
+    predi <- predict.gam(mi, newdata=test.set)
+    #
+    cv_mape[l] <- RelMAE(true=exp(test.set$y),pred=exp(predi))
+    cv_cor[l] <- cor(exp(test.set$y),exp(predi))
+    #
+    pred_list[[l]] <- exp(predi)
+    ytest_list[[l]] <- exp(test.set$y) 
+    vtest_list[[l]] <- test.set$vrgstd   }
+  
+  stats_quantile <- function(x){ quantile(x, probs=c(0.10, 0.5, 0.9), na.rm = TRUE) } 
+  res_cv <- cbind(stats_quantile(cv_cor), 100*stats_quantile(cv_mape))
+  colnames(res_cv) <- c('Corr','MedAPE')
+  if (print_stats == 1){
+    print(paste('Cross-validation metrics -',compressor_nm,'-',data_nm))
+    print(round(res_cv, 4))
+  }
+  
+  return(list(pred=c(unlist(pred_list)), ytest=c(unlist(ytest_list)),res_cv=res_cv))
+}
+
+
+cr_regression_gam_traintest <- function(df, kf=20, prctg, print_stats=1, compressor_nm){
+  set.seed(1234)
+  indsz <- which(df$y<=comp_thresh)
+  df <- df[indsz,]
+  qent0 <- df$qent
+  qent <- (log(qent0)-min(log(qent0),na.rm=TRUE))/(max(log(qent0),na.rm=TRUE)-min(log(qent0),na.rm=TRUE))
+  vrgstd0 <- df$vrgstd
+  vrgstd <- ((vrgstd0)-min((vrgstd0),na.rm=TRUE))/(max((vrgstd0),na.rm=TRUE)-min((vrgstd0),na.rm=TRUE))
+  y <- log(df$y)
+  df_reg <- data.frame(y, qent, vrgstd)
+  indqna <- which(is.na(qent))
+  if (length(indqna)>1) {df_reg <- df_reg[-indqna,]}
+
+  cv_cor <- c() ; cv_mape <- c() 
+  pred_list <- c()
+  ytest_list <- c()
+  vtest_list <- c()
+  for (l in 1:kf){
+    df_reg <- df_reg[sample(1:nrow(df_reg)), ]
+    test.set <- df_reg[1:(prctg*nrow(df_reg)),]
+    train.set <- df_reg[(prctg*nrow(df_reg)+1):nrow(df_reg),]
+    mi <- gam(y~s(qent, k=3) + s(vrgstd, k=3) + ti(qent, vrgstd, k=3), data = train.set)
+    predi <- predict.gam(mi, newdata=test.set)
+    #
+    cv_mape[l] <- RelMAE(true=exp(test.set$y),pred=exp(predi))
+    cv_cor[l] <- cor(exp(test.set$y),exp(predi))
+    #
+    pred_list[[l]] <- exp(predi)
+    ytest_list[[l]] <- exp(test.set$y) 
+    vtest_list[[l]] <- test.set$vrgstd   }
+  
+  stats_quantile <- function(x){ quantile(x, probs=c(0.10, 0.5, 0.9), na.rm = TRUE) } 
+  res_cv <- cbind(stats_quantile(cv_cor), 100*stats_quantile(cv_mape))
+  colnames(res_cv) <- c('Corr','MedAPE')
+  if (print_stats == 1){
+    print(paste('Cross-validation metrics -',compressor_nm))
+    print(round(res_cv, 4))
+  }
+  return(list(pred=c(unlist(pred_list)), ytest=c(unlist(ytest_list)),res_cv=res_cv))
+}
+
+
+
+
+scatterplot_sz_3modes_prediction <- function(gam_res, fig_nm, data_nm, error_bnd, error_mode){
   ymin <- min(gam_res[[1]]$ytest, gam_res[[1]]$pred,gam_res[[2]]$ytest, gam_res[[2]]$pred,gam_res[[3]]$ytest, gam_res[[3]]$pred, gam_res[[4]]$ytest, gam_res[[4]]$pred, na.rm=TRUE) -.05
   ymax <- max(gam_res[[1]]$ytest, gam_res[[1]]$pred,gam_res[[2]]$ytest, gam_res[[2]]$pred,gam_res[[3]]$ytest, gam_res[[3]]$pred, gam_res[[4]]$ytest, gam_res[[4]]$pred, na.rm=TRUE) +.05
   
@@ -245,7 +341,7 @@ scatterplot_sz_3modes_prediction <- function(gam_res, fig_nm, data_nm, error_bnd
 
 
 lasso_selection <- function(df,  print=1){
-  indsz <- which(df$y<=100)
+  indsz <- which(df$y<=comp_thresh)
   df <- df[indsz,]
   qent0 <- log(df$qent)
   qent <- scale(qent0, scale = TRUE, center=TRUE)
@@ -263,8 +359,10 @@ lasso_selection <- function(df,  print=1){
 }
 
 
+
+
 gam_selection <- function(df){
-  indsz <- which(df$y<=100)
+  indsz <- which(df$y<=comp_thresh)
   df <- df[indsz,]
   qent0 <- df$qent
   qent <- (log(qent0)-min(log(qent0),na.rm=TRUE))/(max(log(qent0),na.rm=TRUE)-min(log(qent0),na.rm=TRUE))
@@ -287,11 +385,11 @@ cr_regression_coeffcient <- function(data, graph_nm, error_mode){
   coeff_regression <- array(NA, c((length(unique(data$info.compressor))+2), (length(err_bnd)), 4))
   for (j in 1:(length(err_bnd))){
     list_df <- extract_cr_predictors(data, error_mode, error_bnd=err_bnd[j], gaussian_corr=0) 
-    indsz0 <- which(list_df$df[['sz']]$y<=100)
+    indsz0 <- which(list_df$df[['sz']]$y<=comp_thresh)
     compressors <- list_df$compressors
     for (i in 1:length(compressors)){
       df <- list_df$df[[i]]
-      indsz <- which(df$y<=100)
+      indsz <- which(df$y<=comp_thresh)
       df <- df[indsz,]
       qent0 <- log(df$qent)
       qent <- scale(qent0, scale = TRUE, center=TRUE)
