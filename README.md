@@ -64,6 +64,16 @@ docker run -it --rm ghcr.io/fthpc/correlation_compressibility:latest
 docker run -it --rm --security-opt label=disable ghcr.io/fthpc/correlation_compressibility:latest
 ```
 
+NOTE this container image does not contain the updated reviewer rebuttal code. In order to install the newest code in the container,
+follow these steps once the container has been activated:
+
+```bash
+sudo dnf install git
+sudo dnf install git-lfs
+git-lfs clone https://github.com/FTHPC/Correlation_Compressibility
+cd Correlation_Compressibility/
+```
+
 ### Building the Container
 
 You can build the container yourself as follows:
