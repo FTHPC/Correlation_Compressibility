@@ -70,7 +70,7 @@ follow these steps once the container has been activated:
 ```bash
 sudo dnf install git
 sudo dnf install git-lfs
-git-lfs clone https://github.com/FTHPC/Correlation_Compressibility
+git-lfs clone --recursive https://github.com/FTHPC/Correlation_Compressibility
 #updates package install location
 export COMPRESS_HOME=/app/Correlation_Compressibility
 cd Correlation_Compressibility/
