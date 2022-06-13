@@ -21,10 +21,9 @@ fi
 # activate spack and spack packages
 echo "Spack location: $SPACK_ROOT"
 
-cd $COMPRESS_HOME
+cd $COMPRESS_HOME/runtime_analysis
 echo "Package location: $COMPRESS_HOME"
 
-cd $SPACK_ENV/runtime_analysis
 
 # runs script based on dataset specified 
 if [[ "$dataset" == "NYX" ]]; then
