@@ -1,13 +1,13 @@
 from fedora:35 as builder
 
-RUN dnf install -y gcc-g++ gfortran glib-devel libtool findutils file pkg-config lbzip2 git tar zip patch xz python3-devel coreutils m4 automake autoconf cmake openssl-devel openssh-server openssh bison bison-devel gawk which && \
+RUN dnf install -y gcc-g++ gfortran glib-devel libtool findutils file pkg-config lbzip2 git tar zip zlib-devel perl-core patch xz python3-devel coreutils m4 automake autoconf cmake openssl-devel openssh-server openssh bison bison-devel gawk which lzma glib && \
     dnf clean all -y && \
     groupadd demo && \
     useradd demo -d /home/demo -g demo
 RUN echo "demo    ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers.d/demo
 RUN mkdir /app && chown demo:demo /app
 RUN ln -s /usr/lib64/libpthread.so.0 /usr/lib64/libpthread.so
-RUN su demo -c "git clone --depth=1 https://github.com/spack/spack /app/spack"
+RUN su demo -c "git clone --depth=1 --branch v0.17.2 https://github.com/spack/spack /app/spack"
 RUN su demo -c "git clone --depth=1 https://github.com/robertu94/spack_packages /app/robertu94_packages"
 WORKDIR /app
 USER demo
