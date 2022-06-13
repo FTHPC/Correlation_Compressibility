@@ -7,7 +7,7 @@ RUN dnf install -y gcc-g++ gfortran glib-devel libtool findutils file pkg-config
 RUN echo "demo    ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers.d/demo
 RUN mkdir /app && chown demo:demo /app
 RUN ln -s /usr/lib64/libpthread.so.0 /usr/lib64/libpthread.so
-RUN su demo -c "git clone --depth=1 --branch v0.17.2 https://github.com/spack/spack /app/spack"
+RUN su demo -c "git clone --filter=blob:none https://github.com/spack/spack /app/spack && cd /app/spack && git checkout 89f6db21f10ebe95c66b7015c14a69052619d26d"
 RUN su demo -c "git clone --depth=1 https://github.com/robertu94/spack_packages /app/robertu94_packages"
 WORKDIR /app
 USER demo
