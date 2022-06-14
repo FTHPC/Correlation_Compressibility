@@ -34,13 +34,3 @@ void SVD_3D(tensor B)
 
 
 }
-
-
-int main()
-{
-    MatrixXf m = MatrixXf::Random(3,2);
-    
-    
-
-
-}
