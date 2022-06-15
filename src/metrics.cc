@@ -67,6 +67,10 @@ static pressio_register metrics_svd_plugin(metrics_plugins(), "svd", [](){ retur
 
 
 int main() {
+  library.get_metrics("svd")
+
+
+
   pressio library;
   pressio_data metadata = pressio_data::owning(pressio_float_dtype, {500,500,100});
   pressio_io io = library.get_io("posix");
@@ -83,6 +87,7 @@ int main() {
       { "pressio:compressor", "sz"s },
       { "pressio:metric", "svd"s },
     });
+
 
   compressor->compress(&input, &compressed);
   compressor->decompress(&compressed, &decompressed);
