@@ -115,9 +115,9 @@ int main(int argc, char* argv[]) {
   };
 
 
-  using request_t = std::tuple<std::string, std::string, double>;
-  using response_t = std::tuple<request_t,pressio_options>;
-  std::vector<request_t> requests;
+  using compression_request_t = std::tuple<std::string, std::string, double>;
+  using compression_response_t = std::tuple<compression_request_t,pressio_options>;
+  std::vector<compression_request_t> requests;
 
   // loop to go through the different compressors
   for (auto const& comp: comps){
@@ -136,14 +136,19 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  pressio_data input;
+  if(rank ==0) {
+    pressio_data metadata = pressio_data::owning(dtype, dims);  
+    input = std::move(*io->read(&metadata));
+  }
+  distributed::comm::bcast(input, 0, MPI_COMM_WORLD);
+
   distributed::queue::work_queue(
-      distributed::queue::work_queue_options<request_t>(),
+      distributed::queue::work_queue_options<compression_request_t>(),
       requests.begin(),
       requests.end(),
-      [&](request_t const& request) {
+      [&](compression_request_t const& request) {
         auto const& [comp, bound_type, bound] = request;
-        pressio_data metadata = pressio_data::owning(dtype, dims);  
-        pressio_data input = std::move(*io->read(&metadata));
         pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
         pressio_data decompressed = pressio_data::owning(input.dtype(), input.dimensions());
         auto options = make_config(comp, bound_type, bound, input.dtype());
@@ -158,9 +163,9 @@ int main(int argc, char* argv[]) {
 
         auto compress_results = compressor->get_metrics_results();
         std::cout << compress_results << std::endl;
-        return response_t(request, std::move(compress_results));
+        return compression_response_t(request, std::move(compress_results));
       },
-      [](response_t const& response) {
+      [](compression_response_t const& response) {
       }
       );
 
