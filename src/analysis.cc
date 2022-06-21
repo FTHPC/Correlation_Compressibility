@@ -9,6 +9,11 @@
 
 #include "compress.h"
 #include <array>
+#include <tuple>
+#include <mpi.h>
+#include <libdistributed/libdistributed_work_queue.h>
+#include <libpressio_ext/cpp/serializable.h>
+#include <libpressio_ext/cpp/printers.h>
 
 using namespace std::string_literals;
 
@@ -67,39 +72,39 @@ pressio_options make_config(std::string compressor_id, std::string boundmode, fl
 
 
 
-int main() {
+int main(int argc, char* argv[]) {
+  MPI_Init(&argc, &argv);
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   pressio library;
   auto dtype = pressio_float_dtype;
   std::vector<size_t> dims {500,500,100};
-
-  pressio_data metadata = pressio_data::owning(dtype, dims);  
   pressio_io io = library.get_io("posix");
   io->set_options({
       {"io:path", "/home/runderwood/git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32"}
     });
-  pressio_data input = std::move(*io->read(&metadata));
-  pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
+  if(rank == 0) {
 
-  pressio_compressor analysis = library.get_compressor("pressio");
-  analysis->set_options({
-      { "pressio:metric", "data_analysis"s },
-    });
+    pressio_data metadata = pressio_data::owning(dtype, dims);  
+    pressio_data input = std::move(*io->read(&metadata));
+    pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
 
-
-  analysis->compress(&input, &compressed);
-  
-
-  auto analysis_results = analysis->get_metrics_results();
-  std::cout << analysis_results << std::endl;
+    pressio_compressor analysis = library.get_compressor("pressio");
+    analysis->set_options({
+        { "pressio:metric", "data_analysis"s },
+      });
 
 
+    analysis->compress(&input, &compressed);
+    
+
+    auto analysis_results = analysis->get_metrics_results();
+    std::cout << analysis_results << std::endl;
+}
 
 
 
-  /* run different compressors on different bounds */
-  pressio_compressor compressor = library.get_compressor("pressio");
-  compressed = pressio_data::empty(pressio_byte_dtype, {});
-  pressio_data decompressed = pressio_data::owning(input.dtype(), input.dimensions());
+
 
   static const std::vector metrics_composites {
     "error_stat"s, "size"s, "compress_analysis"s,
@@ -108,6 +113,11 @@ int main() {
   static const std::array bound_types {
     "pressio:abs"s, "pressio:rel"s
   };
+
+
+  using request_t = std::tuple<std::string, std::string, double>;
+  using response_t = std::tuple<request_t,pressio_options>;
+  std::vector<request_t> requests;
 
   // loop to go through the different compressors
   for (auto const& comp: comps){
@@ -121,21 +131,38 @@ int main() {
       // loop to go through different bounds 1e-5 upto 1e-2
       // reset bound for each bound type and compressor
       for (double bound=1e-5; bound<1e-1; bound*=10){
+        requests.push_back(std::make_tuple(comp, bound_type, bound));
+      }
+    }
+  }
+
+  distributed::queue::work_queue(
+      distributed::queue::work_queue_options<request_t>(),
+      requests.begin(),
+      requests.end(),
+      [&](request_t const& request) {
+        auto const& [comp, bound_type, bound] = request;
+        pressio_data metadata = pressio_data::owning(dtype, dims);  
+        pressio_data input = std::move(*io->read(&metadata));
+        pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
+        pressio_data decompressed = pressio_data::owning(input.dtype(), input.dimensions());
         auto options = make_config(comp, bound_type, bound, input.dtype());
+        pressio_compressor compressor = library.get_compressor("pressio");
         options.set("pressio:compressor", comp);
         options.set("pressio:metric", "composite"s);
         options.set("composite:plugins", metrics_composites);
         compressor->set_options(options);
 
-
         compressor->compress(&input, &compressed);
         compressor->decompress(&compressed, &decompressed);
 
         auto compress_results = compressor->get_metrics_results();
-        std::cout << "bound: " << bound << std::endl;
-        std::cout << "compr: " << comp << std::endl;
         std::cout << compress_results << std::endl;
+        return response_t(request, std::move(compress_results));
+      },
+      [](response_t const& response) {
       }
-    }
-  }
+      );
+
+  MPI_Finalize();
 }
