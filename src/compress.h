@@ -1,6 +1,5 @@
 #ifndef COMPRESS_H
 #define COMPRESS_H
-#define DEBUG
 
 #include <libpressio_ext/cpp/libpressio.h>
 #include <libpressio_ext/io/pressio_io.h>

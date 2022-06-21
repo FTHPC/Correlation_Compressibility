@@ -13,8 +13,8 @@ __pycache__
 prediction_benchmark_*
 training_benchmark_*
 *_h5
-*.txt
 *.tgz
+/*.txt
 *.png
 compression_mpi.e*
 compression_mpi.o*

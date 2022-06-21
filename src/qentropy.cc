@@ -1,38 +1,35 @@
-// #include <cstdint>
-// #include <random>
-// #include <ranges>
-// #include <functional>
-// #include <execution>
-// #include <chrono>
-// #include <memory_resource>
+#include <cstdint>
+#include <random>
+#include <ranges>
+#include <functional>
+#include <execution>
+#include <chrono>
 
 #include "compress.h"
 
 
 double qentropy(std::vector<float> const& copy, double abs) {
-//   std::pmr::monotonic_buffer_resource pool(sizeof(uint32_t) * 108117* 2);
-  
-//   const auto N = copy.size();
-//   auto [min_it, max_it] = std::minmax_element(copy.begin(), copy.end());
-//   double min = *min_it;
-//   double max = *max_it;
-//   size_t bins = (max-min)/abs + 1;
-//   std::cout << bins << std::endl;
-//   std::pmr::vector<uint32_t> bin_counts(bins, &pool);
-//   for (size_t i = 0; i < copy.size(); ++i) {
-//     bin_counts.at(size_t((copy[i] - min)/abs))++;
-//   }
-//   std::cout << "prob" << std::endl;
+   const auto N = copy.size();
+   auto [min_it, max_it] = std::minmax_element(copy.begin(), copy.end());
+   double min = *min_it;
+   double max = *max_it;
+   size_t bins = (max-min)/abs + 1;
+   std::cout << bins << std::endl;
+   std::vector<uint32_t> bin_counts(bins);
+   for (size_t i = 0; i < copy.size(); ++i) {
+     bin_counts.at(size_t((copy[i] - min)/abs))++;
+   }
+   std::cout << "prob" << std::endl;
 
-//   double sum = 0;
-// //#pragma omp parallel for simd reduction(+:sum)
-//   for (size_t i = 0; i < bins; ++i) {
-//     double prop = static_cast<double>(bin_counts[i])/N;
-//     sum += (prop * log2(prop));
-//   }
-//   std::cout << "sum" << std::endl;
+   double sum = 0;
+ #pragma omp parallel for simd reduction(+:sum)
+   for (size_t i = 0; i < bins; ++i) {
+     double prop = static_cast<double>(bin_counts[i])/N;
+     sum += (prop * log2(prop));
+   }
+   std::cout << "sum" << std::endl;
 
-  // return -sum;
+  return -sum;
   return 15;
 }
 

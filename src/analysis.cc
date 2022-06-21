@@ -8,22 +8,22 @@
 */
 
 #include "compress.h"
-#include <initializer_list>
+#include <array>
 
 using namespace std::string_literals;
 
-static std::vector<std::string> comps = {
-  "sz", 
-  "zfp",
-  "mgard",
-  "tthresh",
-  "digit_rounding",
-  "fpzip",
-  "bit_grooming"
+static std::array comps = {
+  "sz"s, 
+  "zfp"s,
+  "mgard"s,
+  "tthresh"s,
+  "digit_rounding"s,
+  "fpzip"s,
+  "bit_grooming"s
 };
 
 
-std::initializer_list<std::vector<std::string>> make_config(std::string compressor_id, float bound, std::string boundmode, int dtype){
+pressio_options make_config(std::string compressor_id, std::string boundmode, float bound,  int dtype){
     usi prec = 0;
     if (!compressor_id.compare("sz")      ||
         !compressor_id.compare("zfp")     ||
@@ -58,7 +58,7 @@ std::initializer_list<std::vector<std::string>> make_config(std::string compress
       return {{"fpzip:prec"s, prec}};     
     }
     else{
-      fprintf(stderr, "ERROR: Unknown Configuration; Exiting 32");
+      std::cerr << "ERROR: Unknown Configuration; Exiting 32" << std::endl;
       exit(32);
     }
 }
@@ -70,11 +70,12 @@ std::initializer_list<std::vector<std::string>> make_config(std::string compress
 int main() {
   pressio library;
   auto dtype = pressio_float_dtype;
+  std::vector<size_t> dims {500,500,100};
 
-  pressio_data metadata = pressio_data::owning(dtype, {500,500,100});  
+  pressio_data metadata = pressio_data::owning(dtype, dims);  
   pressio_io io = library.get_io("posix");
   io->set_options({
-      {"io:path", "/home/dkrasow/compression/datasets/SDRBENCH-Hurricane-ISABEL-100x500x500/CLOUDf48.bin.f32"}
+      {"io:path", "/home/runderwood/git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32"}
     });
   pressio_data input = std::move(*io->read(&metadata));
   pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
@@ -100,36 +101,31 @@ int main() {
   compressed = pressio_data::empty(pressio_byte_dtype, {});
   pressio_data decompressed = pressio_data::owning(input.dtype(), input.dimensions());
 
-  float bound;
-
-  static std::vector<std::string> metrics_composites = {
+  static const std::vector metrics_composites {
     "error_stat"s, "size"s, "compress_analysis"s,
   };
 
-  static std::vector<std::string> bound_type = {
-    "pressio:abs", "pressio:rel"
+  static const std::array bound_types {
+    "pressio:abs"s, "pressio:rel"s
   };
 
   // loop to go through the different compressors
-  for (usi i=0; i<comps.size(); i++){
+  for (auto const& comp: comps){
     // loop to go through the different bound types (rel and abs)
-    for (usi j=0; j<bound_type.size(); j++){
+    for (auto const& bound_type: bound_types){
       // fpzip, digit_rounding, and bit_grooming have no relative boundmode
-      if (!(bound_type[j].compare("pressio:rel")) && 
-         (!comps[i].compare("fpzip") || !comps[i].compare("digit_rounding") 
-                                     || !comps[i].compare("bit_grooming")))
+      if (!(bound_type.compare("pressio:rel")) && 
+         (!comp.compare("fpzip") || !comp.compare("digit_rounding") 
+                                     || !comp.compare("bit_grooming")))
         continue;
       // loop to go through different bounds 1e-5 upto 1e-2
       // reset bound for each bound type and compressor
-      bound = 1e-5;
-      for (usi k=1; k<5; k++){
-      
-        compressor->set_options({
-            { "compressor_config", make_config(comps[i], bound_type[j], bound, input.dtype()) },
-            { "pressio:compressor", comps[i] },
-            { "pressio:metric", "composite"s },
-            { "composite:plugins", metrics_composites }
-          });
+      for (double bound=1e-5; bound<1e-1; bound*=10){
+        auto options = make_config(comp, bound_type, bound, input.dtype());
+        options.set("pressio:compressor", comp);
+        options.set("pressio:metric", "composite"s);
+        options.set("composite:plugins", metrics_composites);
+        compressor->set_options(options);
 
 
         compressor->compress(&input, &compressed);
@@ -137,10 +133,8 @@ int main() {
 
         auto compress_results = compressor->get_metrics_results();
         std::cout << "bound: " << bound << std::endl;
-        std::cout << "compr: " << comps[i] << std::endl;
+        std::cout << "compr: " << comp << std::endl;
         std::cout << compress_results << std::endl;
-        
-        bound *= 10;
       }
     }
   }
