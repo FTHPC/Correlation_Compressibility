@@ -28,7 +28,7 @@ static std::array comps = {
 };
 
 
-pressio_options make_config(std::string compressor_id, std::string boundmode, float bound,  int dtype){
+pressio_options make_config(std::string compressor_id, std::string boundmode, float bound, int dtype){
   usi prec = 0;
   if (!compressor_id.compare("sz")      ||
       !compressor_id.compare("zfp")     ||
@@ -43,8 +43,8 @@ pressio_options make_config(std::string compressor_id, std::string boundmode, fl
     else if (bound == 1E-4)   prec = 1;
     else if (bound == 1E-5)   prec = 3;
     return {{"bit_grooming:n_sig_digits"s, prec}, 
-      {"bit_grooming:error_control_mode_str"s, "NSD"s},
-      {"bit_grooming:mode_str"s, "BITGROOM"s}};    
+            {"bit_grooming:error_control_mode_str"s, "NSD"s},
+            {"bit_grooming:mode_str"s, "BITGROOM"s}};    
   }
   else if (!compressor_id.compare("digit_rounding")) {
     if (bound == 1E-2)        prec = 2;
@@ -72,16 +72,29 @@ int main(int argc, char* argv[]) {
   MPI_Init(&argc, &argv);
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  libpressio_register_all();
   pressio library;
-  auto dtype = pressio_float_dtype;
-  std::vector<size_t> dims {500,500,100};
-  pressio_io io = library.get_io("posix");
+  
+  // auto dtype = pressio_float_dtype;
+  // std::vector<size_t> dims {500,500,100};
+  // pressio_io io = library.get_io("posix");
+  // io->set_options({
+  //     {"io:path", "/home/dkrasow/compression/datasets/SDRBENCH-Hurricane-ISABEL-100x500x500/CLOUDf48.bin.f32"}
+  //     });
+
+  auto dtype = pressio_double_dtype;
+  std::vector<size_t> dims {1028, 1028};
+  pressio_io io = library.get_io("hdf5");
   io->set_options({
-      {"io:path", "/home/runderwood/git/datasets/hurricane/100x500x500/CLOUDf48.bin.f32"}
+      {"io:path", "/home/dkrasow/compression/datasets/spatialweight_fixed_sum/sample_gp_K1028_sum3ranges_Sample1.h5"},
+      {"hdf5:dataset", "Z"}
       });
+
+
+  pressio_data input;
   if(!rank) {
     pressio_data metadata = pressio_data::owning(dtype, dims);  
-    pressio_data input = std::move(*io->read(&metadata));
+    input = std::move(*io->read(&metadata));
     pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
 
     pressio_compressor analysis = library.get_compressor("pressio");
@@ -119,11 +132,6 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  pressio_data input;
-  if(rank ==0) {
-    pressio_data metadata = pressio_data::owning(dtype, dims);  
-    input = std::move(*io->read(&metadata));
-  }
   distributed::comm::bcast(input, 0, MPI_COMM_WORLD);
 
   distributed::queue::work_queue(
@@ -134,7 +142,7 @@ int main(int argc, char* argv[]) {
         auto const& [comp, bound_type, bound] = request;
         pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
         pressio_data decompressed = pressio_data::owning(input.dtype(), input.dimensions());
-        
+
         auto options = make_config(comp, bound_type, bound, input.dtype());
         pressio_compressor compressor = library.get_compressor("pressio");
         options.set("pressio:compressor", comp);

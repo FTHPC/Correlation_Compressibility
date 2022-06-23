@@ -6,6 +6,7 @@
 #include <libpressio_ext/io/posix.h>
 #include <std_compat/optional.h>
 #include <std_compat/memory.h>
+#include <libpressio_meta.h>
 
 #include <map>
 #include <iostream>
@@ -23,12 +24,10 @@ typedef unsigned long int uli;
 typedef unsigned short int usi;
 
 // from svd.cc
-void SVD_2D_Jacobi(const float* ptr, compat::optional<float*> m);
-void SVD_2D_DC(const float* ptr, compat::optional<float*> m);
-void SVD_3D_Tucker(const float* ptr, compat::optional<float*> m);
-double find_svd_trunc(compat::optional<float*> m, float threshold);
+Eigen::MatrixXd svd_sv(void* ptr, usi num_dim, std::vector<size_t> dimensions, int dtype);
+double find_svd_trunc(std::vector<double> ev0, double threshold);
 
 // from qentropy.cc
-double qentropy(std::vector<float> const& copy, double abs);
+double qentropy(std::vector<float> data, double abs);
 
 #endif

@@ -11,12 +11,10 @@ endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 
 
-find_package(LibPressio REQUIRED)
-find_package(LibPressioTThresh REQUIRED)
-find_package(std_compat REQUIRED)
+find_package(LibPressioTools REQUIRED)
+find_package(LibDistributed REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenMP REQUIRED)
-find_package(LibDistributed REQUIRED)
 find_package(MPI REQUIRED)
 include(GNUInstallDirs)
 
@@ -25,7 +23,7 @@ target_link_libraries(type_shared PRIVATE MPI::MPI_CXX)
 
 add_executable(compress_analysis metrics.cc svd.cc analysis.cc qentropy.cc)
 target_compile_features(compress_analysis PRIVATE cxx_std_20)
-target_link_libraries(compress_analysis PRIVATE LibPressio::libpressio Eigen3::Eigen OpenMP::OpenMP_CXX LibDistributed::libdistributed)
+target_link_libraries(compress_analysis PRIVATE LibPressioTools::libpressio_meta Eigen3::Eigen OpenMP::OpenMP_CXX LibDistributed::libdistributed)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(compress_analysis PRIVATE DEBUG)
 endif()

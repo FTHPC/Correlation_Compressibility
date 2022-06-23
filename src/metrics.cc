@@ -8,46 +8,46 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
     int begin_compress_impl(const struct pressio_data * input, struct pressio_data const * ) override {
       size_t dims_num = input->num_dimensions();
       auto dims = input->dimensions();
-      // auto dtype = input->dtype();
-      const float* ptr = static_cast<const float*>(input->data());
+      auto dtype = input->dtype();
 
-      //not recommended, just an example of what is possible
-      // if(dtype != pressio_float_dtype) {
-      //   return set_error(1, "only float supported");
-      // }
+      if (dims_num != 2 && dims_num != 3) {
+        return set_error(1, "Invalid amount of dimensions. Only 2D and 3D supported");
+      }
 
       std::reverse(dims.begin(), dims.end()); //put in row major order
-      
-      
-      (void)ptr;
 
-      /* run functions to produce metrics */
+      Eigen::MatrixXd svd0_s = svd_sv(input->data(), dims_num, dims, dtype);
+      // stores the squared singular value matrix 
+      Eigen::MatrixXd svd0_s_squared = svd0_s.array().square();
+
+      // determines cumulative sum and sum of singular values
+      int sum = 0;
+      vector<double> cumsum_svd0;
+      for(size_t i=0; i<svd0_s_squared.size(); ++i){
+        sum += svd0_s_squared(i);
+        cumsum_svd0.push_back(sum);
+      } 
       
-      // 2D SVD
-      if (dims_num == 2)
-        SVD_2D_Jacobi(ptr, svd);
-      // 3D SVD
-      else if (dims_num == 3)
-        SVD_3D_Tucker(ptr, svd);
-
-      // singular values from svd trunction levels
+      // determines ev0
+      vector<double> ev0;
+      for (size_t i=0; i<cumsum_svd0.size(); ++i){
+        ev0.push_back(cumsum_svd0[i] / sum);
+      }
       
-      n100  = find_svd_trunc(svd, 1);
-      n9999 = find_svd_trunc(svd, .9999);
-      n999  = find_svd_trunc(svd, .999);
-      n99   = find_svd_trunc(svd, .99);
+      // singular values from svd trunction levels based on ev0 and thresholds
+      n100  = find_svd_trunc(ev0, 1);
+      n9999 = find_svd_trunc(ev0, .9999);
+      n999  = find_svd_trunc(ev0, .999);
+      n99   = find_svd_trunc(ev0, .99);
+    
 
-
-#ifdef DEBUG
-      // std::cout << svd << std::endl;
-#endif
       return 0;
     }
 
     pressio_options get_metrics_results(pressio_options const &)  override {
       pressio_options opt;
       //newer way
-      set(opt, "data_analysis:svd", svd);
+      // set(opt, "data_analysis:svd", svd);
       set(opt, "data_analysis:n100", n100);
       set(opt, "data_analysis:n9999", n9999);
       set(opt, "data_analysis:n999", n999);
@@ -64,7 +64,7 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
     struct pressio_options get_documentation_impl() const override {
       pressio_options opt;
       set(opt, "pressio:description", "Basic error statistics that can be computed in in one pass");
-      set(opt, "data_analysis:svd",   "the singular value decomposition");
+      // set(opt, "data_analysis:svd",   "the singular value decomposition");
       set(opt, "data_analysis:n100",  "n100");
       set(opt, "data_analysis:n9999", "n9999");
       set(opt, "data_analysis:n999",  "n999");
@@ -79,7 +79,7 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       return "data_analysis";
     }
 
-    compat::optional<float*> svd;
+    // compat::optional<float *> svd;
     compat::optional<double> n100, n9999, n999, n99;
 };
 
@@ -95,17 +95,19 @@ class compress_analysis_metric_plugin : public libpressio_metrics_plugin {
       // size_t dims_num = input->num_dimensions();
       // auto dims = input->dimensions();
       // auto dtype = input->dtype();
+      auto num_elements = input->num_elements();
 
       const float* ptr = static_cast<const float*>(input->data());    
-      (void)ptr;
+      // (void)ptr;
 
-      qentropy = 1.234;
+      std::vector<float> ptr_vec(ptr, ptr + num_elements);
+      q_entropy = qentropy(ptr_vec , 1e-3);
       return 0;
     }
 
     pressio_options get_metrics_results(pressio_options const &)  override {
       pressio_options opt;
-      set(opt, "compress_analysis:qentropy", qentropy);
+      set(opt, "compress_analysis:qentropy", q_entropy);
       return opt;
     }
     struct pressio_options get_configuration() const override {
@@ -128,7 +130,7 @@ class compress_analysis_metric_plugin : public libpressio_metrics_plugin {
     }
 
     
-    compat::optional<double> qentropy;
+    compat::optional<double> q_entropy;
 };
 
 static pressio_register metrics_compress_analysis_plugin(metrics_plugins(), "compress_analysis", [](){ return compat::make_unique<compress_analysis_metric_plugin>(); });
