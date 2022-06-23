@@ -16,23 +16,48 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
 
       std::reverse(dims.begin(), dims.end()); //put in row major order
 
+      // compute singular values and store values in ascending order
       Eigen::MatrixXd svd0_s = svd_sv(input->data(), dims_num, dims, dtype);
+
       // stores the squared singular value matrix 
       Eigen::MatrixXd svd0_s_squared = svd0_s.array().square();
+   
+   // debug print out svd singular value array
+    #ifdef DEBUG
+      for(size_t i=0; i<svd0_s.size(); ++i)
+        cout << svd0_s(i) << ' ';
+      cout << endl;
+    #endif
 
       // determines cumulative sum and sum of singular values
-      int sum = 0;
+      double sum = 0;
       vector<double> cumsum_svd0;
       for(size_t i=0; i<svd0_s_squared.size(); ++i){
         sum += svd0_s_squared(i);
         cumsum_svd0.push_back(sum);
       } 
+
+    // debug print of cumsum of the squared svd values
+    #ifdef DEBUG
+      for (double i: cumsum_svd0)
+        cout << i << ' ';
+      cout << "sum: " << sum << endl;
+    #endif
+  
       
       // determines ev0
       vector<double> ev0;
       for (size_t i=0; i<cumsum_svd0.size(); ++i){
         ev0.push_back(cumsum_svd0[i] / sum);
       }
+
+    // debug print of the ev0 values
+    #ifdef DEBUG
+      for (double i: ev0)
+        cout << i << ' ';
+      cout << endl;
+    #endif
+  
       
       // singular values from svd trunction levels based on ev0 and thresholds
       n100  = find_svd_trunc(ev0, 1);
@@ -46,8 +71,6 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
 
     pressio_options get_metrics_results(pressio_options const &)  override {
       pressio_options opt;
-      //newer way
-      // set(opt, "data_analysis:svd", svd);
       set(opt, "data_analysis:n100", n100);
       set(opt, "data_analysis:n9999", n9999);
       set(opt, "data_analysis:n999", n999);
@@ -64,7 +87,6 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
     struct pressio_options get_documentation_impl() const override {
       pressio_options opt;
       set(opt, "pressio:description", "Basic error statistics that can be computed in in one pass");
-      // set(opt, "data_analysis:svd",   "the singular value decomposition");
       set(opt, "data_analysis:n100",  "n100");
       set(opt, "data_analysis:n9999", "n9999");
       set(opt, "data_analysis:n999",  "n999");
@@ -78,8 +100,6 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
     const char* prefix() const override {
       return "data_analysis";
     }
-
-    // compat::optional<float *> svd;
     compat::optional<double> n100, n9999, n999, n99;
 };
 
@@ -87,21 +107,20 @@ static pressio_register metrics_data_analysis_plugin(metrics_plugins(), "data_an
 
 
 
-
+usi times_sset = 0;
 
 // dependent on error bound
 class compress_analysis_metric_plugin : public libpressio_metrics_plugin {
     int begin_compress_impl(const struct pressio_data * input, struct pressio_data const * ) override {
       // size_t dims_num = input->num_dimensions();
       // auto dims = input->dimensions();
-      // auto dtype = input->dtype();
+      auto dtype = input->dtype();
       auto num_elements = input->num_elements();
 
-      const float* ptr = static_cast<const float*>(input->data());    
-      // (void)ptr;
+      // const float* ptr = static_cast<const float*>(input->data());    
 
-      std::vector<float> ptr_vec(ptr, ptr + num_elements);
-      q_entropy = qentropy(ptr_vec , 1e-3);
+      q_entropy = qentropy(input->data(), 1e-3, dtype, num_elements);
+      std::cout << ++times_sset << std::endl;
       return 0;
     }
 

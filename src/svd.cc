@@ -36,7 +36,8 @@ MatrixXd SVD_2D_Jacobi(void* ptr, std::vector<size_t> dimensions, int dtype)
 // TuckerMPI 3D
 Eigen::MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype)
 {
-    MatrixXd g = MatrixXd::Random(2,4);
+    MatrixXd g(1, 4);
+    g << 3, 5, 7, 3;
     // cout << g << endl;
     return g;
 }
@@ -62,10 +63,9 @@ Eigen::MatrixXd svd_sv(void* ptr, usi num_dim, std::vector<size_t> dimensions, i
 double find_svd_trunc(std::vector<double> ev0, double threshold)
 {
     uli loc = 0;
-    for(size_t i=0; i<ev0.size(); ++i)
-        if(ev0[i] > threshold){
-            loc = i;
-            break;
-        }           
-    return 100*(loc+1)/ev0.size();
+    for (double val: ev0) {
+        if(val >= threshold) break;  
+        loc++;
+    }
+    return (double)100*((loc+1)/(double)ev0.size());
 }

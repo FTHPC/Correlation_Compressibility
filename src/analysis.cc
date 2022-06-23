@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
   std::vector<size_t> dims {1028, 1028};
   pressio_io io = library.get_io("hdf5");
   io->set_options({
-      {"io:path", "/home/dkrasow/compression/datasets/spatialweight_fixed_sum/sample_gp_K1028_sum3ranges_Sample1.h5"},
+      {"io:path", "/home/dkrasow/compression/datasets/spatialweight_fixed_sum/sample_gp_K1028_sum3ranges_Sample3.h5"},
       {"hdf5:dataset", "Z"}
       });
 
@@ -110,7 +110,6 @@ int main(int argc, char* argv[]) {
   };
 
   static const std::array bound_types { "pressio:abs"s, "pressio:rel"s };
-
   using compression_request_t = std::tuple<std::string, std::string, double>;
   using compression_response_t = std::tuple<compression_request_t,pressio_options>;
   std::vector<compression_request_t> requests;

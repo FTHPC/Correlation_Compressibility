@@ -28,6 +28,6 @@ Eigen::MatrixXd svd_sv(void* ptr, usi num_dim, std::vector<size_t> dimensions, i
 double find_svd_trunc(std::vector<double> ev0, double threshold);
 
 // from qentropy.cc
-double qentropy(std::vector<float> data, double abs);
+double qentropy(void *ptr, double abs, int dtype, size_t num_elements);
 
 #endif
