@@ -10,7 +10,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 
-
 find_package(LibPressioTools REQUIRED)
 find_package(LibDistributed REQUIRED)
 find_package(Eigen3 REQUIRED)

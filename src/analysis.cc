@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
     input = std::move(*io->read(&metadata));
     pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
 
-    pressio_compressor analysis = library.get_compressor("pressio");
+    pressio_compressor analysis = library.get_compressor("noop");
     analysis->set_options({{ "pressio:metric", "data_analysis"s }});
     analysis->compress(&input, &compressed);
 

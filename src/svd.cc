@@ -34,7 +34,7 @@ MatrixXd SVD_2D_Jacobi(void* ptr, std::vector<size_t> dimensions, int dtype)
 }
 
 // TuckerMPI 3D
-Eigen::MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype)
+MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype)
 {
     MatrixXd g(1, 4);
     g << 3, 5, 7, 3;
@@ -49,7 +49,7 @@ Eigen::MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dty
  *  returns the singular value matrix based on the dimensions
  *  of the dataset inputted (num_dim)
  */
-Eigen::MatrixXd svd_sv(void* ptr, usi num_dim, std::vector<size_t> dimensions, int dtype)
+MatrixXd svd_sv(void* ptr, usi num_dim, std::vector<size_t> dimensions, int dtype)
 {
     if (num_dim == 2)
         return SVD_2D_Jacobi(ptr, dimensions, dtype);
