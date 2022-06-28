@@ -10,6 +10,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 
+include(FetchContent)
+
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.10.5/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
 find_package(LibPressioTools REQUIRED)
 find_package(LibDistributed REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -20,9 +25,10 @@ include(GNUInstallDirs)
 add_executable(type_shared shared.cc)
 target_link_libraries(type_shared PRIVATE MPI::MPI_CXX)
 
-add_executable(compress_analysis metrics.cc svd.cc analysis.cc qentropy.cc)
+add_executable(compress_analysis metrics.cc svd.cc analysis.cc qentropy.cc export.cc)
 target_compile_features(compress_analysis PRIVATE cxx_std_20)
-target_link_libraries(compress_analysis PRIVATE LibPressioTools::libpressio_meta Eigen3::Eigen OpenMP::OpenMP_CXX LibDistributed::libdistributed)
+target_link_libraries(compress_analysis PRIVATE nlohmann_json::nlohmann_json LibPressioTools::libpressio_meta Eigen3::Eigen OpenMP::OpenMP_CXX LibDistributed::libdistributed)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(compress_analysis PRIVATE DEBUG)
 endif()

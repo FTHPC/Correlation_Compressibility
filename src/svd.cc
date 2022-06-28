@@ -1,17 +1,17 @@
 /* 
-    svd.cpp
+    svd.cc
     Performs 3D and 2D SVD decomposition
     Clemson University and Argonne National Laboratory
 
-    TuckerMPI for 3D https://gitlab.com/tensors/TuckerMPI 
-    Eigen for for 2D https://eigen.tuxfamily.org/
+    Eigen for svd https://eigen.tuxfamily.org/
 */
 
 #include <Eigen/SVD>
 #include "compress.h"
+#include <nlohmann/json.hpp>
+
 using namespace Eigen; 
 using namespace std;
-
 
 /* PRIVATE FUNCTIONS for svd.cc */
 // JacobiSVD 2D
@@ -34,12 +34,26 @@ MatrixXd SVD_2D_Jacobi(void* ptr, std::vector<size_t> dimensions, int dtype)
 }
 
 // TuckerMPI 3D
-MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype)
+MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype, std::string filepath)
 {
-    MatrixXd g(1, 4);
-    g << 3, 5, 7, 3;
-    // cout << g << endl;
-    return g;
+    // // call the Julia code
+    // ostringstream julia_call;
+    // julia_call << "julia $COMPRESS_HOME/src/hosvd.jl.julia " << filepath << ' ' << dimensions[2] << ' ' << dimensions[1] << ' ' << dimensions[0];
+    // string julia_call_str = julia_call.str();
+
+    // char *julia_call_ptr = (char *) calloc(1, julia_call_str.length() + 1);
+    // strcpy(julia_call_ptr, julia_call_str.c_str());
+    // array<char, 128> buffer;
+    // string output_julia;
+    // unique_ptr<FILE, decltype(&pclose)> pipe(popen(julia_call_ptr, "r"), pclose);
+    // if (!pipe) throw runtime_error("popen() failed!");
+    // while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+    //     output_julia += buffer.data();
+
+    // nlohmann::json json = nlohmann::json::parse(output_julia);
+    // cout << json["singular_modes"] << endl;
+    // // return json["singular_modes"];
+    return MatrixXd::Random(1,1);
 }
 
 
@@ -49,12 +63,12 @@ MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype)
  *  returns the singular value matrix based on the dimensions
  *  of the dataset inputted (num_dim)
  */
-MatrixXd svd_sv(void* ptr, usi num_dim, std::vector<size_t> dimensions, int dtype)
+MatrixXd svd_sv(void* ptr, usi num_dim, std::vector<size_t> dimensions, int dtype, std::string filepath)
 {
     if (num_dim == 2)
         return SVD_2D_Jacobi(ptr, dimensions, dtype);
     else 
-        return SVD_3D_Tucker(ptr, dimensions, dtype);
+        return SVD_3D_Tucker(ptr, dimensions, dtype, filepath);
 }
 
 /*  find_svd_trunc
