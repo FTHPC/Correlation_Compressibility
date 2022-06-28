@@ -7,21 +7,22 @@
 #include "compress.h"
 #include <iomanip>
 
-void exportcsv(pressio_options options) {
+void exportcsv(pressio_options options, std::string output_file) {
+
     std::vector<std::string> hdrs =
     {"info:filename", "info:filepath", "info:dataset", "info:dim1", "info:dim2",
      "info:dim3", "stat:n100", "stat:n99", "stat:n999", "stat:n9999", "stat:qentropy",
-     "info:bound_type", "info_compressor", "info:error_bound", "size:compression_ratio",
+     "info:bound_type", "info:compressor", "info:error_bound", "size:compression_ratio",
      "error_stat:average_error", "error_stat:error_range", "error_stat:mse",
      "error_stat:psnr", "error_stat:rmse", "error_stat:value_max", "error_stat:value_mean",
      "error_stat:value_min", "error_stat:value_range", "error_stat:value_std", "size:bit_rate",
     };
     std::ifstream myFile_chk;
-    myFile_chk.open("orbitals.csv");
+    myFile_chk.open(output_file);
     if (!myFile_chk) {
         // file doesn't exist yet
         // write headers
-        std::ofstream myFile("orbitals.csv");
+        std::ofstream myFile(output_file);
         for (auto each : hdrs){
             myFile << each << ',';
         }
@@ -29,7 +30,7 @@ void exportcsv(pressio_options options) {
     } else {
         myFile_chk.close();
     }
-    std::ofstream myFile("orbitals.csv", std::ios::app);
+    std::ofstream myFile(output_file, std::ios::app);
 
     for (auto each : hdrs){
         pressio_option const& value = options.get(each);
@@ -93,7 +94,7 @@ void exportcsv(pressio_options options) {
                 myFile << "None";
             }
           } else {
-            myFile << ',';
+            // myFile << ',';
           }
           if(each != hdrs.back()) {
             myFile << ',';

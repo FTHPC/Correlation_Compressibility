@@ -32,5 +32,5 @@ double find_svd_trunc(std::vector<double> ev0, double threshold);
 double qentropy(void *ptr, double abs, int dtype, size_t num_elements);
 
 // from export.cc
-void exportcsv(pressio_options options);
+void exportcsv(pressio_options options, std::string output_file);
 #endif

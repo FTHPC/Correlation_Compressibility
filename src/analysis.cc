@@ -15,6 +15,9 @@
 #include <libdistributed/libdistributed_work_queue.h>
 #include <libpressio_ext/cpp/serializable.h>
 #include <libpressio_ext/cpp/printers.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <getopt.h>
 
 using namespace std::string_literals;
 
@@ -28,6 +31,48 @@ static std::array comps = {
   "bit_grooming"s
 };
 
+void printHelp()
+{
+    std::cout <<
+            "--help:              Show help\n";
+    exit(1);
+}
+
+cmdline_args parse_args(int argc, char* argv[]) {
+  int c;
+  int option_index = 0;
+  cmdline_args args;
+  static struct option long_options[] = {
+    {"dim",required_argument,0,'d'},
+    {"dataset",required_argument,0,'i'},
+    {"dtype",required_argument,0,'t'},
+    {"verbose",no_argument,0,'v'},
+    {"help",no_argument,0,'h'},
+    {0,0,0,0}//required all-null entry
+  };
+  while(true) {
+    c = getopt_long(argc, argv, "d:i:t:vh", long_options, &option_index);
+    if(c == -1) break; //we are done 
+    switch(c) {
+      case 'd':
+        args.dims.push_back(std::stoull(optarg));
+        break;
+      case 'i':
+        args.dataset = optarg;
+        break;
+      case 't':
+        args.dtype    = optarg;
+      case 'v':
+        args.verbose  = true;
+      case 'h':
+      case '?':
+      default:
+        printHelp();
+        break;
+    }
+  }
+  return args;
+}
 
 pressio_options make_config(std::string compressor_id, std::string boundmode, float bound, int dtype){
   usi prec = 0;
@@ -70,24 +115,39 @@ pressio_options make_config(std::string compressor_id, std::string boundmode, fl
 }
 
 int main(int argc, char* argv[]) {
+  // init stuff
   MPI_Init(&argc, &argv);
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   libpressio_register_all();
+  auto args = parse_args(argc, argv);
+
   pressio library;
+  if ((!args.filename) || (!args.dataset) || (!args.dims)) {
+    std::cerr << "Invalid arguments exiting 12" << std::endl;
+    printHelp();
+    exit(12);
+  }
 
-  std::string filepath = "/home/dkrasow/compression/datasets/";
-  std::string dataset  = "qmcpack_h5";
+  pressio_dtype dtype;
+  if (!args.dtype.compare("float64"))
+    dtype = pressio_double_dtype;
+  else if (!args.dtype.compare("float32"))
+    dtype = pressio_float_dtype;
+  else { 
+    std::cerr << "Invalid dtype exiting 12" << std::endl;
+    printHelp();
+    exit(12);
+  }
+  
 
-  // for (const auto & entry : std::filesystem::directory_iterator(filepath+dataset)) {
-
-  for (int i = 0; i < 288; ++i) {
+  for (const auto & entry : std::filesystem::directory_iterator(args.filepath+args.dataset)) {
     pressio_data input;
     pressio_options analysis_results;
 
     if(!rank) {
-      std::string filename = "obital_" + std::to_string(i) + ".f32.dat.h5";
-      std::cout << filename << std::endl;
+      std::string filename = entry.path().filename().string();
+      std::cout << "filename " << filename << std::endl;
       
       size_t lastindex = filename.find_last_of("."); 
 
@@ -98,32 +158,37 @@ int main(int argc, char* argv[]) {
         else dataset_name = "Z";
       }
 
-      auto dtype = pressio_float_dtype;
-      std::vector<size_t> dims {115, 115, 69};
+      std::vector<size_t> dims {256, 384, 384};
 
-      std::string full_filepath = filepath+dataset+'/'+filename;
+      std::string full_filepath = args.filepath+args.dataset+'/'+filename;
       std::cout << full_filepath << std::endl;
 
-      pressio_io io = library.get_io("hdf5");
-      io->set_options({
-          {"io:path", full_filepath},
-          {"hdf5:dataset", dataset_name}
-          });
-
-
-      // pressio_io io = library.get_io("posix");
+      // pressio_io io = library.get_io("hdf5");
       // io->set_options({
-      //     {"io:path", "/home/dkrasow/compression/datasets/qmcpack/obital_177.f32"}
+      //     {"io:path", full_filepath},
+      //     {"hdf5:dataset", dataset_name}
       //     });
 
+
+      pressio_io io = library.get_io("posix");
+      io->set_options({
+          {"io:path", full_filepath}
+          });
+
       pressio_data metadata = pressio_data::owning(dtype, dims);  
-      input = std::move(*io->read(&metadata));
+      auto input_ptr = io->read(&metadata);
+      if (!input_ptr) {
+        std::cerr << io->error_msg() << std::endl;
+        break;
+      } else {
+        input = std::move(*input_ptr);
+      }
       pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
       pressio_compressor analysis = library.get_compressor("noop");
       analysis->set_options({{"pressio:metric", "data_analysis"s }, 
-                            {"info:filepath", filepath},
+                            {"info:filepath", args.filepath},
                             {"info:filename", filename},
-                            {"info:dataset",  dataset}});
+                            {"info:dataset",  args.dataset}});
       analysis->compress(&input, &compressed);
 
       analysis_results = analysis->get_metrics_results();
@@ -193,7 +258,7 @@ int main(int argc, char* argv[]) {
           results.copy_from(results2);
           results.copy_from(analysis_results);
           // export to csv
-          exportcsv(results);
+          exportcsv(results, "miranda.csv");
 
           return compression_response_t(request, std::move(results));
         },

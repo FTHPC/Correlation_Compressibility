@@ -27,7 +27,7 @@ target_link_libraries(type_shared PRIVATE MPI::MPI_CXX)
 
 add_executable(compress_analysis metrics.cc svd.cc analysis.cc qentropy.cc export.cc)
 target_compile_features(compress_analysis PRIVATE cxx_std_20)
-target_link_libraries(compress_analysis PRIVATE nlohmann_json::nlohmann_json LibPressioTools::libpressio_meta Eigen3::Eigen OpenMP::OpenMP_CXX LibDistributed::libdistributed)
+target_link_libraries(compress_analysis PRIVATE stdc++fs nlohmann_json::nlohmann_json LibPressioTools::libpressio_meta Eigen3::Eigen OpenMP::OpenMP_CXX LibDistributed::libdistributed)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(compress_analysis PRIVATE DEBUG)

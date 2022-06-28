@@ -33,7 +33,7 @@ MatrixXd SVD_2D_Jacobi(void* ptr, std::vector<size_t> dimensions, int dtype)
     }
 }
 
-// TuckerMPI 3D
+// SVD 3D
 MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype, std::string filepath)
 {
     // // call the Julia code
@@ -52,7 +52,7 @@ MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype, std
 
     // nlohmann::json json = nlohmann::json::parse(output_julia);
     // cout << json["singular_modes"] << endl;
-    // // return json["singular_modes"];
+    // return json["singular_modes"];
     return MatrixXd::Random(1,1);
 }
 

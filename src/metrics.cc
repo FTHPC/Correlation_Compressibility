@@ -90,14 +90,14 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       pressio_options opt;
       set(opt, "info:filepath", filepath);
       set(opt, "info:filename", filename);
-      set(opt, "info:dataset", dataset);
-      set(opt, "info:dim1", dim1);
-      set(opt, "info:dim2", dim2);
-      set(opt, "info:dim3", dim3);
-      set(opt, "stat:n100", n100);
-      set(opt, "stat:n9999", n9999);
-      set(opt, "stat:n999", n999);
-      set(opt, "stat:n99", n99);
+      set(opt, "info:dataset",  dataset);
+      set(opt, "info:dim1",     dim1);
+      set(opt, "info:dim2",     dim2);
+      set(opt, "info:dim3",     dim3);
+      set(opt, "stat:n100",     n100);
+      set(opt, "stat:n9999",    n9999);
+      set(opt, "stat:n999",     n999);
+      set(opt, "stat:n99",      n99);
 
       return opt;
     }
@@ -109,17 +109,18 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
     }
     struct pressio_options get_documentation_impl() const override {
       pressio_options opt;
-      set(opt, "pressio:description", "Basic error statistics that can be computed in in one pass");
+      set(opt, "pressio:description", "basic statistics of datasets themselves");
       set(opt, "info:filepath", "full file path to locate dataset");
       set(opt, "info:filename", "name of the file");
       set(opt, "info:dataset",  "name of the dataset");
-      set(opt, "stat:n100",  "n100");
-      set(opt, "stat:n9999", "n9999");
-      set(opt, "stat:n999",  "n999");
-      set(opt, "stat:n99",   "n99");
-      set(opt, "info:dim1",  "The first dimension of the inputted data");
-      set(opt, "info:dim2",  "The second dimension of the inputted data");
-      set(opt, "info:dim3",  "The third dimension of the inputted data");
+      set(opt, "info:dim1",  "dimension of the inputted data");
+      set(opt, "info:dim2",  "second dimension of the inputted data");
+      set(opt, "info:dim3",  "third dimension of the inputted data");
+      set(opt, "stat:n100",  "svd truncation representing 100% of the data");
+      set(opt, "stat:n9999", "svd truncation representing 99.99% of the data");
+      set(opt, "stat:n999",  "svd truncation representing 99.9% of the data");
+      set(opt, "stat:n99",   "svd truncation representing 99% of the data");
+
 
       return opt;
     }
@@ -165,10 +166,10 @@ class compress_analysis_metric_plugin : public libpressio_metrics_plugin {
 
     pressio_options get_metrics_results(pressio_options const &)  override {
       pressio_options opt;
-      set(opt, "stat:qentropy", q_entropy);
-      set(opt, "info:error_bound", error_bound);
-      set(opt, "info:bound_type", bound_type);
-      set(opt, "info:compressor", compressor);
+      set(opt, "stat:qentropy",     q_entropy);
+      set(opt, "info:error_bound",  error_bound);
+      set(opt, "info:bound_type",   bound_type);
+      set(opt, "info:compressor",   compressor);
       return opt;
     }
     struct pressio_options get_configuration() const override {
@@ -179,11 +180,11 @@ class compress_analysis_metric_plugin : public libpressio_metrics_plugin {
     }
     struct pressio_options get_documentation_impl() const override {
       pressio_options opt;
-      set(opt, "pressio:description", "Basic error statistics that can be computed in in one pass");
-      set(opt, "stat:qentropy",    "Quantized entropy based upon error bound");
-      set(opt, "info:error_bound", "Error bound used based on the bound_type");
-      set(opt, "info:bound_type",  "Error bound type (rel or abs)");
-      set(opt, "info:compressor",  "Compressor used to determine data");
+      set(opt, "pressio:description", "statistics requiring an error bound");
+      set(opt, "stat:qentropy",       "quantized entropy based upon error bound");
+      set(opt, "info:error_bound",    "error bound used based on the bound_type");
+      set(opt, "info:bound_type",     "error bound type (rel or abs)");
+      set(opt, "info:compressor",     "compressor used to compress data");
 
       return opt;
     }
