@@ -31,10 +31,26 @@ static std::array comps = {
   "bit_grooming"s
 };
 
+typedef struct cmdline_args{
+  std::string       dataset;
+  std::string       dtype;
+  std::string       directory;
+  std::string       filename;
+  std::vector<uli>  dims;
+  bool              verbose;
+} cmdline_args;
+
 void printHelp()
 {
     std::cout <<
-            "--help:              Show help\n";
+            "--dtype      -t: The data type of the files contained within the dataset folder\n"
+            "--dataset    -i: Folder containing either hdf5 files or binary files\n"
+            "--directory  -r: Full path for the parent dataset directory. ex: '$COMPRESS_HOME/datasets'\n"
+            "--filename   -f: Specific file within a dataset directory to be run\n"
+            "--dims       -d: Dimensions\n"
+            "--verbose    -v: Verbose mode\n"
+            "--help       -h: Show help\n"  
+            ;
     exit(1);
 }
 
@@ -43,15 +59,17 @@ cmdline_args parse_args(int argc, char* argv[]) {
   int option_index = 0;
   cmdline_args args;
   static struct option long_options[] = {
-    {"dim",required_argument,0,'d'},
+    {"dims",required_argument,0,'d'},
+    {"filename",required_argument,0,'f'},
     {"dataset",required_argument,0,'i'},
+    {"directory",required_argument,0,'r'},
     {"dtype",required_argument,0,'t'},
     {"verbose",no_argument,0,'v'},
     {"help",no_argument,0,'h'},
     {0,0,0,0}//required all-null entry
   };
   while(true) {
-    c = getopt_long(argc, argv, "d:i:t:vh", long_options, &option_index);
+    c = getopt_long(argc, argv, "d:i:f:r:t:vh", long_options, &option_index);
     if(c == -1) break; //we are done 
     switch(c) {
       case 'd':
@@ -60,10 +78,18 @@ cmdline_args parse_args(int argc, char* argv[]) {
       case 'i':
         args.dataset = optarg;
         break;
+      case 'r':
+        args.directory = optarg;
+        break;
+      case 'f':
+        args.filename = optarg;
+        break;
       case 't':
         args.dtype    = optarg;
+        break;
       case 'v':
         args.verbose  = true;
+        break;
       case 'h':
       case '?':
       default:
@@ -123,10 +149,9 @@ int main(int argc, char* argv[]) {
   auto args = parse_args(argc, argv);
 
   pressio library;
-  if ((!args.filename) || (!args.dataset) || (!args.dims)) {
-    std::cerr << "Invalid arguments exiting 12" << std::endl;
+  if ((!args.directory.length()) || (!args.dataset.length()) || (!args.dims.size())) {
+    std::cerr << "Invalid arguments exiting" << std::endl;
     printHelp();
-    exit(12);
   }
 
   pressio_dtype dtype;
@@ -135,47 +160,54 @@ int main(int argc, char* argv[]) {
   else if (!args.dtype.compare("float32"))
     dtype = pressio_float_dtype;
   else { 
-    std::cerr << "Invalid dtype exiting 12" << std::endl;
+    std::cerr << "Invalid dtype exiting" << std::endl;
     printHelp();
-    exit(12);
   }
   
-
-  for (const auto & entry : std::filesystem::directory_iterator(args.filepath+args.dataset)) {
+  bool stop = false;
+  for (const auto & entry : std::filesystem::directory_iterator(args.directory+'/'+args.dataset)) {
     pressio_data input;
+    std::string filename;
     pressio_options analysis_results;
-
+    if (stop) break;
     if(!rank) {
-      std::string filename = entry.path().filename().string();
+      if (args.filename.length()) {
+        filename = args.filename; 
+        stop = true;
+      } else filename = entry.path().filename().string();
       std::cout << "filename " << filename << std::endl;
       
-      size_t lastindex = filename.find_last_of("."); 
+      size_t lastindex = filename.find_last_of('.'); 
+      std::string full_filepath = args.directory+'/'+args.dataset+'/'+filename;
 
       std::string dataset_name;
+      pressio_io io;
       if (!filename.substr(lastindex, lastindex + 3).compare(".h5")){
+        // if hdf5 file
         if (!filename.substr(lastindex - 4, lastindex + 3).compare(".dat.h5"))
-             dataset_name = filename.substr(0, lastindex); 
-        else dataset_name = "Z";
+          // .dat.h5 follows our naming scheme for dataset names of hdf5 files
+          // ex: velocityx.d64.dat.h5 will have a dataset name of velocityx.d64.dat
+          dataset_name = filename.substr(0, lastindex); 
+        else dataset_name = 'Z'; // 'Z' is used for our generated Gaussian samples
+
+        io = library.get_io("hdf5");
+        io->set_options({
+            {"io:path", full_filepath},
+            {"hdf5:dataset", dataset_name}
+            });
+      } else {
+        // if posix binary file
+        io = library.get_io("posix");
+        io->set_options({
+            {"io:path", full_filepath}
+            });
       }
 
-      std::vector<size_t> dims {256, 384, 384};
 
-      std::string full_filepath = args.filepath+args.dataset+'/'+filename;
       std::cout << full_filepath << std::endl;
 
-      // pressio_io io = library.get_io("hdf5");
-      // io->set_options({
-      //     {"io:path", full_filepath},
-      //     {"hdf5:dataset", dataset_name}
-      //     });
 
-
-      pressio_io io = library.get_io("posix");
-      io->set_options({
-          {"io:path", full_filepath}
-          });
-
-      pressio_data metadata = pressio_data::owning(dtype, dims);  
+      pressio_data metadata = pressio_data::owning(dtype, args.dims);  
       auto input_ptr = io->read(&metadata);
       if (!input_ptr) {
         std::cerr << io->error_msg() << std::endl;
@@ -186,7 +218,7 @@ int main(int argc, char* argv[]) {
       pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
       pressio_compressor analysis = library.get_compressor("noop");
       analysis->set_options({{"pressio:metric", "data_analysis"s }, 
-                            {"info:filepath", args.filepath},
+                            {"info:filepath", args.directory},
                             {"info:filename", filename},
                             {"info:dataset",  args.dataset}});
       analysis->compress(&input, &compressed);
@@ -258,7 +290,7 @@ int main(int argc, char* argv[]) {
           results.copy_from(results2);
           results.copy_from(analysis_results);
           // export to csv
-          exportcsv(results, "miranda.csv");
+          exportcsv(results, "output.csv");
 
           return compression_response_t(request, std::move(results));
         },
