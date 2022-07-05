@@ -37,6 +37,7 @@ typedef struct cmdline_args{
   std::string       directory;
   std::string       filename;
   std::vector<uli>  dims;
+  std::string       output;
   bool              verbose;
 } cmdline_args;
 
@@ -48,6 +49,7 @@ void printHelp()
             "--directory  -r: Full path for the parent dataset directory. ex: '$COMPRESS_HOME/datasets'\n"
             "--filename   -f: Specific file within a dataset directory to be run\n"
             "--dims       -d: Dimensions\n"
+            "--output     -o: Ouput csv to store results in\n"
             "--verbose    -v: Verbose mode\n"
             "--help       -h: Show help\n"  
             ;
@@ -64,31 +66,35 @@ cmdline_args parse_args(int argc, char* argv[]) {
     {"dataset",required_argument,0,'i'},
     {"directory",required_argument,0,'r'},
     {"dtype",required_argument,0,'t'},
+    {"output",required_argument,0,'o'},
     {"verbose",no_argument,0,'v'},
     {"help",no_argument,0,'h'},
     {0,0,0,0}//required all-null entry
   };
   while(true) {
-    c = getopt_long(argc, argv, "d:i:f:r:t:vh", long_options, &option_index);
+    c = getopt_long(argc, argv, "d:i:f:r:t:o:vh", long_options, &option_index);
     if(c == -1) break; //we are done 
     switch(c) {
       case 'd':
         args.dims.push_back(std::stoull(optarg));
         break;
       case 'i':
-        args.dataset = optarg;
+        args.dataset    = optarg;
         break;
       case 'r':
-        args.directory = optarg;
+        args.directory  = optarg;
         break;
       case 'f':
-        args.filename = optarg;
+        args.filename   = optarg;
         break;
       case 't':
-        args.dtype    = optarg;
+        args.dtype      = optarg;
+        break;
+        case 'o':
+        args.output     = optarg;
         break;
       case 'v':
-        args.verbose  = true;
+        args.verbose    = true;
         break;
       case 'h':
       case '?':
@@ -153,6 +159,10 @@ int main(int argc, char* argv[]) {
     std::cerr << "Invalid arguments exiting" << std::endl;
     printHelp();
   }
+
+  std::string output;
+  if (!args.output.length()) output = "output.csv";
+  else output = args.output;
 
   pressio_dtype dtype;
   if (!args.dtype.compare("float64"))
@@ -290,7 +300,7 @@ int main(int argc, char* argv[]) {
           results.copy_from(results2);
           results.copy_from(analysis_results);
           // export to csv
-          exportcsv(results, "output.csv");
+          exportcsv(results, output);
 
           return compression_response_t(request, std::move(results));
         },
