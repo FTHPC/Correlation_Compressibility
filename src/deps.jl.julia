@@ -1,5 +1,0 @@
-#!/usr/bin/env julia
-using Pkg
-Pkg.add("CUDA")
-Pkg.add("LinearAlgebra")
-Pkg.add("JSON")
