@@ -1,0 +1,1 @@
+cat(paste(unlist(packageVersion("RInside")), collapse="."), '\n')

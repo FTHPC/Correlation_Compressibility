@@ -1,0 +1,18 @@
+temperature.f32
+velocity_x.f32
+Quantizing NYX at a abs 1e-05 error bound
+0.8123309798538685
+Performing SVD analysis
+4.656218785792589
+Performing tiled SVD analysis with a size of 32x32
+8.338940259069204
+Compression using sz lossy compressor at a abs 1e-5 error bound
+1.1689984686672688
+Compression using zfp lossy compressor at a abs 1e-5 error bound
+2.8729937560856342
+Compression using fpzip lossy compressor at a abs 1e-5 error bound
+1.7668090537190437
+Compression using mgard lossy compressor at a abs 1e-5 error bound
+ERROR: mgard failed on velocity_x.f32_slice_0_X.dat.h5
+ERROR: mgard failed on velocity_x.f32_slice_0_X.dat.h5
+4.098186746239662
