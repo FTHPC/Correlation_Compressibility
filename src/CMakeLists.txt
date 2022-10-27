@@ -31,8 +31,8 @@ target_link_libraries(type_shared PRIVATE MPI::MPI_CXX)
 
 add_executable(compress_analysis arguments.cc metrics.cc svd.cc analysis.cc qentropy.cc export.cc)
 
+
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/julia DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/jobs_qsub.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 # execute_process (COMMAND bash -c "julia ${CMAKE_CURRENT_BINARY_DIR}/julia/deps.jl.julia")
 
 target_compile_features(compress_analysis PRIVATE cxx_std_20)
@@ -48,4 +48,21 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(compress_analysis PRIVATE DEBUG)
 endif()
 
-install(TARGETS compress_analysis)
+
+
+
+add_executable(test reproducer.cc.cpp)
+target_compile_features(test PRIVATE cxx_std_20)
+target_link_libraries(test PRIVATE stdc++fs
+      LibPressioTools::libpressio_meta
+      OpenMP::OpenMP_CXX 
+      LibDistributed::libdistributed
+)
+install(TARGETS test)
+
+
+
+
+
+
+

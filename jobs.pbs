@@ -1,0 +1,51 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=32:mem=372gb
+#PBS -l walltime=8:00:00
+#PBS -N data_compression_estimation
+#PBS -m abe
+#PBS -j oe
+source ~/.zshrc
+
+function echo_do(){
+  echo $@
+  "$@"
+}
+
+#load spack
+compress
+
+#cd /path/to/compression_env
+rm -rf $COMPRESS_HOME/build
+echo_do cmake -S $COMPRESS_HOME/src -B $COMPRESS_HOME/build
+cd $COMPRESS_HOME/build
+echo_do make -j 
+
+echo $COMPRESS_HOME
+
+declare -A dset_size
+dset_size[SDRBENCH-Miranda-256x384x384]="-d 256 -d 384 -d 384"
+dset_size[FULL_HURRICANE]="-d 500 -d 500 -d 100"
+
+declare -A dset_dtype
+dset_dtype[SDRBENCH-Miranda-256x384x384]=float64
+dset_dtype[FULL_HURRICANE]=float32
+
+declare -A dset_loc
+dset_loc[SDRBENCH-Miranda-256x384x384]=$COMPRESS_HOME/datasets
+dset_loc[FULL_HURRICANE]=/scratch1/dkrasow
+
+
+for dataset in SDRBENCH-Miranda-256x384x384 FULL_HURRICANE
+do
+  for blocks in 16 32 64 128
+  do
+    #choosing zfp, sz3d, 2x zfp, lcm(zfp,sz)/sz x2, zfp x 4, sz x 4, large
+    for block_size in 4 6 8 12 16 24 32
+    do
+    echo_do which mpiexec
+    echo_do mpiexec -np 32 ./compress_analysis -t ${dset_dtype[${dataset}]} \
+      -i ${dataset} -r ${dset_loc[${dataset}]}  ${dset_size[${dataset}]} \
+      -o "${dataset}_blocks${blocks}_block_size${block_size}.csv" --blocks $blocks --block_size $block_size
+    done
+  done
+done
