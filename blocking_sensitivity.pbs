@@ -35,7 +35,7 @@ dset_loc[SDRBENCH-Miranda-256x384x384]=$COMPRESS_HOME/datasets
 dset_loc[FULL_HURRICANE]=/scratch1/dkrasow
 
 
-for dataset in SDRBENCH-Miranda-256x384x384 FULL_HURRICANE
+for dataset in SDRBENCH-Miranda-256x384x384 
 do
   for blocks in 16 32 64 128
   do

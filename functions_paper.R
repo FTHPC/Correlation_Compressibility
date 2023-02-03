@@ -209,7 +209,7 @@ cr_regression_linreg <- function(df, kf=8, graph=1, data_nm, compressor_nm, erro
 
 
 
-cr_regression_gam <- function(df, kf=8, graph=1, fig_nm, data_nm, compressor_nm, error_mode, error_bnd, print_stats=1){
+cr_regression_gam <- function(df, kf=8, graph=1, fig_nm, data_nm, compressor_nm, error_mode, error_bnd, block_count=block_count, block_size=block_size, print_stats=1){
   indsz <- which(df$y<=comp_thresh)
   df <- df[indsz,]
   qent0 <- df$qent
@@ -219,6 +219,8 @@ cr_regression_gam <- function(df, kf=8, graph=1, fig_nm, data_nm, compressor_nm,
   y <- log(df$y)
   df_reg <- data.frame(y, qent, vrgstd)
   indqna <- which(is.na(qent))
+
+
   if (length(indqna)>1) {df_reg <- df_reg[-indqna,]}
 
 
@@ -229,6 +231,7 @@ cr_regression_gam <- function(df, kf=8, graph=1, fig_nm, data_nm, compressor_nm,
   fold <- floor(runif(nrow(df_reg),1,(kf+1)))
   df_reg$fold <- fold
   cv_cor <- c() ; cv_mape <- c() 
+  cv_compression <- c()
   pred_list <- c()
   ytest_list <- c()
   vtest_list <- c()
@@ -239,6 +242,7 @@ cr_regression_gam <- function(df, kf=8, graph=1, fig_nm, data_nm, compressor_nm,
     predi <- predict.gam(mi, newdata=test.set)
     #
     cv_mape[l] <- RelMAE(true=exp(test.set$y),pred=exp(predi))
+    cv_compression[l] <- c(mean(test.set$y), mean(predi))
     cv_cor[l] <- cor(exp(test.set$y),exp(predi))
     #
     pred_list[[l]] <- exp(predi)
@@ -259,17 +263,18 @@ cr_regression_gam <- function(df, kf=8, graph=1, fig_nm, data_nm, compressor_nm,
       points(ytest_list[[i]], pred_list[[i]], pch=20, cex=1.2, col=Col[i]) }
     dev.off()
     }
-
-  stats_quantile <- function(x){ quantile(x, probs=c(0.10, 0.5, 0.9), na.rm = TRUE) } 
-  res_cv <- cbind(stats_quantile(cv_cor), 100*stats_quantile(cv_mape))
-  colnames(res_cv) <- c('Corr','MedAPE')
+  probs=c(0.10, 0.5, 0.9)
+  stats_quantile <- function(x){ quantile(x, probs=probs, na.rm = TRUE) } 
+  res_cv <- cbind(probs, stats_quantile(cv_cor), 100*stats_quantile(cv_mape))
+  colnames(res_cv) <- c('Quantile', 'Corr','MedAPE')
   if (print_stats == 1){
-    print(paste('Cross-validation metrics -',compressor_nm,'-',error_mode,'-',error_bnd,'-',data_nm))
-    print(round(res_cv, 4))
-    csv_res_cv <- cbind(compressor_nm, error_mode, error_bnd, data_nm, res_cv)
-    colnames(csv_res_cv) <- c('Compressor, Error_mode, Error_bound, Data_number, Corr, MedAPE')
-    print(csv_res_cv)
-    write.csv(csv_res_cv, "apples.csv", row.names=FALSE)
+    csv_res_cv <- cbind(res_cv, block_count, block_size, compressor_nm, error_mode, error_bnd, data_nm, mean(cv_compression[l]))
+    colnames(csv_res_cv) <- c('Quantile', 'Corr', 'MedAPE', 'Block_Count', 'Block_Size', 'Compressor', 'Error_mode', 'Error_bound', 'Data_name', 'CR estimate')
+    if (file.exists("apples.csv")) {
+      write.table(csv_res_cv, "apples.csv", sep=',', col.names=FALSE, row.names=FALSE, append=TRUE)
+    } else {
+      write.table(csv_res_cv, "apples.csv", sep=',', col.names=TRUE, row.names=FALSE)
+    }
   }
   
   return(list(pred=c(unlist(pred_list)), ytest=c(unlist(ytest_list)),res_cv=res_cv))

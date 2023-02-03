@@ -86,6 +86,25 @@ function main()
         end 
     end
 
+
+    ## TODO: Implement this R code for new singular values merging.
+
+    # num_modes <- tnsr@num_modes   
+    # sv_list <- vector("list", num_modes)
+    # sv_contrib_list <- vector("list", num_modes)
+    # u_list <- vector("list", num_modes)
+    # trunc_list <- vector("list", num_modes)
+    # ind_trunc_list <- vector("list", num_modes)
+    # for (m in 1:num_modes) {
+    # temp_mat <- k_unfold(tnsr, m = m)@data
+    # svdi <- svd(temp_mat)
+    # di <- svdi$d
+    # u_list[[m]] <- svdi$u
+    # sv_list[[m]] <- di
+    # sv_contrib_list[[m]] <- cumsum(di^2)/sum(di^2) 
+    # trunc_list[[m]] <- min(which(sv_contrib_list[[m]]>0.999)) 
+    # ind_trunc_list[[m]] <- 1:(trunc_list[[m]])  }  
+
     sort!(sv1, rev=true);
 
     sorted = Array{Float64,1}()

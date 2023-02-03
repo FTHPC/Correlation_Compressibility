@@ -30,10 +30,6 @@ typedef unsigned long int uli;
 typedef unsigned short int usi;
 
 
-#define UNIFORM   1555
-#define RANDOM    1556
-#define MULTIGRID 1557
-
 typedef struct cmdline_args{
   std::string       dataset;
   std::string       dtype;
@@ -88,6 +84,7 @@ pressio_options make_config(std::string compressor_id, std::string boundmode, fl
 // from arguments.cc
 cmdline_args* parse_args(int argc, char* argv[]);
 void printHelp();
+
 #endif
 
 
