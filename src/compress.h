@@ -31,14 +31,15 @@ typedef unsigned short int usi;
 
 
 typedef struct cmdline_args{
-  std::string       dataset;
-  std::string       dtype;
-  std::string       directory;
-  std::string       filename;
-  std::vector<size_t>  dims;
-  std::string       output;
-  size_t            blocks;
-  size_t            block_size;
+  std::string           dataset;
+  std::string           dtype;
+  std::string           directory;
+  std::string           filename;
+  std::vector<size_t>   dims;
+  std::string           output;
+  size_t                blocks;
+  size_t                block_size;
+  usi                   block_method;
 } cmdline_args;
 
 

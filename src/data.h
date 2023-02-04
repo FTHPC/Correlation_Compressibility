@@ -1,6 +1,7 @@
 #ifndef DATA_H
 #define DATA_H
 
+#define NONE      1554
 #define UNIFORM   1555
 #define RANDOM    1556
 #define MULTIGRID 1557

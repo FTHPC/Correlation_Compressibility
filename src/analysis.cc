@@ -82,13 +82,14 @@ int main(int argc, char* argv[]) {
   auto args = parse_args(argc, argv);
   dataset buffers = std::make_unique<dataset_setup>(args)->set();
 
-  // at this point assuming blocks are used
+  // all sampling methods are defined as a short int greater than NONE
+  if (args->block_method > NONE){
+    samples blocks = std::make_unique<block_sampler>(buffers)->sample(args->block_method, args->blocks, args->block_size);
+    buffers = blocks;
+  }
 
 
-  samples blocks = std::make_unique<block_sampler>(buffers)->sample(UNIFORM, args->blocks, args->block_size);
-
-
-  for (auto block : blocks) {
+  for (auto block : buffers) {
     if (!rank) {
       input = block->load();
       block_metadata *meta = block->block_meta();
