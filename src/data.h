@@ -11,8 +11,10 @@ struct loader {
   virtual ~loader()=default;
   // loads pressio data buffer from file provided by metadata
   virtual pressio_data load() = 0;
+  virtual pressio_data load_global() = 0;
   // loads pressio data buffer from cache 
   virtual pressio_data retrieve() = 0; 
+  virtual pressio_data retrieve_global() = 0;
   // returns specific file metadata
   virtual file_metadata* metadata() = 0;
   // only used if its a block
@@ -39,7 +41,9 @@ struct file_loader: public loader {
     block_metadata* block_meta();
     file_metadata* metadata();
     pressio_data load();
+    pressio_data load_global();
     pressio_data retrieve();
+    pressio_data retrieve_global();
     // private
     pressio_data input;
     file_metadata* meta;
@@ -57,9 +61,13 @@ struct sample_loader: public loader{
     block_metadata* block_meta();
     file_metadata* metadata();
     pressio_data load();
+    pressio_data load_global();
     pressio_data retrieve();
+    pressio_data retrieve_global();
+    
     // private
-    pressio_data cache;
+    pressio_data block_data;
+    pressio_data file_data;
     block_metadata* meta;
 };
 // samples the blocks and writes each block into a file within TMPDIR

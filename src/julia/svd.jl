@@ -59,13 +59,13 @@ end
 function main()
     filename = ARGS[1]
     output   = ARGS[2]
-    vers     = ARGS[3]
+    vers     = parse.(Bool, ARGS[3])
     dims     = parse.(Int, ARGS[4:end])
-    data     = Array{Float64}(undef, dims...)
+    data     = Array{Float32}(undef, dims...)
     read!(filename, data)
 
-    # TODO:: GPU argument (-g) switches the GPU version on
-    if (vers == 0) 
+    #GPU argument (-g) switches the GPU version on
+    if (vers) 
         sing = cuda_svd_trunc(data)
     else 
         sing = cpu_svd_trunc(data)

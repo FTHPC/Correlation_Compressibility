@@ -77,9 +77,18 @@ int main(int argc, char* argv[]) {
   libpressio_register_all();
   pressio library;
   pressio_data input;
+  pressio_data input_global;
   pressio_options analysis_results;
+
+  float error_high = 1e-2;
+  float error_low  = 1e-5;
   
   auto args = parse_args(argc, argv);
+  if (args->error > 0) {
+    error_high = args->error;
+    error_low  = args->error;
+  }
+
   dataset buffers = std::make_unique<dataset_setup>(args)->set();
 
   // all sampling methods are defined as a short int greater than NONE
@@ -92,6 +101,7 @@ int main(int argc, char* argv[]) {
   for (auto block : buffers) {
     if (!rank) {
       input = block->load();
+      // individual block meta data
       block_metadata *meta = block->block_meta();
 
       pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
@@ -126,7 +136,7 @@ int main(int argc, char* argv[]) {
           continue;
         // loop to go through different bounds 1e-5 upto 1e-2
         // reset bound for each bound type and compressor
-        for (double bound=1e-5; bound<1e-1; bound*=10){
+        for (double bound=error_low; bound<=error_high; bound*=10){
           requests.push_back(std::make_tuple(comp, bound_type, bound));
         }
       }
@@ -141,8 +151,38 @@ int main(int argc, char* argv[]) {
         requests.end(),
         [&](compression_request_t const& request) {
         auto const& [comp, bound_type, bound] = request;
-        pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
+        auto options = make_config(comp, bound_type, bound, input.dtype());
+        options.set("pressio:compressor", comp);
+        options.set("pressio:metric", "composite"s);
+        options.set("composite:plugins", metrics_composites);
+
+
+      
+        // GLOBAL METRICS ON ENTIRE DATASET
+        input_global = block->load_global();
+        pressio_data compressed_global   = pressio_data::empty(pressio_byte_dtype, {});
+        pressio_data decompressed_global = pressio_data::owning(input_global.dtype(), input_global.dimensions());
+        pressio_compressor global_compressor = library.get_compressor("pressio");
+        global_compressor->set_options(options);
+        global_compressor->compress(&input_global, &compressed_global);
+        global_compressor->decompress(&compressed_global, &decompressed_global);
+        pressio_options global_results_unsorted = global_compressor->get_metrics_results();
+        pressio_options global_results = {
+          {"global:value_std", global_results_unsorted.get("error_stat:value_std")},
+          {"global:compression_ratio", global_results_unsorted.get("size:compression_ratio")},
+          {"global:value_range", global_results_unsorted.get("error_stat:value_range")}
+        };
+
+ 
+
+        // LOCAL METRICS ON INDIVIDUAL BLOCK
+        pressio_data compressed   = pressio_data::empty(pressio_byte_dtype, {});
         pressio_data decompressed = pressio_data::owning(input.dtype(), input.dimensions());
+        pressio_compressor compressor = library.get_compressor("pressio");
+        compressor->set_options(options);
+        compressor->compress(&input, &compressed);
+        compressor->decompress(&compressed, &decompressed);
+        pressio_options results = compressor->get_metrics_results();
 
         pressio_compressor noop = library.get_compressor("noop");
         noop->set_options({
@@ -152,22 +192,12 @@ int main(int argc, char* argv[]) {
             {"info:compressor", comp},
             });
         noop->compress(&input, &compressed);
+        pressio_options compress_analysis  = noop->get_metrics_results();
 
-        pressio_compressor compressor = library.get_compressor("pressio");
-        auto options = make_config(comp, bound_type, bound, input.dtype());
-        options.set("pressio:compressor", comp);
-        options.set("pressio:metric", "composite"s);
-        options.set("composite:plugins", metrics_composites);
-        compressor->set_options(options);
-        compressor->compress(&input, &compressed);
-        compressor->decompress(&compressed, &decompressed);
-
-
-        pressio_options results  = noop->get_metrics_results();
-        pressio_options results2 = compressor->get_metrics_results();
         // combine distributed results and data results
-        results.copy_from(results2);
+        results.copy_from(compress_analysis);
         results.copy_from(analysis_results);
+        results.copy_from(global_results);
         // export to csv
         exportcsv(results, args->output);
 

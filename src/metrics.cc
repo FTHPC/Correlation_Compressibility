@@ -103,6 +103,9 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       set(opt, "block:dim1",        meta_cast->block_dims[0]);
       set(opt, "block:dim2",        meta_cast->block_dims[1]);
       set(opt, "block:dim3",        meta_cast->block_dims[2]);
+      set(opt, "block:loc1",        meta_cast->block_loc[0]);
+      set(opt, "block:loc2",        meta_cast->block_loc[1]);
+      set(opt, "block:loc3",        meta_cast->block_loc[2]);
       set(opt, "stat:n100",         n100);
       set(opt, "stat:n9999",        n9999);
       set(opt, "stat:n999",         n999);
@@ -131,6 +134,9 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       set(opt, "block:dim1",        "first dimension of the block");
       set(opt, "block:dim2",        "second dimension of the block");
       set(opt, "block:dim3",        "third dimension of the block");
+      set(opt, "block:loc1",        "first coordinate of the block");
+      set(opt, "block:loc2",        "second coordinate of the block");
+      set(opt, "block:loc3",        "third coordinate of the block");
       set(opt, "stat:n100",         "svd truncation representing 100% of the data");
       set(opt, "stat:n9999",        "svd truncation representing 99.99% of the data");
       set(opt, "stat:n999",         "svd truncation representing 99.9% of the data");

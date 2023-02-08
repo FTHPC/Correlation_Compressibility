@@ -1,7 +1,6 @@
 #ifndef COMPRESS_H
 #define COMPRESS_H
 
-
 #include <libpressio_ext/cpp/libpressio.h>
 #include <libpressio_ext/io/pressio_io.h>
 #include <libpressio_ext/io/posix.h>
@@ -29,6 +28,7 @@
 typedef unsigned long int uli;
 typedef unsigned short int usi;
 
+extern bool GPU_ACC;
 
 typedef struct cmdline_args{
   std::string           dataset;
@@ -40,6 +40,7 @@ typedef struct cmdline_args{
   size_t                blocks;
   size_t                block_size;
   usi                   block_method;
+  float                 error;
 } cmdline_args;
 
 
@@ -51,7 +52,7 @@ typedef struct file_metadata{
   std::vector<size_t>   dims;
   pressio_dtype         dtype;
   std::string           dataset_name;
-  pressio_io            io;               
+  pressio_io            io;              
 } file_metadata;
 
 
@@ -62,7 +63,8 @@ typedef struct block_metadata{
   size_t                total_blocks;
   size_t                block_number;
   size_t                block_size; 
-  std::vector<size_t>   block_dims;            
+  std::vector<size_t>   block_dims; 
+  std::vector<size_t>   block_loc;           
   std::string           block_method; 
   std::string           block_filepath;
   pressio_io            block_io; 

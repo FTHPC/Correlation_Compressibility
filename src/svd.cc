@@ -9,8 +9,6 @@
 #include <Eigen/SVD>
 #include <stdlib.h>
 #include "compress.h"
-
-
 // #include <RInside.h> 
 
 using namespace Eigen; 
@@ -43,21 +41,14 @@ MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype, std
     srand(time(NULL));
     int key = rand() % 10000;
     string output = to_string(key) + ".txt";
-    bool vers;
-    
+  
     // DOES NOT APPLY
     // reverse order of dimensions for julia
     // std::vector<size_t> dims = dimensions;
     // std::reverse(dims.begin(), dims.end());
 
-    #ifdef GPU_ACC
-        vers = 0;
-    #else
-        vers = 1;
-    #endif
-
     stringstream result;
-    result << "julia -t 4 ./julia/svd.jl " << filepath << " " << output << " " << vers << " ";
+    result << "julia -t 4 ./julia/svd.jl " << filepath << " " << output << " " << GPU_ACC << " ";
     copy(dimensions.begin(), dimensions.end(), ostream_iterator<int>(result, " "));
     
     string result_s = result.str();

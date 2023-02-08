@@ -43,7 +43,7 @@ do
     for block_size in 4 6 8 12 16 24 32
     do
     echo_do which mpiexec
-    echo_do mpiexec -np 32 ./compress_analysis -t ${dset_dtype[${dataset}]} \
+    echo_do mpiexec -np 40 ./compress_analysis -t ${dset_dtype[${dataset}]} \
       -i ${dataset} -r ${dset_loc[${dataset}]}  ${dset_size[${dataset}]} \
       -o "${dataset}_blocks${blocks}_block_size${block_size}.csv" \
       --blocks $blocks --block_size $block_size --method "UNIFORM"

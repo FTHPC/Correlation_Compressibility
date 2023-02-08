@@ -20,16 +20,34 @@ pressio_data sample_loader::load() {
     std::cerr << meta->block_io->error_msg() << std::endl;
     exit(1);
   } else {
-    cache = std::move(*input_ptr);
+    block_data = std::move(*input_ptr);
   }
-  return cache;
+  return block_data;
 }
 
-// returns whats cached in input.
-pressio_data sample_loader::retrieve() {
-  return cache;
+// returns global file input
+pressio_data sample_loader::load_global() {
+  pressio_data metadata = pressio_data::owning(meta->file->dtype, meta->file->dims);  
+  auto input_ptr = meta->file->io->read(&metadata);
+  if (!input_ptr) {
+    std::cerr << meta->file->io->error_msg() << std::endl;
+    exit(1);
+  } else {
+    file_data = std::move(*input_ptr);
+  }
+  return file_data;
 }
 
+// returns cached block file input
+pressio_data sample_loader::retrieve(){
+  return block_data;
+}
+
+
+// returns cached global file input
+pressio_data sample_loader::retrieve_global(){
+  return file_data;
+}
 
 
 /*
@@ -67,13 +85,13 @@ std::vector<std::shared_ptr<loader>> block_sampler::uniform_sample(usi total_blo
     pressio_data input_pressio  = buffer->load(); 
     double *input = (double *) input_pressio.data();
     file_metadata* meta = buffer->metadata();
-    
     size_t block_num = 1;
     // organize data into uniform blocks
-    for (size_t i=0; i<meta->dims[0]; i+=(block_dims+meta->dims[0]/total_blocks))  // goes along x dimension 
-      for (size_t j=0; j<meta->dims[1]; j+=(block_dims+meta->dims[0]/total_blocks)) // goes along y dimension
-        for (size_t k=0; k<meta->dims[2]; k+=(block_dims+meta->dims[0]/total_blocks)) { // goes along z dimension
+    for (size_t i=0; i<=meta->dims[0]-block_dims; i+=block_dims)  // goes along x dimension 
+      for (size_t j=0; j<=meta->dims[1]-block_dims; j+=block_dims) // goes along y dimension
+        for (size_t k=0; k<=meta->dims[2]-block_dims; k+=block_dims) { // goes along z dimension
           // new block created
+          if (block_num > total_blocks) goto STOP;
           double* block = new double[(int)std::pow(block_dims, 3)];
           for (size_t block_i=0; block_i<block_dims; block_i++)
             for (size_t block_j=0; block_j<block_dims; block_j++)
@@ -81,8 +99,6 @@ std::vector<std::shared_ptr<loader>> block_sampler::uniform_sample(usi total_blo
               {
                 block[block_i*(int)std::pow(block_dims, 2) + block_j*block_dims + block_k] 
                 = input[(i+block_i)*meta->dims[1]*meta->dims[2] + (j+block_j)*meta->dims[2] + (k + block_k)];
-
-                if (block_num > total_blocks) goto STOP;
               }
               
           std::stringstream block_data_output;
@@ -92,6 +108,7 @@ std::vector<std::shared_ptr<loader>> block_sampler::uniform_sample(usi total_blo
 
           //assumption blocks are cubes
           std::vector<size_t> block_dims_vec = {block_dims, block_dims, block_dims}; 
+          std::vector<size_t> block_loc_vec  =  {i, j, k}; 
           pressio_data block_pressio = pressio_data::nonowning(meta->dtype, (void*)block, block_dims_vec);  
           block_io->write(&block_pressio);
 
@@ -105,6 +122,7 @@ std::vector<std::shared_ptr<loader>> block_sampler::uniform_sample(usi total_blo
           data->block_dims     = block_dims_vec;
           data->block_size     = (int)std::pow(block_dims, 3); 
           data->block_method   = method;
+          data->block_loc      = block_loc_vec;
           data->block_number   = block_num;
           data->total_blocks   = total_blocks;
 
@@ -112,8 +130,9 @@ std::vector<std::shared_ptr<loader>> block_sampler::uniform_sample(usi total_blo
           block_num++;
           free(block);
         }
-    }
-STOP:
+    STOP:
+    continue;
+  }
   return blocks;
 }
 

@@ -11,7 +11,9 @@ void exportcsv(pressio_options options, std::string output_file) {
 
     std::vector<std::string> hdrs =
     {"info:filename", "info:filepath", "info:dataset", "info:dim1", "info:dim2", "info:dim3", 
-     "block:total_count", "block:number", "block:dim1", "block:dim2", "block:dim3", "block:method",
+     "global:value_std", "global:compression_ratio", "global:value_range",
+     "block:total_count", "block:number", "block:dim1", "block:dim2", "block:dim3", 
+     "block:method","block:loc1", "block:loc2", "block:loc3",
      "stat:n100", "stat:n99", "stat:n999", "stat:n9999", "stat:qentropy",
      "info:bound_type", "info:compressor", "info:error_bound", "size:compression_ratio",
      "error_stat:average_error", "error_stat:error_range", "error_stat:mse",

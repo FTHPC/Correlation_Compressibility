@@ -11,6 +11,7 @@ block_metadata* file_loader::block_meta() {
   data->block_number = 0;
   data->block_size = meta->dims[0] * meta->dims[1] * meta->dims[2];
   data->block_dims = meta->dims;
+  data->block_loc  = {0, 0, 0};
   data->block_method = "none";
   return data;
 }
@@ -30,10 +31,22 @@ pressio_data file_loader::load() {
   return input;
 }
 
+// returns global file input
+pressio_data file_loader::load_global() {
+  return input;
+}
+
 // returns whats cached in input. If load() hasn't been called, return is NULL
 pressio_data file_loader::retrieve() {
   return input;
 }
+
+// returns cached global file input
+pressio_data file_loader::retrieve_global(){
+  return input;
+}
+
+
 
 /*
   dataset_setup function definitions

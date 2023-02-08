@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+bool GPU_ACC = 0;
+
 void printHelp()
 {
   std::cout <<
@@ -35,12 +37,13 @@ cmdline_args* parse_args(int argc, char* argv[]) {
     {"block_size",required_argument,0,'s'},
     {"method", required_argument,0,'m'},
     {"gpu",no_argument,0,'g'},
+    {"bound", no_argument,0,'e'},
     {"help",no_argument,0,'h'},
     {0,0,0,0}//required all-null entry
   };
   std::string method;
   while(true) {
-    c = getopt_long(argc, argv, "d:i:f:r:t:o:b:s:gh", long_options, &option_index);
+    c = getopt_long(argc, argv, "d:i:f:r:t:o:b:s:m:e:gh", long_options, &option_index);
     if(c == -1) break; //we are done 
     switch(c) {
       case 'd': args->dims.push_back(std::stoull(optarg)); break;
@@ -52,10 +55,8 @@ cmdline_args* parse_args(int argc, char* argv[]) {
       case 'b': args->blocks     = std::stoull(optarg); break;
       case 's': args->block_size = std::stoull(optarg); break;
       case 'm': method           = optarg; break;
-      case 'g':
-        #ifndef GPU_ACC
-        #define GPU_ACC 
-        #endif
+      case 'e': args->error      = atof(optarg); break;
+      case 'g': GPU_ACC          = 1;
       break;
       case 'h': case '?': 
       default:  

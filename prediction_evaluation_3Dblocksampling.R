@@ -14,16 +14,26 @@ set.seed(1234)
 comp_thresh <- 200
 
 source('functions_paper.R')
-upper_block_count = 128
-block_counts = 1:upper_block_count
-block_sizes <- c(4, 6, 8, 12, 16, 32)
 
-error_bnds <- c(1e-2, 1e-3, 1e-4, 1e-5)
-error_modes <- c('pressio:abs', 'pressio:rel')
-compressors <- c('sz', 'zfp', 'mgard')
+upper_block_count = 100
 
-#error_modes <- c('pressio:abs')
-#compressors <- c('sz')
+block_counts = c(upper_block_count)
+
+# block_counts = 1:upper_block_count
+# block_sizes <- c(4, 6, 8, 12, 16, 32)
+block_sizes <- c(32)
+
+
+error_bnds <- c(1e-3)
+# error_bnds <- c(1e-2, 1e-3, 1e-4, 1e-5)
+
+error_modes <- c('pressio:abs')
+# error_modes <- c('pressio:abs', 'pressio:rel')
+
+compressors <- c('sz')
+# compressors <- c('sz', 'zfp', 'mgard')
+
+
 
 for (block_size in block_sizes) { 
   name <- paste0("/home/dkrasow/compression/outputs/*blocks", upper_block_count, "_block_size", block_size, "*.csv")
