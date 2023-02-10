@@ -49,7 +49,6 @@ pressio_data sample_loader::retrieve_global(){
   return file_data;
 }
 
-
 /*
   block_sampler function definitions
   sampling methods

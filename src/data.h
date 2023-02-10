@@ -33,7 +33,13 @@ struct sampler {
   virtual std::vector<std::shared_ptr<loader>> sample(usi method, usi total_blocks, size_t block_dims) = 0;
 };
 
-
+// sets up file_metadata data structure for all the files loaded by file_loader
+struct dataset_setup: public setup{
+    dataset_setup(cmdline_args* args): args(args){}
+    std::vector<std::shared_ptr<loader>> set();
+    // private
+    cmdline_args* args;
+};
 
 // whole file loader (can load velocityx.f32 for example)
 struct file_loader: public loader {
@@ -44,17 +50,11 @@ struct file_loader: public loader {
     pressio_data load_global();
     pressio_data retrieve();
     pressio_data retrieve_global();
-    // private
+    // private 
     pressio_data input;
     file_metadata* meta;
 };
-// sets up file_metadata data structure for all the files loaded by file_loader
-struct dataset_setup: public setup{
-    dataset_setup(cmdline_args* args): args(args){}
-    std::vector<std::shared_ptr<loader>> set();
-    // private
-    cmdline_args* args;
-};
+
 // loads samples (similar to file_loader but for sampling)
 struct sample_loader: public loader{
     sample_loader(block_metadata* meta): meta(meta){}
@@ -64,8 +64,7 @@ struct sample_loader: public loader{
     pressio_data load_global();
     pressio_data retrieve();
     pressio_data retrieve_global();
-    
-    // private
+    // private 
     pressio_data block_data;
     pressio_data file_data;
     block_metadata* meta;
@@ -74,7 +73,7 @@ struct sample_loader: public loader{
 struct block_sampler: public sampler{
     block_sampler(std::vector<std::shared_ptr<loader>> buffers): buffers(buffers){}
     std::vector<std::shared_ptr<loader>> sample(usi method_d, usi total_blocks, size_t block_dims);
-    // private
+    // private 
     std::vector<std::shared_ptr<loader>> uniform_sample(usi total_blocks, size_t block_dims);
     std::vector<std::shared_ptr<loader>> random_sample(usi total_blocks, size_t block_dims);
     std::vector<std::shared_ptr<loader>> multigrid_sample(usi total_blocks, size_t block_dims);

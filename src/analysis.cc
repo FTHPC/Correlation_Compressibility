@@ -94,33 +94,38 @@ int main(int argc, char* argv[]) {
   // all sampling methods are defined as a short int greater than NONE
   if (args->block_method > NONE){
     samples blocks = std::make_unique<block_sampler>(buffers)->sample(args->block_method, args->blocks, args->block_size);
-    buffers = blocks;
+    buffers = std::move(blocks);
   }
 
 
   for (auto block : buffers) {
     if (!rank) {
       input = block->load();
-      // individual block meta data
-      block_metadata *meta = block->block_meta();
+      // grab meta data
+      file_metadata *file_meta = block->metadata();
+      block_metadata *block_meta = block->block_meta();
 
       pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
       pressio_compressor analysis = library.get_compressor("noop");
-      analysis->set_options({
+      pressio_options metrics_options = {
           {"pressio:metric", "data_analysis"s }, 
-          {"data_analysis:meta", meta},     
-      });
-      analysis->compress(&input, &compressed);
+          {"data_analysis:file_meta", file_meta}, 
+          {"data_analysis:block_meta", block_meta},  
+      };
 
+      analysis->set_options(metrics_options);
+      analysis->compress(&input, &compressed);
       analysis_results = analysis->get_metrics_results();
+
       std::cout << analysis_results << std::endl;
     }
 
     static const std::vector metrics_composites { 
       "error_stat"s, "size"s
     };
-
     static const std::array bound_types {"pressio:abs"s, "pressio:rel"s };
+
+    
     using compression_request_t = std::tuple<std::string, std::string, double>;
     using compression_response_t = std::tuple<compression_request_t,pressio_options>;
     std::vector<compression_request_t> requests;
@@ -159,23 +164,25 @@ int main(int argc, char* argv[]) {
 
       
         // GLOBAL METRICS ON ENTIRE DATASET
-        input_global = block->load_global();
-        pressio_data compressed_global   = pressio_data::empty(pressio_byte_dtype, {});
-        pressio_data decompressed_global = pressio_data::owning(input_global.dtype(), input_global.dimensions());
-        pressio_compressor global_compressor = library.get_compressor("pressio");
-        global_compressor->set_options(options);
-        global_compressor->compress(&input_global, &compressed_global);
-        global_compressor->decompress(&compressed_global, &decompressed_global);
-        pressio_options global_results_unsorted = global_compressor->get_metrics_results();
-        pressio_options global_results = {
-          {"global:value_std", global_results_unsorted.get("error_stat:value_std")},
-          {"global:compression_ratio", global_results_unsorted.get("size:compression_ratio")},
-          {"global:value_range", global_results_unsorted.get("error_stat:value_range")}
-        };
+        pressio_options global_results;
+        if (args->block_method > NONE){
+          input_global = block->load_global();
+          pressio_data compressed_global   = pressio_data::empty(pressio_byte_dtype, {});
+          pressio_data decompressed_global = pressio_data::owning(input_global.dtype(), input_global.dimensions());
+          pressio_compressor global_compressor = library.get_compressor("pressio");
+          global_compressor->set_options(options);
+          global_compressor->compress(&input_global, &compressed_global);
+          global_compressor->decompress(&compressed_global, &decompressed_global);
+          pressio_options global_results_unsorted = global_compressor->get_metrics_results();
+          global_results = {
+            {"global:value_std", global_results_unsorted.get("error_stat:value_std")},
+            {"global:compression_ratio", global_results_unsorted.get("size:compression_ratio")},
+            {"global:value_range", global_results_unsorted.get("error_stat:value_range")}
+          };
+        }
 
  
-
-        // LOCAL METRICS ON INDIVIDUAL BLOCK
+        // LOCAL METRICS ON INDIVIDUAL LOCAL BUFFER
         pressio_data compressed   = pressio_data::empty(pressio_byte_dtype, {});
         pressio_data decompressed = pressio_data::owning(input.dtype(), input.dimensions());
         pressio_compressor compressor = library.get_compressor("pressio");

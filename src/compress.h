@@ -52,7 +52,7 @@ typedef struct file_metadata{
   std::vector<size_t>   dims;
   pressio_dtype         dtype;
   std::string           dataset_name;
-  pressio_io            io;              
+  pressio_io            io;             
 } file_metadata;
 
 
@@ -72,7 +72,7 @@ typedef struct block_metadata{
 
 
 // from svd.cc
-Eigen::MatrixXd svd_sv(void* ptr, usi num_dim, block_metadata* meta);
+Eigen::MatrixXd svd_sv(void* ptr, usi num_dim, void* block_meta, void* file_meta);
 double find_svd_trunc(std::vector<double> ev0, double threshold);
 
 // from qentropy.cc

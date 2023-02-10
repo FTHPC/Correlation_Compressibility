@@ -89,15 +89,17 @@ MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype, std
  *  returns the singular value matrix based on the dimensions
  *  of the dataset inputted (num_dim)
  */
-MatrixXd svd_sv(void* ptr, usi num_dim, block_metadata* meta)
+MatrixXd svd_sv(void* ptr, usi num_dim, void* block_meta, void* file_meta)
 {
+    file_metadata* meta = (file_metadata*) file_meta;
     if (num_dim == 2)
-        return SVD_2D_Jacobi(ptr, meta->file->dims, meta->file->dtype);
+        return SVD_2D_Jacobi(ptr, meta->dims, meta->dtype);
     else { 
-        if (!meta->block_number) {
-            return SVD_3D_Tucker(ptr, meta->file->dims, meta->file->dtype, meta->file->filepath);
-        } else {
+        if (block_meta) {
+            block_metadata* meta = (block_metadata*) block_meta;
             return SVD_3D_Tucker(ptr, meta->block_dims, meta->file->dtype, meta->block_filepath);
+        } else {
+            return SVD_3D_Tucker(ptr, meta->dims, meta->dtype, meta->filepath);
         }
     }
 }

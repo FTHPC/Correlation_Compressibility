@@ -26,11 +26,7 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       // std::reverse(dims.begin(), dims.end()); //put in row major order
 
       // compute singular values and store values in ascending order
-      block_metadata* meta_cast = (block_metadata*) meta;
-
-      cout << meta_cast->block_filepath << endl;
-
-      Eigen::MatrixXd svd0_s = svd_sv(input->data(), dims_num, meta_cast);
+      Eigen::MatrixXd svd0_s = svd_sv(input->data(), dims_num, block_meta, file_meta);
       
       // stores the squared singular value matrix 
       Eigen::MatrixXd svd0_s_squared = svd0_s.array().square();
@@ -83,33 +79,38 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
     }
 
     int set_options(struct pressio_options const& options) override {
-      get(options, "data_analysis:meta", &meta);
+      get(options, "data_analysis:meta", &file_meta);
+      get(options, "data_analysis:file_meta", &file_meta);
+      get(options, "data_analysis:block_meta", &block_meta);
       return 0;
     }
 
     pressio_options get_metrics_results(pressio_options const &)  override {
       pressio_options opt;
-      block_metadata* meta_cast = (block_metadata*) meta;
-      set(opt, "info:filepath",     meta_cast->file->filepath);
-      set(opt, "info:filename",     meta_cast->file->filename);
-      set(opt, "info:dataset",      meta_cast->file->dataset);
-      set(opt, "info:dim1",         meta_cast->file->dims[0]);
-      set(opt, "info:dim2",         meta_cast->file->dims[1]);
-      set(opt, "info:dim3",         meta_cast->file->dims[2]);
-      set(opt, "block:method",      meta_cast->block_method);
-      set(opt, "block:total_count", meta_cast->total_blocks);
-      set(opt, "block:number",      meta_cast->block_number);
-      set(opt, "block:size",        meta_cast->block_size);
-      set(opt, "block:dim1",        meta_cast->block_dims[0]);
-      set(opt, "block:dim2",        meta_cast->block_dims[1]);
-      set(opt, "block:dim3",        meta_cast->block_dims[2]);
-      set(opt, "block:loc1",        meta_cast->block_loc[0]);
-      set(opt, "block:loc2",        meta_cast->block_loc[1]);
-      set(opt, "block:loc3",        meta_cast->block_loc[2]);
+      file_metadata* meta_cast    = (file_metadata*) file_meta;
+      block_metadata* block_cast  = (block_metadata*) block_meta;
+      set(opt, "info:filepath",     meta_cast->filepath);
+      set(opt, "info:filename",     meta_cast->filename);
+      set(opt, "info:dataset",      meta_cast->dataset);
+      set(opt, "info:dim1",         meta_cast->dims[0]);
+      set(opt, "info:dim2",         meta_cast->dims[1]);
+      set(opt, "info:dim3",         meta_cast->dims[2]);
       set(opt, "stat:n100",         n100);
       set(opt, "stat:n9999",        n9999);
       set(opt, "stat:n999",         n999);
       set(opt, "stat:n99",          n99);
+      if (block_cast != NULL){
+      set(opt, "block:method",      block_cast->block_method);
+      set(opt, "block:total_count", block_cast->total_blocks);
+      set(opt, "block:number",      block_cast->block_number);
+      set(opt, "block:size",        block_cast->block_size);
+      set(opt, "block:dim1",        block_cast->block_dims[0]);
+      set(opt, "block:dim2",        block_cast->block_dims[1]);
+      set(opt, "block:dim3",        block_cast->block_dims[2]);
+      set(opt, "block:loc1",        block_cast->block_loc[0]);
+      set(opt, "block:loc2",        block_cast->block_loc[1]);
+      set(opt, "block:loc3",        block_cast->block_loc[2]);
+      }
       return opt;
     }
     struct pressio_options get_configuration() const override {
@@ -155,7 +156,8 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
     compat::optional<uli> dim1, dim2, dim3;
 
     private:
-    void* meta;
+    void* file_meta;
+    void* block_meta;
 };
 
 static pressio_register metrics_data_analysis_plugin(metrics_plugins(), "data_analysis", [](){ return compat::make_unique<data_analysis_metric_plugin>(); });
