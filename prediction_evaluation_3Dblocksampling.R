@@ -30,7 +30,7 @@ error_bnds <- c(1e-3)
 error_modes <- c('pressio:abs')
 
 # compressors <- c('sz', 'zfp', 'mgard')
-compressors <- c('zfp')
+compressors <- c('sz')
 
 
 for (block_size in block_sizes) { 
@@ -45,10 +45,9 @@ for (block_size in block_sizes) {
     for (comp in compressors) {
       for (error_bnd in error_bnds){ 
         for (error_mode in error_modes){
-          list_df <- extract_cr_predictors(data, error_mode, error_bnd, comp_thresh=comp_thresh)
+         df <- extract_cr_predictors(data, error_mode, error_bnd, comp, comp_thresh)
           ### perform the regression and print its prediction assessment 
-          df <- list_df$df[[comp]][1:block_count, ]
-          print(nrow(df))
+
           tryCatch(expr = {res <- cr_blocking_model(df, kf=8, data_nm=var_nm, compressor_nm=comp, error_mode, error_bnd, block_count=block_count, block_size=block_size)},
                   error = function(e){ print(paste("Cannot fit model", e))})
         }

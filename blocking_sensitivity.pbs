@@ -49,7 +49,7 @@ do
     echo_do mpiexec -np 40 ./compress_analysis -t ${dset_dtype[${dataset}]} \
       -i ${dataset} -r ${dset_loc[${dataset}]}  ${dset_size[${dataset}]} \
       -o "${dataset}_blocks${blocks}_block_size${block_size}.csv" \
-      --blocks $blocks --block_size $block_size --method "UNIFORM"
+      --blocks $blocks --block_size $block_size --method "UNIFORM" 
     done
   done
 done

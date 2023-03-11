@@ -50,42 +50,6 @@ This container differs from our experimental setup slightly. The production buil
 NOTE this file is >= 11 GB , download with caution.
 
 
-#### Docker
-
-Many other systems can use podman or docker.
-
-```bash
-docker pull ghcr.io/fthpc/correlation_compressibility:latest
-
-#most systems
-docker run -it --rm ghcr.io/fthpc/correlation_compressibility:latest
-
-# if running on a SeLinux enforcing system
-docker run -it --rm --security-opt label=disable ghcr.io/fthpc/correlation_compressibility:latest
-```
-
-### Building the Container
-
-You can build the container yourself as follows:
-NOTE this process takes 3+ hours on a modern laptop, and most clusters do not
-provide sufficient permissions to run container builds on the cluster.
-
-Additionally compiling MGRAD -- one of the compressors we use takes >= 4GB RAM per core, be cautious
-with systems with low RAM.  You may be able compensate by using fewer cores by changing the spack install
-instruction in the Dockerfile to have a `-j N` where `N` is the number of cores you wish to use
-
-```bash
-# install/module load git-lfs, needed to download example_data for building the container
-sudo dnf install git-lfs #Fedora/CentOS Stream 8
-sudo apt-get install git-lfs # Ubuntu
-spack install git-lfs; spack load git-lfs # using spack
-
-# clone this repository
-git clone --recursive https://github.com/FTHPC/Correlation_Compressibility
-cd Correlation_Compressibility
-docker build . -t correlation_compressibility
-```
-
 ### Manual Installation
 
 By default, it is recommended to follow the install locations that are indicated on the top of ```scripts/run.sh```
@@ -141,45 +105,7 @@ If you are using an older < gcc11, then you will need to add the following to th
 ^libstdcompat+boost
 ```
 after ```^mgard@robertu94+cuda``` but before the ```,```.
-
-## Replication of Results
-
-### How to compute statistical predictors and compression metrics on datasets
-
-In order to run the statistical analysis that computes the statistical predictors (SVD, standard deviation, quantized entropy) of compression ratios, a dataset and a configuration file must be specified.
-TEST is a dataset that is specified within the `config.json` file. 
-
-```bash
-sh scripts/run.sh -c config.json -d TEST -n 2
-```
-
-The command above performs the computation of statistical predictors and writes output to the output file specified in the configuration file.
-This will use local hardware without a scheduler. Use ```-n``` to specify the MPI processes on your local system. Default value is 32.
-It is recommended that this value matches your CPU core count.
-
-If one has the PBS scheduler and runs outside of the container, feel free to use flags ```-p``` or ```-s``` for job execution.
-```-p``` will schedule multiple jobs based on the quantized error bounds and error bound types for a specified dataset.
-```-s``` will schedule a single job grouping all the analysis for a specified dataset.
-
-See ```-h``` for more options or help with syntax.
-
-
-If a dataset is wanted to run, the `config.json` file provides options to add datasets.
-The following options must be added when adding another dataset in the configuration file:
-```json
-"_comment" : 
-{
-    "folder"            : "folder containing h5 or binary files",
-    "data_dimensions"   : "dimensions of the datasets within dataset_folder. Either 1x2 or 1x3. EX: '1028, 1028'",
-    "slice_dimensions"  : "list of the dimensions wanted: EX: 'None' or 'X, Y, Z'",
-    "output"            : "name of the output csv file: EX: 'test.csv'",
-    "dtype"             : "data type. can be 'float32' or 'float64'",
-    "parse_info"        : "type of parsing needed: 'None', 'slice', 'gaussian', 'gaussian_multi', 'spatialweight', or 'scalarweight'",
-    "dataset_name"      : "necessary accessing 2D HDF5 files: 'standard' if not custom. custom EX: 'Z'"
-} 
-```
-
-From this section, .csv files are generated for each dataset and contain all the statistical predictors described in the paper as well as compression metrcis including compresison ratios for the 8 lossy compressors and 4 error bounds. 
+ 
 
 ### To run the training and prediction timing analysis demonstration
 
