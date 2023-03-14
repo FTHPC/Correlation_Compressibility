@@ -4,7 +4,7 @@
 #PBS -N data_compression_estimation
 #PBS -m abe
 #PBS -j oe
-source ~/.zshrc
+source ~/.bashrc
 
 function echo_do(){
   echo $@
@@ -33,12 +33,12 @@ dset_dtype[QMCPACK]=float32
 dset_dtype[FULL_HURRICANE]=float32
 
 declare -A dset_loc
-dset_loc[SDRBENCH-Miranda-256x384x384]=$COMPRESS_HOME/datasets
-dset_loc[QMCPACK]=$COMPRESS_HOME/datasets
+dset_loc[SDRBENCH-Miranda-256x384x384]=$HOME/datasets
+dset_loc[QMCPACK]=/zfs/fthpc/common/sdrbench/qmcpack
 dset_loc[FULL_HURRICANE]=/scratch1/dkrasow
 
 
-for dataset in QMCPACK
+for dataset in SDRBENCH-Miranda-256x384x384
 do
   for blocks in 16 32 64 128
   do

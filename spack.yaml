@@ -4,20 +4,15 @@ spack:
       target:
       - x86_64
   specs:
-  - libpressio+libdistributed+hdf5+mgard+python+sz+sz3+zfp+mpi+bitgrooming+digitrounding+fpzip
-    ^sz@master+stats ^mgard@2021-11-12+cuda cuda_arch=70 ^libstdcompat+boost ^libdistributed@0.4.2
+  - libpressio+libdistributed+hdf5+python+sz+sz3+zfp+mpi+bitgrooming+digitrounding+fpzip
+    ^sz@2.1.12.2+stats ^libstdcompat+boost ^libdistributed@0.4.2
   - libpressio-tthresh
   - libpressio-tools+opt+tthresh+mpi
   - py-h5py
-  - r+X
-  - r-rinside
   - py-matplotlib
-  - py-rpy2
   - py-scipy
   - py-pandas
   - opencv+python3
-  - git-lfs
-  - git
   view: true
   concretizer:
     unify: true
