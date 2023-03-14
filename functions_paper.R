@@ -129,7 +129,7 @@ cr_blocking_model <- function(df, kf=8, data_nm, compressor_nm, error_mode, erro
   print(df_reg)
 
   #does not separate by file
-  #df_reg <- data.frame(y, std_global, std_local, cr_local, loc_inter)
+  # df_reg <- data.frame(y, std_global, std_local, cr_local, loc_inter)
 
   indqna <- which(is.na(qent))
   if (length(indqna)>1) {df_reg <- df_reg[-indqna,]}
