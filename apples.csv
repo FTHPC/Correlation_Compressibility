@@ -1,7 +1,3 @@
-"Quantile","Corr","MedAPE","Block_Count","Block_Size","Compressor","Error_mode","Error_bound","Data_name","CR actual","CR estimate"
-"0.1","0.710764332169991","6.04780343907695","50","16","sz","pressio:abs","0.001","Miranda 3D_block","NaN","NaN"
-"0.5","1","7.92612244156985","50","16","sz","pressio:abs","0.001","Miranda 3D_block","NaN","NaN"
-"0.9","1","14.6123633001661","50","16","sz","pressio:abs","0.001","Miranda 3D_block","NaN","NaN"
-"0.1","0.619861240792461","4.34268256745708","50","16","zfp","pressio:abs","0.001","Miranda 3D_block","1.94175581747131","1.31639563416564"
-"0.5","0.788811800440256","8.51996707936137","50","16","zfp","pressio:abs","0.001","Miranda 3D_block","1.94175581747131","1.31639563416564"
-"0.9","0.957762360088051","33.2517019271855","50","16","zfp","pressio:abs","0.001","Miranda 3D_block","1.94175581747131","1.31639563416564"
+version https://git-lfs.github.com/spec/v1
+oid sha256:f3702a4acdd81c30ead196498555dfa7f88541e796356f32bf2c2380eccdbf01
+size 859
