@@ -30,11 +30,11 @@ error_bnds <- c(1e-3)
 error_modes <- c('pressio:abs')
 
 # compressors <- c('sz', 'zfp', 'mgard')
-compressors <- c('zfp')
+compressors <- c('mgard')
 
 
 for (block_size in block_sizes) { 
-  name <- paste0("/home/dkrasow/compression/outputs/*blocks", upper_block_count, "_block_size", block_size, "*.csv")
+  name <- paste0("outputs/*blocks", upper_block_count, "_block_size", block_size, "*.csv")
   filename <- Sys.glob(name)
   print(filename)
   gaussian <- 0
