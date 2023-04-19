@@ -13,6 +13,7 @@ spack:
   - py-scipy
   - py-pandas
   - opencv+python3
+  - gdb
   view: true
   concretizer:
     unify: true
