@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
     static const std::array bound_types {"pressio:abs"s, "pressio:rel"s };
 
     
-    using compression_request_t = std::tuple<std::string, std::string, double>;
+    using compression_request_t = std::tuple<std::string, std::string, double, pressio_options>;
     using compression_response_t = std::tuple<compression_request_t,pressio_options>;
     std::vector<compression_request_t> requests;
 
@@ -142,20 +142,20 @@ int main(int argc, char* argv[]) {
         // loop to go through different bounds 1e-5 upto 1e-2
         // reset bound for each bound type and compressor
         for (double bound=error_low; bound<=error_high; bound*=10){
-          requests.push_back(std::make_tuple(comp, bound_type, bound));
+          requests.push_back(std::make_tuple(comp, bound_type, bound, analysis_results));
         }
       }
     }
 
     distributed::comm::bcast(input, 0, MPI_COMM_WORLD);
-    distributed::comm::bcast(analysis_results, 0, MPI_COMM_WORLD);
+    //distributed::comm::bcast(analysis_results, 0, MPI_COMM_WORLD);
 
     distributed::queue::work_queue(
         distributed::queue::work_queue_options<compression_request_t>(),
         requests.begin(),
         requests.end(),
         [&](compression_request_t const& request) {
-        auto const& [comp, bound_type, bound] = request;
+        auto const& [comp, bound_type, bound, analysis_results] = request;
         auto options = make_config(comp, bound_type, bound, input.dtype());
         options.set("pressio:compressor", comp);
         options.set("pressio:metric", "composite"s);
