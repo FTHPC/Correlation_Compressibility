@@ -1,5 +1,4 @@
 ### extract data 
-
 extract_cr_predictors <- function(data, error_mode, error_bnd, compressor, comp_thresh=200){
   data_orig <- filter(data, info.bound_type == error_mode)
   data0 <- filter(data_orig, info.error_bound==error_bnd)
