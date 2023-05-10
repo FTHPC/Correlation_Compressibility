@@ -45,31 +45,17 @@ function cuda_svd_trunc(data)
     return sing
 end
 
-function cpu_svd_trunc(data)
-    sing = Array{Array{Float64,1},1}()
-    for i in 1:3
-      uf = unfold_web(data; dims=i);
-      result = svd(uf);
-      push!(sing, result.S)
-    end
-    return sing
-end
-
 
 function main()
     filename = ARGS[1]
     output   = ARGS[2]
-    vers     = parse.(Bool, ARGS[3])
-    dims     = parse.(Int, ARGS[4:end])
+    dims     = parse.(Int, ARGS[3:end])
     data     = Array{Float32}(undef, dims...)
     read!(filename, data)
 
     #GPU argument (-g) switches the GPU version on
-    if (vers) 
-        sing = cuda_svd_trunc(data)
-    else 
-        sing = cpu_svd_trunc(data)
-    end
+    sing = cuda_svd_trunc(data)
+    
     #combine singular values into one array
     sv0 = Array{Float64,1}()
     sv1 = Array{Float64,1}()

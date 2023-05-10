@@ -49,7 +49,7 @@ for (block_size in block_sizes) {
           ### perform the regression and print its prediction assessment 
 
           tryCatch(expr = {res <- cr_blocking_model(df, kf=8, data_nm=var_nm, compressor_nm=comp, error_mode, error_bnd, block_count=block_count, block_size=block_size)},
-                  error = function(e){ print(paste("Cannot fit model", e))})
+                  error = function(e){ print(paste("Cannot fit model: ", e))})
         }
       }
     }

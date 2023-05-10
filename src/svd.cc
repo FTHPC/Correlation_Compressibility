@@ -39,8 +39,8 @@ MatrixXd SVD_2D_Jacobi(void* ptr, std::vector<size_t> dimensions, int dtype)
 MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype, std::string filepath)
 {
     srand(time(NULL));
-    int key = rand() % 10000;
-    string output = to_string(key) + ".txt";
+    int key = rand() % 100000;
+    string output = filepath + to_string(key) + ".txt";
   
     // DOES NOT APPLY
     // reverse order of dimensions for julia
@@ -48,7 +48,9 @@ MatrixXd SVD_3D_Tucker(void* ptr, std::vector<size_t> dimensions, int dtype, std
     // std::reverse(dims.begin(), dims.end());
 
     stringstream result;
-    result << "julia -t 4 ./julia/svd.jl " << filepath << " " << output << " " << GPU_ACC << " ";
+    string julia_file = GPU_ACC ? "svd_cuda.jl" : "svd_cpu.jl";
+
+    result << "julia -t 4 ./julia/" << julia_file << " " << filepath << " " << output << " ";
     copy(dimensions.begin(), dimensions.end(), ostream_iterator<int>(result, " "));
     
     string result_s = result.str();
