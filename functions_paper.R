@@ -1,3 +1,59 @@
+### read data
+read_data <-function(block_count, block_size){
+  name <- paste0("/home/dkrasow/compression/outputs/*blocks", block_count, "_block_size", block_size, "*.csv")
+  filename <- Sys.glob(name)
+  print(filename)
+  data <- read.csv(filename)
+  data <- as.data.frame(data)
+  return(data)
+}
+
+
+### compute loc (arkas locality metric)
+compute_loc <-function(data){
+  df <- data.frame( data$info.filename, 
+                    data$block.method, 
+                    data$block.loc1,
+                    data$block.loc2,
+                    data$block.loc3)
+
+  df_uni <- unique(df) # exclude repeats
+  df_group <- df_uni %>% group_by(df_uni$data.info.filename, df_uni$data.block.method)
+  lx <- as.numeric(df_group$data.block.loc1)
+  ly <- as.numeric(df_group$data.block.loc2)
+  lz <- as.numeric(df_group$data.block.loc3)
+  loc0 <- data.frame(lx,ly,lz)
+
+  loc <- c()
+  for (j in 1:nrow(loc0)) {
+    numer_sum <- 0
+    denom_sum <- 0
+    # first point
+    Bb <- loc0[j,]
+    for (k in 1:nrow(loc0)) {
+      if (!identical(loc0[j,],loc0[k,])) {
+      # second point
+      Bb_prime <- loc0[k,]
+      posbb <- abs(Bb$lx - Bb_prime$lx) + abs(Bb$ly - Bb_prime$ly) + abs(Bb$lz - Bb_prime$lz)
+      distance <- sqrt((Bb$lx - Bb_prime$lx)^2 + (Bb$ly - Bb_prime$ly)^2 + (Bb$lz - Bb_prime$lz)^2)
+
+      distance[distance==0] <- 1e-8 
+      numer_sum <- numer_sum +(posbb / distance)
+      denom_sum <- denom_sum + posbb
+      }
+    }
+    loc[j] <- numer_sum / denom_sum
+  } 
+  inner <- data.frame(df_uni, loc)  
+  ### JOIN on column unique identifiers
+  df_final <- merge(x = data, y = inner,
+                by.x=c("info.filename","block.method", "block.loc1", "block.loc2", "block.loc3"), 
+                by.y=c("data.info.filename","data.block.method", "data.block.loc1", "data.block.loc2", "data.block.loc3"))
+
+
+  return(df_final)
+}
+
 ### extract data 
 extract_cr_predictors <- function(data, error_mode, error_bnd, compressor, comp_thresh=200){
   data_orig <- filter(data, info.bound_type == error_mode)
@@ -27,38 +83,11 @@ extract_cr_predictors <- function(data, error_mode, error_bnd, compressor, comp_
   # global std
   std_global <- as.numeric(vx_compressor$global.value_std[indsz])
   std_global[is.na(std_global)] <- 1e-8
-
   # distances
-  lx <- as.numeric(vx_compressor$block.loc1[indsz])
-  ly <- as.numeric(vx_compressor$block.loc2[indsz])
-  lz <- as.numeric(vx_compressor$block.loc3[indsz])
-  loc0 <- data.frame(lx,ly,lz)
+  loc <- vx_compressor$loc[indsz]
 
   #file identfier
   file <- vx_compressor$info.filename
-
-
-  loc <- c()
-  for (j in 1:nrow(loc0)) {
-    numer_sum <- 0
-    denom_sum <- 0
-    # first point
-    Bb <- loc0[j,]
-    for (k in 1:nrow(loc0)) {
-      if (!identical(loc0[j,],loc0[k,])) {
-      # second point
-      Bb_prime <- loc0[k,]
-      posbb <- abs(Bb$lx - Bb_prime$lx) + abs(Bb$ly - Bb_prime$ly) + abs(Bb$lz - Bb_prime$lz)
-      distance <- sqrt((Bb$lx - Bb_prime$lx)^2 + (Bb$ly - Bb_prime$ly)^2 + (Bb$lz - Bb_prime$lz)^2)
-
-      distance[distance==0] <- 1e-8 
-      numer_sum <- numer_sum +(posbb / distance)
-      denom_sum <- denom_sum + posbb
-      }
-    }
-    loc[j] <- numer_sum / denom_sum
-  } 
-
 
   df <- data.frame(cr_local, qent, vrgstd, vargm, std, cr_global, std_global, loc, file)
   indqna <- which(is.na(qent))
@@ -85,7 +114,7 @@ RelMaxAE <- function(pred,true){
 ### prediction functions
 
 
-cr_blocking_model <- function(df, kf=8, data_nm, compressor_nm, error_mode, error_bnd, block_count=block_count, block_size=block_size, print_stats=1){
+cr_blocking_model <- function(df, kf=8){
   indsz <- which(df$cr_global<=comp_thresh)
   df <- df[indsz,]
 
@@ -125,15 +154,15 @@ cr_blocking_model <- function(df, kf=8, data_nm, compressor_nm, error_mode, erro
                                      "y"      = mean(y,                           na.rm=TRUE))
 
 
-  print(df_reg)
+  # print(df_reg)
 
-  #does not separate by file
+  ### does not separate by file
   # df_reg <- data.frame(y, std_global, std_local, cr_local, loc_inter)
 
   indqna <- which(is.na(qent))
   if (length(indqna)>1) {df_reg <- df_reg[-indqna,]}
   if (nrow(df_reg) == 0){
-    print(paste("model fails: ", compressor_nm, error_mode, error_bnd))
+    stop("model failed")
   }
 
 
@@ -143,41 +172,30 @@ cr_blocking_model <- function(df, kf=8, data_nm, compressor_nm, error_mode, erro
   cv_compression <- c()
   pred_list <- c()
   ytest_list <- c()
-  vtest_list <- c()
 
   for (l in 1:kf){
     test.set <- df_reg[df_reg$fold == l,]
     train.set <- df_reg[df_reg$fold != l,]
 
-    #used if separate by file
+    ### used if separate by file
     mi <- lm(y~1 + x1 + x2 + x3, data = train.set)
-    #mi <- lm(y~1 + loc_inter*cr_local + std_local*cr_local + loc_inter*std_local*cr_local, data = train.set)
-    print(summary(mi))
+    # mi <- lm(y~1 + loc_inter*cr_local + std_local*cr_local + loc_inter*std_local*cr_local, data = train.set)
+    # print(summary(mi))
 
     predi <- predict(mi, newdata=test.set)
     #
     cv_mape[l] <- RelMAE(true=exp(test.set$y),pred=exp(predi))
-    cv_compression[l] <- c(mean(test.set$y), mean(predi))
+    cv_compression[[l]] <- c(mean(test.set$y), mean(predi))
     cv_cor[l] <- cor(exp(test.set$y),exp(predi))
     #
     pred_list[[l]] <- exp(predi)
-    ytest_list[[l]] <- exp(test.set$y) 
-    vtest_list[[l]] <- test.set$vrgstd   
+    ytest_list[[l]] <- exp(test.set$y)  
   }
 
   probs=c(0.10, 0.5, 0.9)
   stats_quantile <- function(x){ quantile(x, probs=probs, na.rm = TRUE) } 
   res_cv <- cbind(probs, stats_quantile(cv_cor), 100*stats_quantile(cv_mape))
-  colnames(res_cv) <- c('Quantile', 'Corr','MedAPE')
-  if (print_stats == 1){
-    csv_res_cv <- cbind(res_cv, block_count, block_size, compressor_nm, error_mode, error_bnd, data_nm, mean(test.set$y), mean(predi))
-    colnames(csv_res_cv) <- c('Quantile', 'Corr', 'MedAPE', 'Block_Count', 'Block_Size', 'Compressor', 'Error_mode', 'Error_bound', 'Data_name', 'CR actual', 'CR estimate')
-    if (file.exists("apples.csv")) {
-      write.table(csv_res_cv, "apples.csv", sep=',', col.names=FALSE, row.names=FALSE, append=TRUE)
-    } else {
-      write.table(csv_res_cv, "apples.csv", sep=',', col.names=TRUE, row.names=FALSE)
-    }
-  }
-  
-  return(list(pred=c(unlist(pred_list)), ytest=c(unlist(ytest_list)),res_cv=res_cv))
+  colnames(res_cv) <- c('Quantile', 'Corr', 'MedAPE')
+
+  return(list(pred=c(unlist(pred_list)), ytest=c(unlist(ytest_list)), res_cv=res_cv))
 }

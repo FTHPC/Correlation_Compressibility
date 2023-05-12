@@ -15,41 +15,48 @@ comp_thresh <- 200
 
 source('functions_paper.R')
 
-upper_block_count = 50
 
-# block_counts = 1:upper_block_count
-block_counts = c(upper_block_count)
+var_nm <- "qmcpack 3D_block"
+
+block_counts = c(50)
 
 # block_sizes <- c(4, 6, 8, 12, 16, 32)
 block_sizes <- c(16)
 
-# error_bnds <- c(1e-2, 1e-3, 1e-4, 1e-5)
-error_bnds <- c(1e-3)
+error_bnds <- c(1e-2, 1e-3, 1e-4, 1e-5)
 
-# error_modes <- c('pressio:abs', 'pressio:rel')
-error_modes <- c('pressio:abs')
+error_modes <- c('pressio:abs', 'pressio:rel')
+# error_modes <- c('pressio:abs')
 
-# compressors <- c('sz', 'zfp', 'mgard')
-compressors <- c('sz')
+compressors <- c('sz', 'zfp', 'mgard')
+# compressors <- c('sz')
 
 
 for (block_size in block_sizes) { 
-  name <- paste0("/home/dkrasow/compression/outputs/*blocks", upper_block_count, "_block_size", block_size, "*.csv")
-  filename <- Sys.glob(name)
-  print(filename)
-  gaussian <- 0
-  var_nm <- "Miranda 3D_block"
-  data <- read.csv(filename)
-  data <- as.data.frame(data)
   for (block_count in block_counts){
+
+    data <- read_data(block_count, block_size)
+    data_loc <- compute_loc(data)
+    ## dependent on compression scheme
     for (comp in compressors) {
       for (error_bnd in error_bnds){ 
         for (error_mode in error_modes){
-         df <- extract_cr_predictors(data, error_mode, error_bnd, comp, comp_thresh)
+          predictors <- extract_cr_predictors(data_loc, error_mode, error_bnd, comp, comp_thresh)
           ### perform the regression and print its prediction assessment 
+          unique_des <- paste0("size", block_size, "_count", block_count, "_", comp, "_", error_bnd, "_", error_mode)
+          tryCatch(expr = {
+      
+            res <- cr_blocking_model(predictors, kf=8)
 
-          tryCatch(expr = {res <- cr_blocking_model(df, kf=8, data_nm=var_nm, compressor_nm=comp, error_mode, error_bnd, block_count=block_count, block_size=block_size)},
-                  error = function(e){ print(paste("Cannot fit model: ", e))})
+            png(file=paste0(unique_des, ".png"),
+            width=600, height=350)
+            plot(res$ytest, res$pred, xlab = "actual log(CR)", ylab = "pred log(CR)", main = unique_des)
+            abline(lm(pred ~ ytest, data = res), col = "red")
+            dev.off()
+            
+            
+            }, error = function(e){ print(paste(unique_des, "::", e))}
+          )
         }
       }
     }
