@@ -60,18 +60,18 @@ for (block_size in block_sizes) {
 
             
         
-            print(res$res_cv[,3])
-            res_mape <- which(res$res_cv$Quantile==0.5)
-            df_mape <- res$res_cv[res_mape,]
+            # print(res$res_cv[,3])
+            # res_mape <- which(res$res_cv$Quantile==0.5)
+            # df_mape <- res$res_cv[res_mape,]
            
-            print(df_mape)
-            print(res$ytest)
+            # print(df_mape)
+            # print(res$ytest)
 
-            png(file=paste0("mape_", unique_des, ".png"),
-            width=600, height=350)
-            plot(res$ytest, df_mape, xlab = "actual log(CR)", ylab = "pred log(CR)", main = unique_des)
-            # abline(lm(pred ~ ytest, data = res), col = "red")
-            dev.off()
+            # png(file=paste0("mape_", unique_des, ".png"),
+            # width=600, height=350)
+            # plot(res$ytest, df_mape, xlab = "actual log(CR)", ylab = "pred log(CR)", main = unique_des)
+            # # abline(lm(pred ~ ytest, data = res), col = "red")
+            # dev.off()
             
             
             }, error = function(e){ print(paste(unique_des, "::", e))}
