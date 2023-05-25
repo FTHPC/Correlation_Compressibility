@@ -9,36 +9,35 @@ block_metadata* file_loader::block_meta() {
   return NULL;
 }
 file_metadata* file_loader::metadata() {
-  return meta;
+  return this->meta;
 }
 
 pressio_data file_loader::load() {
-  pressio_data metadata = pressio_data::owning(meta->dtype, meta->dims);  
-  auto input_ptr = meta->io->read(&metadata);
+  if (this->input.has_data()) {
+    // returns whats cached in input.
+    return this->input;
+  }
+
+  pressio_data metadata = pressio_data::owning(this->metadata()->dtype, 
+                                               this->metadata()->dims);  
+  auto input_ptr = this->metadata()->io->read(&metadata);
   if (!input_ptr) {
-    std::cerr << meta->io->error_msg() << std::endl;
+    std::cerr << this->metadata()->io->error_msg() << std::endl;
     exit(1);
   } else {
-    input = std::move(*input_ptr);
+    this->input = std::move(*input_ptr);
   }
-  return input;
+  return this->input;
 }
 
 // returns global file input
 pressio_data file_loader::load_global() {
-  return input;
+  return this->load();
 }
 
-// returns whats cached in input. If load() hasn't been called, return is NULL
-pressio_data file_loader::retrieve() {
-  return input;
+void file_loader::release() {
+  this->input.~pressio_data();
 }
-
-// returns cached global file input
-pressio_data file_loader::retrieve_global(){
-  return input;
-}
-
 
 
 
@@ -48,7 +47,7 @@ pressio_data file_loader::retrieve_global(){
 std::vector<std::shared_ptr<loader>> dataset_setup::set() {
   pressio library;
   bool stop = false;
-  std::vector<std::shared_ptr<loader>> loaders;
+
   for (const auto & entry : std::filesystem::directory_iterator(args->directory+'/'+args->dataset)) {
     std::string filename;
     if (stop) break;
@@ -96,7 +95,13 @@ std::vector<std::shared_ptr<loader>> dataset_setup::set() {
           {"io:path", data->filepath}
           });
     }
-    loaders.emplace_back(std::make_shared<file_loader>(data));
+    this->loaders.emplace_back(std::make_shared<file_loader>(data));
   }
-  return loaders;
+  return this->loaders;
+}
+
+void dataset_setup::release() {
+  for (auto buff : this->loaders) {
+    buff->release();
+  }
 }

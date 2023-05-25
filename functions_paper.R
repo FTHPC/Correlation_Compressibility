@@ -162,7 +162,7 @@ cr_blocking_model <- function(df, kf=8){
   indqna <- which(is.na(qent))
   if (length(indqna)>1) {df_reg <- df_reg[-indqna,]}
   if (nrow(df_reg) == 0){
-    stop("model failed")
+    print("model failed")
   }
 
 

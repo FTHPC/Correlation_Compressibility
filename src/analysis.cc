@@ -74,6 +74,9 @@ int main(int argc, char* argv[]) {
   MPI_Init(&argc, &argv);
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+
+  // utilizing pressio library
   libpressio_register_all();
   pressio library;
   pressio_data input;
@@ -84,27 +87,42 @@ int main(int argc, char* argv[]) {
   float error_low  = 1e-5;
   
   auto args = parse_args(argc, argv);
-  if (args->error > 0) {
+  if (args->error != 0) {
     error_high = args->error;
     error_low  = args->error;
   }
 
-  dataset buffers = std::make_unique<dataset_setup>(args)->set();
+  // store large buffers (velocityx.d64, xxx.d64, xxx.d64) in a loader
+  
+  auto loaders = std::make_unique<dataset_setup>(args);
+  dataset buffers = loaders->set();
 
   // all sampling methods are defined as a short int greater than NONE
-  if (args->block_method > NONE){
+  if (args->block_method != NONE){
+    // transform the buffers into blocks if a block sampling mode is selected
     samples blocks = std::make_unique<block_sampler>(buffers)->sample(args->block_method, args->blocks, args->block_size);
-    buffers = std::move(blocks);
+    // frees the large dataset buffers
+    loaders->release();
+    buffers = std::move(blocks); // replace buffers w/ blocks to utilize blocks in analysis
   }
-
 
   for (auto block : buffers) {
     if (!rank) {
+      // rank 0 loads block OR buffer depending on blocking mode
       input = block->load();
-      // grab meta data
+      // grab file meta data
       file_metadata *file_meta = block->metadata();
+      // will be NULL if no blocking mode wasn't selected
       block_metadata *block_meta = block->block_meta();
 
+      if (block_meta == NULL && args->block_method != NONE) {
+        std::cerr << "Block metadata configuration invalid. Exiting 32" << std::endl;
+        exit(32);
+      }
+
+      // setup metrics for data_analysis and metadata
+      // performed on a block OR buffer and is only dependent on statistical properties of the dataset
+      // NOT dependent on error bound, error mode, or compressor
       pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
       pressio_compressor analysis = library.get_compressor("noop");
       pressio_options metrics_options = {
@@ -114,9 +132,9 @@ int main(int argc, char* argv[]) {
       };
 
       analysis->set_options(metrics_options);
+      // perform analysis 
       analysis->compress(&input, &compressed);
       analysis_results = analysis->get_metrics_results();
-
       std::cout << analysis_results << std::endl;
     }
 
@@ -165,7 +183,10 @@ int main(int argc, char* argv[]) {
       
         // GLOBAL METRICS ON ENTIRE DATASET
         pressio_options global_results;
-        if (args->block_method > NONE){
+        // perform global analysis if block sampling is used
+        // this will load the global buffer from a sampled block
+        // velocityx_block1.d64 will load velocityx.d64
+        if (args->block_method != NONE){
           input_global = block->load_global();
           pressio_data compressed_global   = pressio_data::empty(pressio_byte_dtype, {});
           pressio_data decompressed_global = pressio_data::owning(input_global.dtype(), input_global.dimensions());
@@ -204,7 +225,9 @@ int main(int argc, char* argv[]) {
         // combine distributed results and data results
         results.copy_from(compress_analysis);
         results.copy_from(analysis_results);
-        results.copy_from(global_results);
+        if (args->block_method != NONE){
+          results.copy_from(global_results);
+        }
         // export to csv
         exportcsv(results, args->output);
 
@@ -212,6 +235,8 @@ int main(int argc, char* argv[]) {
         },
         [](compression_response_t const& response) {}
     );
+    // free resources for this iteration
+    block->release();
   }
   MPI_Finalize();
 }

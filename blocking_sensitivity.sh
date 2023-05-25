@@ -1,27 +1,17 @@
 #!/bin/bash
-source ~/.bashrc
-
 function echo_do(){
   echo $@
   "$@"
 }
 
-#load spack
-compress
 
-#cd /path/to/compression_env
-#rm -rf $COMPRESS_HOME/build
-#echo_do cmake -S $COMPRESS_HOME/src -B $COMPRESS_HOME/build
+COMPRESS_HOME=/home/dkrasow/compression
+
 cd $COMPRESS_HOME/build
-#echo_do make -j 
 
-echo $COMPRESS_HOME
     
 declare -A dset_size
 dset_size[SDRBENCH-Miranda-256x384x384]="-d 256 -d 384 -d 384"
-dset_size[qmcpack]="-d 69 -d 69 -d 115"
-dset_size[hurricane]="-d 500 -d 500 -d 100"
-dset_size[CESM3D]="-d 3600 -d 1800 -d 26"
 
 declare -A dset_dtype
 dset_dtype[SDRBENCH-Miranda-256x384x384]=float64
@@ -47,7 +37,7 @@ do
   do
     pbsout="${pbsdir}/${app}_${blocks}_${block_size}.pbs"
     echo "#!/bin/bash" > $pbsout
-    echo "#PBS -l select=1:ncpus=20:ngpus=2:gpu_model=a100:mem=372gb" >> $pbsout
+    echo "#PBS -l select=1:ncpus=40:mem=372gb" >> $pbsout
     echo "#PBS -l walltime=32:00:00" >> $pbsout
     echo "#PBS -N data_compression_estimation_${app}_${blocks}_${block_size}" >> $pbsout
     echo "#PBS -m a" >> $pbsout
@@ -79,7 +69,7 @@ do
     echo "do" >> $pbsout
 
     printf "\techo_do which mpiexec\n" >> $pbsout
-    printf "\techo_do mpiexec -np 20 ./compress_analysis -g -t \${dset_dtype[\${dataset}]} \\
+    printf "\techo_do mpiexec -np 40 ./compress_analysis -g -t \${dset_dtype[\${dataset}]} \\
       -i \${dataset} -r \${dset_loc[\${dataset}]} \${dset_size[\${dataset}]} \\
       -o \"\${dataset}_blocks${blocks}_block_size${block_size}.csv\" \\
       --blocks ${blocks} --block_size ${block_size} --method \"UNIFORM\"" >> $pbsout 

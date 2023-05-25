@@ -5,48 +5,57 @@
   sample_loader function definitions
   used to setup the files for sampling
 */
+// block file metadata
 block_metadata* sample_loader::block_meta() {
-  return meta;
+  return this->meta;
 }
 
+// global buffer file metadata
 file_metadata* sample_loader::metadata() {
-  return meta->file;
+  return this->meta->file;
 }
 
 pressio_data sample_loader::load() {
-  pressio_data metadata = pressio_data::owning(meta->file->dtype, meta->block_dims);  
+  if (this->block_data.has_data()) {
+    // returns whats cached in file_data.
+    return this->block_data;
+  }
+
+  pressio_data metadata = pressio_data::owning(this->metadata()->dtype,
+                                               this->block_meta()->block_dims);  
   auto input_ptr = meta->block_io->read(&metadata);
   if (!input_ptr) {
     std::cerr << meta->block_io->error_msg() << std::endl;
     exit(1);
   } else {
-    block_data = std::move(*input_ptr);
+    this->block_data = std::move(*input_ptr);
   }
-  return block_data;
+  return this->block_data;
 }
 
 // returns global file input
 pressio_data sample_loader::load_global() {
-  pressio_data metadata = pressio_data::owning(meta->file->dtype, meta->file->dims);  
-  auto input_ptr = meta->file->io->read(&metadata);
+  if (this->file_data.has_data()) {
+    // returns whats cached in file_data.
+    return this->file_data;
+  }
+
+  pressio_data metadata = pressio_data::owning(this->metadata()->dtype, 
+                                               this->metadata()->dims);  
+  auto input_ptr = this->metadata()->io->read(&metadata);
   if (!input_ptr) {
-    std::cerr << meta->file->io->error_msg() << std::endl;
+    std::cerr << this->metadata()->io->error_msg() << std::endl;
     exit(1);
   } else {
-    file_data = std::move(*input_ptr);
+    this->file_data = std::move(*input_ptr);
   }
-  return file_data;
-}
-
-// returns cached block file input
-pressio_data sample_loader::retrieve(){
-  return block_data;
+  return this->file_data;
 }
 
 
-// returns cached global file input
-pressio_data sample_loader::retrieve_global(){
-  return file_data;
+void sample_loader::release() {
+  this->file_data.~pressio_data();
+  this->block_data.~pressio_data();
 }
 
 /*
@@ -54,31 +63,29 @@ pressio_data sample_loader::retrieve_global(){
   sampling methods
 */
 std::vector<std::shared_ptr<loader>> block_sampler::sample(usi method_d, usi total_blocks, size_t block_dims) {
-  std::vector<std::shared_ptr<loader>> blocks;
   switch (method_d) {
     case(UNIFORM):
-      method = "uniform";
-      blocks = uniform_sample(total_blocks, block_dims);
+      this->method = "uniform";
+      uniform_sample(total_blocks, block_dims);
       break;
     case(RANDOM):
-      method = "random";
-      blocks = random_sample(total_blocks, block_dims);
+      this->method = "random";
+      random_sample(total_blocks, block_dims);
       break;
     case(MULTIGRID):
-      method = "multigrid";
-      blocks = multigrid_sample(total_blocks, block_dims);
+      this->method = "multigrid";
+      multigrid_sample(total_blocks, block_dims);
       break;
     default:
       break;
   }
-  return blocks;
+  return this->blocks;
 }
 
 
-std::vector<std::shared_ptr<loader>> block_sampler::uniform_sample(usi total_blocks, size_t block_dims) {
+void block_sampler::uniform_sample(usi total_blocks, size_t block_dims) {
   pressio library; 
 
-  std::vector<std::shared_ptr<loader>> blocks;
 
   for (auto buffer : buffers){
     pressio_data input_pressio  = buffer->load(); 
@@ -86,9 +93,9 @@ std::vector<std::shared_ptr<loader>> block_sampler::uniform_sample(usi total_blo
     file_metadata* meta = buffer->metadata();
     size_t block_num = 1;
     // organize data into uniform blocks
-    for (size_t i=0; i<=meta->dims[0]-block_dims; i+=block_dims)  // goes along x dimension 
-      for (size_t j=0; j<=meta->dims[1]-block_dims; j+=block_dims) // goes along y dimension
-        for (size_t k=0; k<=meta->dims[2]-block_dims; k+=block_dims) { // goes along z dimension
+    for (size_t i=0; i<meta->dims[0]-block_dims; i+=block_dims)  // goes along x dimension 
+      for (size_t j=0; j<meta->dims[1]-block_dims; j+=block_dims) // goes along y dimension
+        for (size_t k=0; k<meta->dims[2]-block_dims; k+=block_dims) { // goes along z dimension
           // new block created
           if (block_num > total_blocks) goto STOP;
           double* block = new double[(int)std::pow(block_dims, 3)];
@@ -123,27 +130,29 @@ std::vector<std::shared_ptr<loader>> block_sampler::uniform_sample(usi total_blo
           data->block_method   = method;
           data->block_loc      = block_loc_vec;
           data->block_number   = block_num;
+          // this isn't accurate if the loop iterations don't allow it
+          // under STOP: is a fix
           data->total_blocks   = total_blocks;
-
-          blocks.emplace_back(std::make_shared<sample_loader>(data));
+          // emplace meta/file data for block created
+          this->blocks.emplace_back(std::make_shared<sample_loader>(data));
           block_num++;
-          free(block);
         }
     STOP:
-    continue;
+    // if the previously counted total doesn't allign with actual total
+    if (block_num < total_blocks) {
+      for (auto b : this->blocks){
+        b->block_meta()->total_blocks = block_num;
+      }
+    }
+
   }
-  return blocks;
 }
 
-std::vector<std::shared_ptr<loader>> block_sampler::random_sample(usi total_blocks, size_t block_dims) {
-  std::vector<std::shared_ptr<loader>> blocks;
+void block_sampler::random_sample(usi total_blocks, size_t block_dims) {
 
-  return blocks;
 }
 
-std::vector<std::shared_ptr<loader>> block_sampler::multigrid_sample(usi total_blocks, size_t block_dims) {
-  std::vector<std::shared_ptr<loader>> blocks;
+void block_sampler::multigrid_sample(usi total_blocks, size_t block_dims) {
 
-  return blocks;
 }
 

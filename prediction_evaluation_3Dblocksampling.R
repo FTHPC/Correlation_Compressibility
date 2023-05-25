@@ -18,18 +18,22 @@ source('functions_paper.R')
 
 var_nm <- "qmcpack 3D_block"
 
+# block_counts = c(16)
 block_counts = c(50)
 
-# block_sizes <- c(4, 6, 8, 12, 16, 32)
+
+#block_sizes <- c(4, 6, 8, 12, 16, 32)
 block_sizes <- c(16)
 
-error_bnds <- c(1e-2, 1e-3, 1e-4, 1e-5)
+# error_bnds <- c(1e-2, 1e-3, 1e-4, 1e-5)
+error_bnds <- c(1e-3)
+
 
 error_modes <- c('pressio:abs', 'pressio:rel')
 # error_modes <- c('pressio:abs')
 
-compressors <- c('sz', 'zfp', 'mgard')
-# compressors <- c('sz')
+compressors <- c('sz')
+# compressors <- c('tthresh', 'bit_grooming', 'digit_rounding')
 
 
 for (block_size in block_sizes) { 
@@ -50,8 +54,23 @@ for (block_size in block_sizes) {
 
             png(file=paste0(unique_des, ".png"),
             width=600, height=350)
-            plot(res$ytest, res$pred, xlab = "actual log(CR)", ylab = "pred log(CR)", main = unique_des)
-            abline(lm(pred ~ ytest, data = res), col = "red")
+            plot(res$ytest, res$pred, xlab = "actual CR", ylab = "pred CR", main = unique_des)
+            abline(a=0, b=1, col="red") 
+            dev.off()
+
+            
+        
+            print(res$res_cv[,3])
+            res_mape <- which(res$res_cv$Quantile==0.5)
+            df_mape <- res$res_cv[res_mape,]
+           
+            print(df_mape)
+            print(res$ytest)
+
+            png(file=paste0("mape_", unique_des, ".png"),
+            width=600, height=350)
+            plot(res$ytest, df_mape, xlab = "actual log(CR)", ylab = "pred log(CR)", main = unique_des)
+            # abline(lm(pred ~ ytest, data = res), col = "red")
             dev.off()
             
             

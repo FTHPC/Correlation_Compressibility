@@ -15,8 +15,7 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       size_t dims_num = input->num_dimensions();
       auto dims = input->dimensions();
       auto dtype = input->dtype();
-      dim1 = dims[0];
-      dim2 = dims[1];
+      dim1 = dims[0]; dim2 = dims[1];
       if (dims_num == 3) dim3 = dims[2];
 
       if (dims_num != 2 && dims_num != 3) {
@@ -31,7 +30,7 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       // stores the squared singular value matrix 
       Eigen::MatrixXd svd0_s_squared = svd0_s.array().square();
    
-   // debug print out svd singular value array
+      // debug print out svd singular value array
     #ifdef DEBUG
       for(size_t i=0; i<svd0_s.size(); ++i)
         cout << svd0_s(i) << ' ';
@@ -46,7 +45,7 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
         cumsum_svd0.push_back(sum);
       } 
 
-    // debug print of cumsum of the squared svd values
+      // debug print of cumsum of the squared svd values
     #ifdef DEBUG
       for (double i: cumsum_svd0)
         cout << i << ' ';
@@ -60,7 +59,7 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
         ev0.push_back(cumsum_svd0[i] / sum);
       }
 
-    // debug print of the ev0 values
+      // debug print of the ev0 values
     #ifdef DEBUG
       for (double i: ev0)
         cout << i << ' ';
