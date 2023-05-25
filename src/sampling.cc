@@ -62,7 +62,8 @@ void sample_loader::release() {
   block_sampler function definitions
   sampling methods
 */
-std::vector<std::shared_ptr<loader>> block_sampler::sample(usi method_d, usi total_blocks, size_t block_dims) {
+std::vector<std::shared_ptr<loader>> block_sampler::sample(int rank, usi method_d, usi total_blocks, size_t block_dims) {
+  this->rank = rank;
   switch (method_d) {
     case(UNIFORM):
       this->method = "uniform";
@@ -99,14 +100,17 @@ void block_sampler::uniform_sample(usi total_blocks, size_t block_dims) {
           // new block created
           if (block_num > total_blocks) goto STOP;
           double* block = new double[(int)std::pow(block_dims, 3)];
-          for (size_t block_i=0; block_i<block_dims; block_i++)
-            for (size_t block_j=0; block_j<block_dims; block_j++)
-              for (size_t block_k=0; block_k<block_dims; block_k++)
-              {
-                block[block_i*(int)std::pow(block_dims, 2) + block_j*block_dims + block_k] 
-                = input[(i+block_i)*meta->dims[1]*meta->dims[2] + (j+block_j)*meta->dims[2] + (k + block_k)];
-              }
-              
+
+          if (this->rank == 0) 
+          {
+            for (size_t block_i=0; block_i<block_dims; block_i++)
+              for (size_t block_j=0; block_j<block_dims; block_j++)
+                for (size_t block_k=0; block_k<block_dims; block_k++)
+                {
+                  block[block_i*(int)std::pow(block_dims, 2) + block_j*block_dims + block_k] 
+                  = input[(i+block_i)*meta->dims[1]*meta->dims[2] + (j+block_j)*meta->dims[2] + (k + block_k)];
+                }
+          }
           std::stringstream block_data_output;
           block_data_output << std::getenv("TMPDIR") << "/" << block_num << "_" << meta->filename << ".blk";
           pressio_io block_io = library.get_io("posix");
@@ -116,7 +120,10 @@ void block_sampler::uniform_sample(usi total_blocks, size_t block_dims) {
           std::vector<size_t> block_dims_vec = {block_dims, block_dims, block_dims}; 
           std::vector<size_t> block_loc_vec  =  {i, j, k}; 
           pressio_data block_pressio = pressio_data::nonowning(meta->dtype, (void*)block, block_dims_vec);  
-          block_io->write(&block_pressio);
+          if (this->rank == 0) 
+          {
+            block_io->write(&block_pressio);
+          }
 
           block_metadata* data = (block_metadata*) calloc(1, sizeof(block_metadata));
           // copy over file metadata
