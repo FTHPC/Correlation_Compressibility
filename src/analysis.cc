@@ -93,10 +93,8 @@ int main(int argc, char* argv[]) {
   }
 
   // store large buffers (velocityx.d64, xxx.d64, xxx.d64) in a loader
-  
   auto loaders = std::make_unique<dataset_setup>(args);
   dataset buffers = loaders->set();
-
   // all sampling methods are defined as a short int greater than NONE
   if (args->block_method != NONE){
     // transform the buffers into blocks if a block sampling mode is selected
@@ -105,6 +103,9 @@ int main(int argc, char* argv[]) {
     loaders->release();
     buffers = std::move(blocks); // replace buffers w/ blocks to utilize blocks in analysis
   }
+
+  // adding a barrier
+  MPI_Barrier(MPI_COMM_WORLD);
 
   for (auto block : buffers) {
     if (!rank) {
@@ -165,6 +166,8 @@ int main(int argc, char* argv[]) {
       }
     }
 
+    // barrier before comms
+    MPI_Barrier(MPI_COMM_WORLD);
     distributed::comm::bcast(input, 0, MPI_COMM_WORLD);
     // distributed::comm::bcast(analysis_results, 0, MPI_COMM_WORLD);
 
@@ -236,6 +239,7 @@ int main(int argc, char* argv[]) {
         [](compression_response_t const& response) {}
     );
     // free resources for this iteration
+    MPI_Barrier(MPI_COMM_WORLD);
     block->release();
   }
   MPI_Finalize();
