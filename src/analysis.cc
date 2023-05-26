@@ -207,9 +207,10 @@ int main(int argc, char *argv[])
           // velocityx_block1.d64 will load velocityx.d64
           if (args->block_method != NONE)
           {
+            // previous statment grabbed global input
+            pressio_compressor global_compressor = library.get_compressor("pressio");
             pressio_data compressed_global = pressio_data::empty(pressio_byte_dtype, {});
             pressio_data decompressed_global = pressio_data::owning(input_global.dtype(), input_global.dimensions());
-            pressio_compressor global_compressor = library.get_compressor("pressio");
             global_compressor->set_options(options);
             global_compressor->compress(&input_global, &compressed_global);
             global_compressor->decompress(&compressed_global, &decompressed_global);
@@ -245,7 +246,7 @@ int main(int argc, char *argv[])
           {
             results.copy_from(global_results);
           }      
-          // std::cout << rank << std::endl;
+          std::cout << rank << std::endl;
           // export to csv
           exportcsv(results, args->output);
         }
@@ -253,7 +254,9 @@ int main(int argc, char *argv[])
     }
 
     // free resources for this iteration
-    MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << "end of iteration: " << rank << std::endl;
+
+    // MPI_Barrier(MPI_COMM_WORLD);
     block->release();
   }
   MPI_Finalize();
