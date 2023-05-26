@@ -245,18 +245,17 @@ int main(int argc, char *argv[])
           if (args->block_method != NONE)
           {
             results.copy_from(global_results);
-          }      
-          std::cout << rank << std::endl;
+          }     
+          // std::cout << rank << std::endl;
           // export to csv
           exportcsv(results, args->output);
         }
       }
     }
-
-    // free resources for this iteration
     std::cout << "end of iteration: " << rank << std::endl;
 
     // MPI_Barrier(MPI_COMM_WORLD);
+    // free resources for this iteration
     block->release();
   }
   MPI_Finalize();
