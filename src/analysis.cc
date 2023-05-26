@@ -150,6 +150,13 @@ int main(int argc, char *argv[])
       exit(32);
     }
 
+    if (args->block_method != NONE)
+    {
+      // load global file if blocking is used
+      input_global = block->load_global();
+    }
+
+
     // setup metrics for data_analysis and metadata
     // performed on a block OR buffer and is only dependent on statistical properties of the dataset
     // NOT dependent on error bound, error mode, or compressor
@@ -170,6 +177,7 @@ int main(int argc, char *argv[])
     static const std::vector metrics_composites{
         "error_stat"s, "size"s};
     static const std::array bound_types{"pressio:abs"s, "pressio:rel"s};
+
 
     // loop to go through the different compressors
     for (auto const &comp : comps)
@@ -199,7 +207,6 @@ int main(int argc, char *argv[])
           // velocityx_block1.d64 will load velocityx.d64
           if (args->block_method != NONE)
           {
-            input_global = block->load_global();
             pressio_data compressed_global = pressio_data::empty(pressio_byte_dtype, {});
             pressio_data decompressed_global = pressio_data::owning(input_global.dtype(), input_global.dimensions());
             pressio_compressor global_compressor = library.get_compressor("pressio");
@@ -237,16 +244,15 @@ int main(int argc, char *argv[])
           if (args->block_method != NONE)
           {
             results.copy_from(global_results);
-          }
-          
+          }      
+          // std::cout << rank << std::endl;
           // export to csv
-          // exportcsv(results, args->output);
+          exportcsv(results, args->output);
         }
       }
     }
 
     // free resources for this iteration
-    std::cout << "reached the end loop" << std::endl;
     MPI_Barrier(MPI_COMM_WORLD);
     block->release();
   }
