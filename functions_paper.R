@@ -8,8 +8,29 @@ read_data <-function(block_count, block_size){
   return(data)
 }
 
+### limits amount of data based on limit_count
+select_data <- function(data, limit_count, comps, bnds, modes){
+  limited_df <- data.frame()
+  for (comp in comps) {
+    for (error_bnd in bnds){ 
+      for (error_mode in modes){
+        mode_filtered <- filter(data, info.bound_type == error_mode)
+        bound_filtered <- filter(mode_filtered, info.error_bound==error_bnd)
+        filtered <- filter(bound_filtered, info.compressor == comp)
+        ### limit filted combination based on block count
+        ### NAIVE IMPLEMENTATION (TAKING FIRST N BLOCKS FROM EACH GLOBAL BUFFER)
+        limited <- filtered[1:limit_count,]
 
-### compute loc (arkas locality metric)
+        ### merge filted back to df
+        limited_df <- rbind(limited_df, limited)
+      }
+    }
+  }
+  return(limited_df)
+}
+
+
+### compute loc (Arkas locality metric)
 compute_loc <-function(data){
   df <- data.frame( data$info.filename, 
                     data$block.method, 
@@ -43,7 +64,6 @@ compute_loc <-function(data){
       }
     }
     loc[j] <- numer_sum / denom_sum
-    loc[j] <- 1
   } 
   inner <- data.frame(df_uni, loc)  
   ### JOIN on column unique identifiers
@@ -57,11 +77,11 @@ compute_loc <-function(data){
 
 ### extract data 
 extract_cr_predictors <- function(data, error_mode, error_bnd, compressor, comp_thresh=200){
+  ### grab selection of data based on unqiue combination of mode, bound, and compressor
   data_orig <- filter(data, info.bound_type == error_mode)
   data0 <- filter(data_orig, info.error_bound==error_bnd)
-  ###
-
   vx_compressor <- filter(data0, info.compressor == compressor)
+  
   indsz <- which(as.numeric(vx_compressor$size.compression_ratio)<=comp_thresh)
 
   ## local per block stats
