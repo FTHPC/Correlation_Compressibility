@@ -43,6 +43,7 @@ compute_loc <-function(data){
       }
     }
     loc[j] <- numer_sum / denom_sum
+    loc[j] <- 1
   } 
   inner <- data.frame(df_uni, loc)  
   ### JOIN on column unique identifiers

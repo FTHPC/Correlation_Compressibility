@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
   {
     // transform the buffers into blocks if a block sampling mode is selected
     samples blocks = std::make_unique<block_sampler>(buffers)->sample(rank, args->block_method, args->blocks, args->block_size);
+    MPI_Barrier(MPI_COMM_WORLD);
     // frees the large dataset buffers
     loaders->release();
     buffers = std::move(blocks); // replace buffers w/ blocks to utilize blocks in analysis
@@ -218,7 +219,7 @@ int main(int argc, char *argv[])
             global_results = {
                 {"global:value_std", global_results_unsorted.get("error_stat:value_std")},
                 {"global:compression_ratio", global_results_unsorted.get("size:compression_ratio")},
-                {"global:value_range", global_results_unsorted.get("error_stat:value_range")}};
+                {"global:value_range", global_results_unsorted.get("error_stat:value_range")}};          
           }
           // LOCAL METRICS ON INDIVIDUAL LOCAL BUFFER
           pressio_data compressed = pressio_data::empty(pressio_byte_dtype, {});
