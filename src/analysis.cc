@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
           {
             results.copy_from(global_results);
           }     
-          // std::cout << rank << std::endl;
+          std::cout << rank << std::endl;
           // export to csv
           exportcsv(results, args->output);
         }

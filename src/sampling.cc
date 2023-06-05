@@ -87,13 +87,27 @@ std::vector<std::shared_ptr<loader>> block_sampler::sample(int rank, usi method_
 void block_sampler::uniform_sample(usi total_blocks, size_t block_dims) {
   pressio library; 
 
-  double* block = NULL;
+  void *block = NULL;
 
   for (auto buffer : buffers){
-    pressio_data input_pressio  = buffer->load(); 
-    double *input = (double *) input_pressio.data();
-    // size_t size_test = input_pressio.size_in_bytes();
+    pressio_data input_pressio = buffer->load(); 
+    void *input = NULL;
+
     file_metadata* meta = buffer->metadata();
+    auto buff_type = input_pressio.dtype();
+
+    // check for sanity
+    if (buff_type != meta->dtype) {
+      std::cerr << "Block dtype does not allign with input dtype" << std::endl;
+      exit(32);
+    }
+ 
+    if (buff_type == pressio_float_dtype) {
+      input = (float *) input_pressio.data();
+    } else {
+      input = (double *) input_pressio.data();
+    }
+
     size_t block_num = 1;
     // organize data into uniform blocks
     for (size_t i=0; i<meta->dims[0]-block_dims; i+=block_dims)  // goes along x dimension 
@@ -103,13 +117,21 @@ void block_sampler::uniform_sample(usi total_blocks, size_t block_dims) {
           if (block_num > total_blocks) goto STOP;
           if (this->rank == 0) 
           {
-            block = new double[(int)std::pow(block_dims, 3)];
+            if (buff_type == pressio_float_dtype) {
+              block = new float[(int)std::pow(block_dims, 3)];
+            } else {
+              block = new double[(int)std::pow(block_dims, 3)];
+            }
             for (size_t block_i=0; block_i<block_dims; block_i++) {
               for (size_t block_j=0; block_j<block_dims; block_j++) { 
                 for (size_t block_k=0; block_k<block_dims; block_k++) {   
                   uint32_t block_idx = block_i*(int)std::pow(block_dims, 2) + block_j*block_dims + block_k;
                   uint32_t input_idx = (i+block_i)*meta->dims[1]*meta->dims[2] + (j+block_j)*meta->dims[2] + (k + block_k);
-                  block[block_idx] = input[input_idx];
+                  if (buff_type == pressio_float_dtype) {
+                    ((float*)block)[block_idx] = ((float*)input)[input_idx];
+                  } else {
+                    ((double*)block)[block_idx] = ((double*)input)[input_idx];
+                  }
                 }
               }
             }
