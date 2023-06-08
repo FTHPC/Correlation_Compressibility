@@ -1,6 +1,6 @@
 ### read data
 read_data <-function(block_count, block_size){
-  name <- paste0("/home/dkrasow/compression/outputs/*blocks", block_count, "_block_size", block_size, "*.csv")
+  name <- paste0("outputs/*blocks", block_count, "_block_size", block_size, ".csv")
   filename <- Sys.glob(name)
   print(filename)
   data <- read.csv(filename)
@@ -14,14 +14,16 @@ select_data <- function(data, limit_count, comps, bnds, modes){
   for (comp in comps) {
     for (error_bnd in bnds){ 
       for (error_mode in modes){
-        mode_filtered <- filter(data, info.bound_type == error_mode)
-        bound_filtered <- filter(mode_filtered, info.error_bound==error_bnd)
-        filtered <- filter(bound_filtered, info.compressor == comp)
-        ### limit filted combination based on block count
+        filtered <- data %>% 
+                      filter(info.bound_type == error_mode) %>% 
+                      filter(info.error_bound == error_bnd) %>% 
+                      filter(info.compressor == comp)
+        
+        ### limit filtered combination based on block count
         ### NAIVE IMPLEMENTATION (TAKING FIRST N BLOCKS FROM EACH GLOBAL BUFFER)
-        limited <- filtered[1:limit_count,]
+        ifelse(nrow(filtered) < limit_count, limited <- filtered, limited <- filtered[1:limit_count,]) 
 
-        ### merge filted back to df
+        ### merge filtered back to df
         limited_df <- rbind(limited_df, limited)
       }
     }
@@ -32,6 +34,7 @@ select_data <- function(data, limit_count, comps, bnds, modes){
 
 ### compute loc (Arkas locality metric)
 compute_loc <-function(data){
+  start_time <- Sys.time()
   df <- data.frame( data$info.filename, 
                     data$block.method, 
                     data$block.loc1,
@@ -46,25 +49,12 @@ compute_loc <-function(data){
   loc0 <- data.frame(lx,ly,lz)
 
   loc <- c()
+  distmtx <- rdist(loc0)
+  distmtx[distmtx==0] <- 1e-8
+  l1norm <- as.matrix(dist(loc0, method='manhattan', upper=TRUE,diag=TRUE))
   for (j in 1:nrow(loc0)) {
-    numer_sum <- 0
-    denom_sum <- 0
-    # first point
-    Bb <- loc0[j,]
-    for (k in 1:nrow(loc0)) {
-      if (!identical(loc0[j,],loc0[k,])) {
-      # second point
-      Bb_prime <- loc0[k,]
-      posbb <- abs(Bb$lx - Bb_prime$lx) + abs(Bb$ly - Bb_prime$ly) + abs(Bb$lz - Bb_prime$lz)
-      distance <- sqrt((Bb$lx - Bb_prime$lx)^2 + (Bb$ly - Bb_prime$ly)^2 + (Bb$lz - Bb_prime$lz)^2)
-
-      distance[distance==0] <- 1e-8 
-      numer_sum <- numer_sum +(posbb / distance)
-      denom_sum <- denom_sum + posbb
-      }
-    }
-    loc[j] <- numer_sum / denom_sum
-  } 
+    loc[j] <- sum(l1norm[,j] / distmtx[,j]) / sum(l1norm[,j])
+  }  
   inner <- data.frame(df_uni, loc)  
   ### JOIN on column unique identifiers
   df_final <- merge(x = data, y = inner,
@@ -72,6 +62,10 @@ compute_loc <-function(data){
                 by.y=c("data.info.filename","data.block.method", "data.block.loc1", "data.block.loc2", "data.block.loc3"))
 
 
+  end_time <- Sys.time()
+  
+  print(end_time - start_time)
+  
   return(df_final)
 }
 

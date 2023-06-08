@@ -11,7 +11,6 @@ suppressPackageStartupMessages({
   library('rTensor')
 })
 
-
 set.seed(1234)
 comp_thresh <- 200
 
@@ -20,22 +19,20 @@ source('functions_paper.R')
 
 var_nm <- "qmcpack 3D_block"
 
-upper_count = 32
-block_counts = 10:upper_count
-
+upper_count = 128
+block_counts = seq(from=16, to=128, by=8)
 
 global_buffers <- 288
-block_sizes <- c(4, 6, 8, 12, 16)
+block_sizes <- c(4, 6, 8, 12, 16, 24, 32)
 
 # error_bnds <- c(1e-2, 1e-3, 1e-4, 1e-5)
 error_bnds <- c(1e-3)
 
-
 # error_modes <- c('pressio:abs', 'pressio:rel')
 error_modes <- c('pressio:abs')
 
-compressors <- c('sz', 'zfp')
-# compressors <- c('tthresh', 'bit_grooming', 'digit_rounding')
+compressors <- c('sz')
+# compressors <- c('sz', 'zfp', tthresh', 'bit_grooming', 'digit_rounding')
 
 success <- FALSE 
 m_key <- c()
@@ -45,12 +42,15 @@ for (block_size in block_sizes) {
   data <- read_data(upper_count, block_size)
   for (block_count in block_counts){
     print(paste("Peforming model on ", block_count, "blocks"))
+    
     ### limit amount of data grabbed based on block_count*global_buffers
     ### we put this here to limit to reduce the occurances of the locality calculation
     limit <- block_count*global_buffers
     data_lim <- select_data(data, limit, compressors, error_bnds, error_modes)
+    
     ### peform locality calculation based on the data grabbed
     data_loc <- compute_loc(data_lim)
+    
     ### dependent on compression scheme
     for (comp in compressors) {
       for (error_bnd in error_bnds){ 
