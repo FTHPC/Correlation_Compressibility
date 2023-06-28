@@ -1,4 +1,3 @@
-
 rm(list=ls())
 suppressPackageStartupMessages({
   library('dplyr')
@@ -9,146 +8,139 @@ suppressPackageStartupMessages({
   library('viridis')
   library('rhdf5')
   library('rTensor')
+  library('reshape2')
+  library('tidyverse')
+  library("lattice")
+  library('stringr')
+  library('gtools')
+  library('gridExtra')
+  library('data.table')
+  library('mixreg')
 })
+#(.packages())
+#detach(package:plyr)
 
 set.seed(1234)
 comp_thresh <- 200
 
 source('functions_paper.R')
 
+#var_nm <- "qmcpack_3D block"
+#app <- "qmcpack"
+#global_buffers <- 288
 
-var_nm <- "qmcpack 3D_block"
+#var_nm <- "hurricane_step48"
+#app <- "hurricane_step48"
+#global_buffers <- 13
+
+var_nm <- "hurricane_CLOUDall"
+app <- "hurricane_CLOUDall"
+global_buffers <- 48
 
 upper_count = 128
 block_counts = seq(from=16, to=128, by=8)
-
-global_buffers <- 288
 block_sizes <- c(4, 6, 8, 12, 16, 24, 32)
+error_bnds <- c(1e-2, 1e-3, 1e-4, 1e-5)
+samplemethod <- "UNIFORM"
+smplmthd <- str_to_lower(samplemethod)
+modeltype <- "MIXED"
+mdltype <- str_to_lower(modeltype)
 
-# error_bnds <- c(1e-2, 1e-3, 1e-4, 1e-5)
-error_bnds <- c(1e-3)
-
-# error_modes <- c('pressio:abs', 'pressio:rel')
+#error_modes <- c('pressio:abs', 'pressio:rel')
 error_modes <- c('pressio:abs')
 
-compressors <- c('sz')
-# compressors <- c('sz', 'zfp', tthresh', 'bit_grooming', 'digit_rounding')
+#compressors <- c('bit_grooming', 'digit_rounding', 'fpzip', 'mgard', 'sz', 'sz3', 'tthresh', 'zfp')
+compressors <- c('bit_grooming', 'fpzip', 'sz', 'sz3', 'zfp')
 
-success <- FALSE 
-m_key <- c()
-m_data <- c()
-for (block_size in block_sizes) { 
-  ### data is the upper block
-  data <- read_data(upper_count, block_size)
+res_real <- c()
+res_pred <- c()
+res_mape <- c()
+res_blocksize <- c()
+res_blockcount <- c()
+res_compressor <- c()
+res_errbnd <- c()
+res_errmode <- c()
+res_lengths <- c()
+res_uppererr <- c()
+res_lowererr <- c()
+res_quartilerange <- c()
+
+for (block_size in block_sizes) {
+  data <- read_data(app,upper_count, block_size)
   for (block_count in block_counts){
+    start.time <- Sys.time()
     print(paste("Peforming model on ", block_count, "blocks"))
     
-    ### limit amount of data grabbed based on block_count*global_buffers
-    ### we put this here to limit to reduce the occurances of the locality calculation
     limit <- block_count*global_buffers
-    data_lim <- select_data(data, limit, compressors, error_bnds, error_modes)
+    if (max(data$block.number,na.rm = TRUE) < block_count) {
+      break
+    }
+    data_lim <- select_data(data, block_count, global_buffers, compressors, error_bnds, error_modes,samplemethod)
     
-    ### peform locality calculation based on the data grabbed
     data_loc <- compute_loc(data_lim)
-    
-    ### dependent on compression scheme
+    ## dependent on compression scheme
     for (comp in compressors) {
       for (error_bnd in error_bnds){ 
         for (error_mode in error_modes){
           predictors <- extract_cr_predictors(data_loc, error_mode, error_bnd, comp, comp_thresh)
-          unique_des <- paste0("size", block_size, "_count", block_count, "_", comp, "_", error_bnd, "_", error_mode)
-          m_key <- paste0(comp, error_bnd, error_mode);
- 
+          ### perform the regression and print its prediction assessment 
+          unique_des <- paste0("size", block_size, "_count", block_count, "_", comp, "_", formatC(error_bnd, format='e',digits=0), "_", error_mode)
           tryCatch(expr = {
-            ### perform the regression
-            res <- cr_blocking_model(predictors, kf=8)
-            success <- TRUE
-
-            png(file=paste0(unique_des, ".png"),
-            width=600, height=350)
-            plot(res$ytest, res$pred, xlab = "actual CR", ylab = "pred CR", main = unique_des)
-            abline(a=0, b=1, col="red") 
-            dev.off()
-
+      
+            res <- cr_blocking_model(predictors, kf=8, modeltype)
+            res_pt <- cbind(res$ytest, res$pred)
             
-            ### row 2 col 3 signifies MAPE in the 0.5 quantile
-            mape <- res$res_cv[2,3]
-            m_data[[m_key]] <- append(m_data[[m_key]], list(data.frame(mape, comp, error_bnd, error_mode, block_size, block_count)))
+            res_real <- c(res_real, res$ytest)
+            res_pred <- c(res_pred, res$pred)
+            res_mape <- c(res_mape, res$res_cv[2,3])
+            res_quartilerange <- c(res_quartilerange, res$res_cv[3,3] - res$res_cv[1,3])
+            res_lowererr <- c(res_lowererr, res$res_cv[1,3])
+            res_uppererr <- c(res_uppererr, res$res_cv[3,3])
+            res_blocksize <- c(res_blocksize, block_size)
+            res_blockcount <- c(res_blockcount, block_count)
+            res_compressor <- c(res_compressor, comp)
+            res_errbnd <- c(res_errbnd, error_bnd)
+            res_errmode <- c(res_errmode, error_mode)
+            res_lengths <- c(res_lengths, length(res$ytest))
 
-          }, error = function(e){ print(paste(unique_des, "::", e))})
+            }, error = function(e){ print(paste(unique_des, "::", e))}
+          )
         }
       }
     }
+    end.time <- Sys.time()
+    print(paste0("exec time: ", end.time - start.time))
   }
 }
 
-
-if (success == TRUE) {
-  plotcolors <- colorRampPalette(c("red","blue"))(6)
-
-  ### split up by unique keys
-  for (v in ls(m_data)) {
-    hash_df <- m_data[[v]]
-    hash_comp <- hash_df[[1]]$comp
-    hash_error_bnd <- hash_df[[1]]$error_bnd
-    hash_error_mode <- hash_df[[1]]$error_mod
-   
-    ### hash_* lists contain content for each unique block size obtained by the key
-    hash_mapes <- c()
-    hash_count <- c()
-    hash_sizes <- c()
-    for (d in hash_df) {
-      hash_mapes <- append(hash_mapes, d$mape)
-      hash_count <- append(hash_count, d$block_count)
-      hash_sizes <- append(hash_sizes, d$block_size)
-    }
-
-    ### sizes_cnt is the amount of block sizes ran per block size
-    sizes_cnt <- length(hash_sizes) / length(block_sizes)
-
-    prev_end <- 0
-    ### plot for each block size
-    ### mape vs block_count
-    for (j in 1:length(block_sizes)) {
-      des <- paste0(hash_sizes[prev_end+1], "_", hash_comp, "_", hash_error_bnd, "_", hash_error_mode)
-      png(file=paste0("mape_size", des, ".png"), width=600, height=350)
-
-      end <- j*sizes_cnt
-      x1 <- hash_count[(prev_end+1):end]
-      y1 <- hash_mapes[(prev_end+1):end]
-
-      plot(x1, y1, xlab = "count", ylab = "mapes", 
-         main = paste0("mape vs count on block size ", des), col = plotcolors[1])
-      abline(lm(y1 ~ x1), col = plotcolors[1])
-      prev_end <- end
-      dev.off()
-    }
-    
-
-    ### FOR COMBINING THE GRAPHS IF WANTED
-    # des <- paste0(hash_comp, "_", hash_error_bnd, "_", hash_error_mode)
-    # png(file=paste0("mape_count_", des, ".png"), width=600, height=350)
-    
-    ### first plot point
-    # x1 <- hash_count[1:sizes_cnt]
-    # y1 <- hash_mapes[1:sizes_cnt]
-    # plot(x1, y1, xlab = "count", ylab = "mapes", 
-    #      main = paste0("mape vs count ", des), col = plotcolors[1])
-    # abline(lm(y1 ~ x1), col = plotcolors[1])
-    # prev_end <- sizes_cnt 
-    # ### remaining plot points
-    # for (j in 2:(sizes_cnt+1)) {
-    #   end <- j*sizes_cnt
-    #   x1 <- hash_count[(prev_end+1):end]
-    #   y1 <- hash_mapes[(prev_end+1):end]
-
-    #   points(x1, y1, col = plotcolors[j+1])
-    #   abline(lm(y1 ~ x1), col = plotcolors[j+1])
-    #   prev_end <- end
-    # }
-    
-    ### the heat map can be added here using a combo technique
+#save all relevant trial results (with one data point per configuration) as dataframe
+formatC(error_bnds, format='e', digits=0)
+fdf <- cbind(res_blocksize,
+             res_blockcount,
+             res_compressor,
+             res_errbnd,
+             res_errmode,
+             res_lengths,
+             res_mape,
+             res_quartilerange,
+             res_lowererr,
+             res_uppererr)
+fdf <- as.data.frame(fdf)
+fdf$res_mape <- sapply(fdf$res_mape, as.numeric)
+fdf$res_quartilerange <- sapply(fdf$res_quartilerange, as.numeric)
+fdf$res_uppererr <- sapply(fdf$res_uppererr, as.numeric)
+fdf$res_lowererr <- sapply(fdf$res_lowererr, as.numeric)
+fdf$res_blocksize <- sapply(fdf$res_blocksize, as.numeric)
+fdf$res_blockcount <- sapply(fdf$res_blockcount, as.numeric)
+fdf$res_errbnd <- sapply(fdf$res_errbnd, as.numeric)
+fdf$res_lengths <- sapply(fdf$res_lengths, as.numeric)
+formatC(fdf$res_errbnd, format='e', digits=0)
 
 
-  }
-}
+#write trial results to file
+fwrite(fdf, paste0(getwd(),"/",var_nm,"_", smplmthd, "_",mdltype,"_fdf.csv"))
+fwrite(list(res_real), paste0(getwd(), "/", var_nm,"_",smplmthd, "_",mdltype,"_real.csv"))
+fwrite(list(res_pred), paste0(getwd(), "/", var_nm,"_", smplmthd,"_",mdltype,"_pred.csv"))
+
+
+

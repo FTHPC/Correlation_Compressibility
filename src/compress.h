@@ -41,6 +41,7 @@ typedef struct cmdline_args{
   size_t                block_size;
   usi                   block_method;
   float                 error;
+  std::string           comp;
 } cmdline_args;
 
 

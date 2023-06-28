@@ -56,6 +56,7 @@ std::vector<std::shared_ptr<loader>> dataset_setup::set() {
       stop = true;
     } else filename = entry.path().filename().string();
 
+    if (!filename.compare("sampled")) continue;  
 
     file_metadata* data = (file_metadata*) calloc(1, sizeof(file_metadata));
     data->filename  = filename;
