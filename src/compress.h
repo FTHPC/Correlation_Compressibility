@@ -24,9 +24,11 @@
 #include <filesystem>
 #include <Eigen/Dense>
 #include <cmath>
+#include <chrono>
+#include <set>
 
 typedef unsigned long int uli;
-typedef unsigned short int usi;
+typedef unsigned int usi;
 
 extern bool GPU_ACC;
 

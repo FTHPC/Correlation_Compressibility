@@ -72,11 +72,12 @@ cmdline_args* parse_args(int argc, char* argv[]) {
     std::cerr << "No block size inputted. Blocks were set" << std::endl;
     printHelp();
   }
+  /*
   if (args->block_size && !args->blocks) {
     std::cerr << "No amount of blocks inputted. Block size was set" << std::endl;
     printHelp();
   }
-
+  */
   if (method.empty()) std::cerr << "No sampling method provided. No sampling is being used." << std::endl;
   if      (!method.compare("UNIFORM"))     args->block_method = UNIFORM;
   else if (!method.compare("RANDOM"))      args->block_method = RANDOM;

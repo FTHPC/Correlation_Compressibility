@@ -47,7 +47,7 @@ void file_loader::release() {
 std::vector<std::shared_ptr<loader>> dataset_setup::set() {
   pressio library;
   bool stop = false;
-
+  
   for (const auto & entry : std::filesystem::directory_iterator(args->directory+'/'+args->dataset)) {
     std::string filename;
     if (stop) break;
@@ -55,6 +55,8 @@ std::vector<std::shared_ptr<loader>> dataset_setup::set() {
       filename = args->filename; 
       stop = true;
     } else filename = entry.path().filename().string();
+
+    //std::cout << filename << std::endl;
 
     if (!filename.compare("sampled")) continue;  
 
