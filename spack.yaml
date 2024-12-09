@@ -2,12 +2,13 @@ spack:
   packages:
     all:
       target:
-      - x86_64
+      - x86_64_v3
   specs:
-  - libpressio+libdistributed+hdf5+mgard+python+sz+sz3+zfp+mpi+bitgrooming+digitrounding+fpzip
-    ^sz@master+stats ^mgard@2021-11-12+cuda cuda_arch=70 ^libstdcompat+boost ^libdistributed@0.4.2
+  - libpressio@1.0.1+libdistributed+hdf5+mgard+python+sz+sz3+mpi+bitgrooming+digitrounding+fpzip+zfp
+    ^sz@master+stats ^cmake@3.25
   - libpressio-tthresh
-  - libpressio-tools+opt+tthresh+mpi
+  - libpressio-tools+opt+tthresh+mpi+sperr
+  - libpressio-predict@0.0.5+python+khan2023+sian2022+rahman2023
   - py-h5py
   - r+X
   - r-rinside
@@ -18,6 +19,30 @@ spack:
   - opencv+python3
   - git-lfs
   - git
+  - meson
+  - libpressio-predict+bin
+  - pcre2 os=rocky8
+  - nasm os=rocky8
+  - util-macros os=rocky8
   view: true
   concretizer:
     unify: true
+  develop:
+    libpressio-predict:
+      spec: libpressio-predict@git.master=0.0.5
+  compilers:
+  - compiler:
+      spec: gcc@=12.3.0
+      paths:
+        cc: /software/slurm/spackages/linux-rocky8-x86_64/gcc-12.2.0/gcc-12.3.0-gte3dhuw5dryttvxvjbbxdqxuz2panwt/bin/gcc
+        cxx: /software/slurm/spackages/linux-rocky8-x86_64/gcc-12.2.0/gcc-12.3.0-gte3dhuw5dryttvxvjbbxdqxuz2panwt/bin/g++
+        f77: /software/slurm/spackages/linux-rocky8-x86_64/gcc-12.2.0/gcc-12.3.0-gte3dhuw5dryttvxvjbbxdqxuz2panwt/bin/gfortran
+        fc: /software/slurm/spackages/linux-rocky8-x86_64/gcc-12.2.0/gcc-12.3.0-gte3dhuw5dryttvxvjbbxdqxuz2panwt/bin/gfortran
+      flags: {}
+      operating_system: rocky8
+      target: x86_64
+      modules: []
+      environment: {}
+      extra_rpaths: []
+  mirrors:
+    develop-2024-12-08-developer-tools-manylinux2014: https://binaries.spack.io/develop-2024-12-08/developer-tools-manylinux2014

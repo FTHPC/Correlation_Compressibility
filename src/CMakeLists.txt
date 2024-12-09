@@ -32,6 +32,12 @@ add_executable(compress_analysis
                 sampling.cc
               )
 
+add_executable(predict
+                arguments.cc
+                poulos2024.cc
+                export.cc
+                file_setup.cc
+               )
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/julia DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 # execute_process (COMMAND bash -c "julia ${CMAKE_CURRENT_BINARY_DIR}/julia/deps.jl.julia")
