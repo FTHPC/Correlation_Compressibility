@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(CompressionCorrelation VERSION 0.2.0 LANGUAGES CXX)
+project(CompressionCorrelation VERSION 0.2.0 LANGUAGES CXX CUDA)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(default_build_type "Release")
@@ -32,11 +32,8 @@ add_executable(compress_analysis
                 sampling.cc
               )
 
-add_executable(predict
-                arguments.cc
+add_library(predict
                 poulos2024.cc
-                export.cc
-                file_setup.cc
                )
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/julia DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
@@ -45,6 +42,12 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/julia DESTINATION ${CMAKE_CURRENT_BINARY_D
 
 target_compile_features(compress_analysis PRIVATE cxx_std_20)
 target_link_libraries(compress_analysis PRIVATE stdc++fs
+      LibPressioTools::libpressio_meta
+      Eigen3::Eigen
+      OpenMP::OpenMP_CXX 
+      LibDistributed::libdistributed
+)
+target_link_libraries(predict PRIVATE stdc++fs
       LibPressioTools::libpressio_meta
       Eigen3::Eigen
       OpenMP::OpenMP_CXX 

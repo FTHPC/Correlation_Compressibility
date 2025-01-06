@@ -2,80 +2,13 @@
 #include "pressio_data.h"
 #include "pressio_compressor.h"
 #include "pressio_options.h"
+#include "libpressio_ext/cpp/compressor.h"
 #include "libpressio_ext/cpp/metrics.h"
 #include "libpressio_ext/cpp/pressio.h"
 #include "libpressio_ext/cpp/options.h"
 #include "std_compat/memory.h"
 #include <cmath>
 #include <chrono>
-
-template<class T>
-std::vector<T>
-collect_samples(pressio_data input, std::vector<size_t> dims) {
-  
-  auto dtype = data.dtype();
-
-  void *data = NULL;
-  if(dtype == pressio_float_dtype) {
-    data = (float *) input.data();
-  } else {
-    data = (double *) input.data();
-  }
-
-  size_t block_num = 1;
-  size_t count = 0;
-
-  size_t xLen = floor(dims[0] / blocksize);
-  size_t yLen = floor(dims[1] / blocksize);
-  size_t zLen = floor(dims[2] / blocksize);
-  size_t max_blocks = xLen * yLen * zLen;
-
-  size_t stride = floor(max_blocks / blockcount);
-
-  uint32_t sq_bs = (uint32_t)std::pow(blocksize, 2);
-  uint32_t cb_bs = (uint32_t)std::pow(blocksize, 3);
-  uint32_t d1d2 = dims[1] * dims[2];
-  uint32_t total_size = dims[0] * dims[1] * dims[2];
-
-  std::vector<std::pair<pressio_data, std::vector<size_t>>> samples;
-
-  void *block = NULL;
-  while(count < blockcount) {
-    if (dtype == pressio_float_dtype) { block = new float[cb_bs]; } 
-    else { block = new double[cb_bs]; }
-    
-    size_t i = ((size_t)(floor((block_num-1) / (xLen * yLen))) % zLen) * blocksize;
-    size_t j = ((size_t)floor((block_num-1) / xLen) % yLen) * blocksize;
-    size_t k = (size_t)(((block_num-1) % xLen) * blocksize);
-
-    std::vector<size_t> loc = {i,j,k};
-
-    for(size_t block_i=0; block_i < blocksize; block_i++) {
-      for(size_t block_j=0; block_j < blocksize; block_j++) {
-        for(size_t block_k=0; block_k < blocksize; block_k++) {
-          
-          uint32_t block_idx = block_i*sq_bs + block_j*blocksize + block_k;
-          assert(block_idx < cb_bs);
-          
-          uint32_t input_idx = (i+block_i)*d1d2 + (j+block_j)*dims[2] + (k + block_k);
-          assert(input_idx < total_size);
-
-          if (dtype == pressio_float_dtype) {
-            ((float*)block)[block_idx] = ((float*)data)[input_idx]; 
-          } else {
-            ((double*)block)[block_idx] = ((double*)data)[input_idx];
-          }
-
-        }
-      }
-    }
-    pressio_data block_pressio = pressio_data::nonowning(
-    samples.emplace_back({block,loc};
-    block_num += stride;
-    count++;
-  }
-  return samples;
-}
 
 
 
@@ -86,16 +19,16 @@ class poulos2024_plugin : public libpressio_metrics_plugin {
   struct result {
       double b,c,d;
   };
-  std::vector<std::pair<pressio_data, location>> collect_samples(pressio_data const* input) const;
+  std::vector<std::pair<pressio_data, location>> collect_samples(pressio_data const& input) const;
   //double locality(std::vector<location> const& locs) const;
 
   typedef std::chrono::nanoseconds ns;
   typedef std::chrono::duration<double, std::nano> duration;
   public:
     int begin_compress_impl(struct pressio_data const* input, pressio_data const*) override {
-      start = high_resolution_clock::now();
+      start = std::chrono::high_resolution_clock::now();
 
-      auto samples = collect_samples(input);
+      auto samples = collect_samples(*input);
       size_t N = 0;
       std::vector<double> stddevs, crs, loc;
       std::vector<location> locs;
@@ -144,13 +77,13 @@ class poulos2024_plugin : public libpressio_metrics_plugin {
       }
       results = result {b, c, d};
 
-      stop = high_resolution_clock::now();
+      end = std::chrono::high_resolution_clock::now();
 
       return 0;
     }
 
     int end_compress_impl(const struct pressio_data * input, struct pressio_data const *, int) override {
-      end = high_resolution_clock::now();
+      end = std::chrono::high_resolution_clock::now();
       return 0;
     }
 
@@ -162,6 +95,17 @@ class poulos2024_plugin : public libpressio_metrics_plugin {
       get(options, "sample:blockcount", &blockcount);
       get(options, "sample:samplemode", &samplemode);
       return 0;
+    }
+
+    pressio_options get_options() const override {
+      pressio_options options;
+      set(options, "info:errorbound", errorbound);
+      set(options, "info:boundtype", boundtype);
+      set(options, "info:compressor", compressor);
+      set(options, "sample:blocksize", blocksize);
+      set(options, "sample:blockcount", blockcount);
+      set(options, "sample:samplemode", samplemode);
+      return options;
     }
 
   
@@ -189,7 +133,7 @@ class poulos2024_plugin : public libpressio_metrics_plugin {
         set_type(opt, "poulos2024:b", pressio_option_double_type);
         set_type(opt, "poulos2024:c", pressio_option_double_type);
         set_type(opt, "poulos2024:d", pressio_option_double_type);
-        set_type(opt, "poulos2024:nanotime", elapsed.count());
+        set_type(opt, "poulos2024:nanotime", pressio_option_uint64_type);
     }
     return opt;
   }
@@ -213,11 +157,79 @@ class poulos2024_plugin : public libpressio_metrics_plugin {
   std::string samplemode;
   std::optional<result> results;
 
-  high_resolution_clock::time_point start;
-  high_resolution_clock::time_point end;
+  std::chrono::high_resolution_clock::time_point start;
+  std::chrono::high_resolution_clock::time_point end;
 
 };
 
 static pressio_register metrics_poulos2024_plugin(metrics_plugins(), "poulos2024", [](){ return compat::make_unique<poulos2024_plugin>(); });
 }}
+
+std::vector<std::pair<pressio_data, std::vector<size_t>>>
+libpressio::poulos2024_metrics_ns::poulos2024_plugin::collect_samples(pressio_data const &input) const {
+ 
+  auto dims = input.dimensions();
+  auto dtype = input.dtype();
+
+  void *data = NULL;
+  if(dtype == pressio_float_dtype) {
+    data = (float *) input.data();
+  } else {
+    data = (double *) input.data();
+  }
+
+  size_t block_num = 1;
+  size_t count = 0;
+
+  size_t xLen = floor(dims[0] / blocksize);
+  size_t yLen = floor(dims[1] / blocksize);
+  size_t zLen = floor(dims[2] / blocksize);
+  size_t max_blocks = xLen * yLen * zLen;
+
+  size_t stride = floor(max_blocks / blockcount);
+
+  uint32_t sq_bs = (uint32_t)std::pow(blocksize, 2);
+  uint32_t cb_bs = (uint32_t)std::pow(blocksize, 3);
+  uint32_t d1d2 = dims[1] * dims[2];
+  uint32_t total_size = dims[0] * dims[1] * dims[2];
+
+  std::vector<std::pair<pressio_data, std::vector<size_t>>> samples;
+
+  void *block = NULL;
+  while(count < blockcount) {
+    if (dtype == pressio_float_dtype) { block = malloc(sizeof(float)*cb_bs); } 
+    else { block = malloc(sizeof(double)*cb_bs); }
+    
+    size_t i = ((size_t)(floor((block_num-1) / (xLen * yLen))) % zLen) * blocksize;
+    size_t j = ((size_t)floor((block_num-1) / xLen) % yLen) * blocksize;
+    size_t k = (size_t)(((block_num-1) % xLen) * blocksize);
+
+    std::vector<size_t> loc = {i,j,k};
+
+    for(size_t block_i=0; block_i < blocksize; block_i++) {
+      for(size_t block_j=0; block_j < blocksize; block_j++) {
+        for(size_t block_k=0; block_k < blocksize; block_k++) {
+          
+          uint32_t block_idx = block_i*sq_bs + block_j*blocksize + block_k;
+          assert(block_idx < cb_bs);
+          
+          uint32_t input_idx = (i+block_i)*d1d2 + (j+block_j)*dims[2] + (k + block_k);
+          assert(input_idx < total_size);
+
+          if (dtype == pressio_float_dtype) {
+            ((float*)block)[block_idx] = ((float*)data)[input_idx]; 
+          } else {
+            ((double*)block)[block_idx] = ((double*)data)[input_idx];
+          }
+
+        }
+      }
+    }
+    pressio_data block_pressio = pressio_data::move(dtype, block, {blocksize,blocksize,blocksize}, pressio_data_libc_free_fn, nullptr);
+    samples.emplace_back(std::make_pair(block_pressio,loc));
+    block_num += stride;
+    count++;
+  }
+  return samples;
+}
 
