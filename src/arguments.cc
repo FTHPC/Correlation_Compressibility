@@ -38,12 +38,13 @@ cmdline_args* parse_args(int argc, char* argv[]) {
     {"method", required_argument,0,'m'},
     {"gpu",no_argument,0,'g'},
     {"bound", no_argument,0,'e'},
+    {"compressor", required_argument,0,'c'},
     {"help",no_argument,0,'h'},
     {0,0,0,0}//required all-null entry
   };
   std::string method;
   while(true) {
-    c = getopt_long(argc, argv, "d:i:f:r:t:o:b:s:m:e:gh", long_options, &option_index);
+    c = getopt_long(argc, argv, "d:i:f:r:t:o:b:s:m:e:ghc:", long_options, &option_index);
     if(c == -1) break; //we are done 
     switch(c) {
       case 'd': args->dims.push_back(std::stoull(optarg)); break;
@@ -56,8 +57,8 @@ cmdline_args* parse_args(int argc, char* argv[]) {
       case 's': args->block_size = std::stoull(optarg); break;
       case 'm': method           = optarg; break;
       case 'e': args->error      = atof(optarg); break;
-      case 'g': GPU_ACC          = 1;
-      break;
+      case 'g': GPU_ACC          = 1; break;
+      case 'c': args->comp       = optarg; break;
       case 'h': case '?': 
       default:  
         printHelp(); break;
@@ -71,11 +72,12 @@ cmdline_args* parse_args(int argc, char* argv[]) {
     std::cerr << "No block size inputted. Blocks were set" << std::endl;
     printHelp();
   }
+  /*
   if (args->block_size && !args->blocks) {
     std::cerr << "No amount of blocks inputted. Block size was set" << std::endl;
     printHelp();
   }
-
+  */
   if (method.empty()) std::cerr << "No sampling method provided. No sampling is being used." << std::endl;
   if      (!method.compare("UNIFORM"))     args->block_method = UNIFORM;
   else if (!method.compare("RANDOM"))      args->block_method = RANDOM;

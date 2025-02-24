@@ -30,7 +30,7 @@ struct setup {
 // samples the inputted 
 struct sampler {
   virtual ~sampler()=default;
-  virtual std::vector<std::shared_ptr<loader>> sample(usi method, usi total_blocks, size_t block_dims) = 0;
+  virtual std::vector<std::shared_ptr<loader>> sample(int rank, int nprocs, usi method, usi total_blocks, size_t block_dims) = 0;
 };
 
 // sets up file_metadata data structure for all the files loaded by file_loader
@@ -65,6 +65,7 @@ struct sample_loader: public loader {
     file_metadata* metadata();
     pressio_data load();
     pressio_data load_global();
+    void set_block_data(pressio_data data);
     void release();
 
     private:
@@ -76,7 +77,7 @@ struct sample_loader: public loader {
 struct block_sampler: public sampler{
     block_sampler(std::vector<std::shared_ptr<loader>> buffers): buffers(buffers){}
 
-    std::vector<std::shared_ptr<loader>> sample(usi method_d, usi total_blocks, size_t block_dims);
+    std::vector<std::shared_ptr<loader>> sample(int rank, int nprocs, usi method_d, usi total_blocks, size_t block_dims);
     
     private:
     void uniform_sample(usi total_blocks, size_t block_dims);
@@ -85,6 +86,8 @@ struct block_sampler: public sampler{
     std::vector<std::shared_ptr<loader>> buffers;
     std::vector<std::shared_ptr<loader>> blocks;
     std::string method;
+    int rank;
+    int nprocs;
 };
 
 

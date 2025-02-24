@@ -10,7 +10,7 @@ test_code
 __pycache__
 .DS_Store
 *.ipynb
-*.r 
+#*.r 
 prediction_benchmark_*
 training_benchmark_*
 *_h5
@@ -31,4 +31,13 @@ __MACOSX
 *.log
 .vscode
 testsz3.py
+debug
+julia
+rawdata_*
+*.bak
+.backup
+.outputs
+.test
+*.json
+*.swp
 CMakeCache.txt

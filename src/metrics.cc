@@ -9,6 +9,8 @@
 
 using namespace std;
 using namespace std::string_literals;
+using namespace std::chrono;
+
 
 class data_analysis_metric_plugin : public libpressio_metrics_plugin {
     int begin_compress_impl(const struct pressio_data * input, struct pressio_data const * ) override {
@@ -21,58 +23,6 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       if (dims_num != 2 && dims_num != 3) {
         return set_error(1, "Invalid amount of dimensions. Only 2D and 3D supported");
       }
-
-      // std::reverse(dims.begin(), dims.end()); //put in row major order
-
-      // compute singular values and store values in ascending order
-      Eigen::MatrixXd svd0_s = svd_sv(input->data(), dims_num, block_meta, file_meta);
-      
-      // stores the squared singular value matrix 
-      Eigen::MatrixXd svd0_s_squared = svd0_s.array().square();
-   
-      // debug print out svd singular value array
-    #ifdef DEBUG
-      for(size_t i=0; i<svd0_s.size(); ++i)
-        cout << svd0_s(i) << ' ';
-      cout << endl;
-    #endif
-
-      // determines cumulative sum and sum of singular values
-      double sum = 0;
-      vector<double> cumsum_svd0;
-      for(size_t i=0; i<svd0_s_squared.size(); ++i){
-        sum += svd0_s_squared(i);
-        cumsum_svd0.push_back(sum);
-      } 
-
-      // debug print of cumsum of the squared svd values
-    #ifdef DEBUG
-      for (double i: cumsum_svd0)
-        cout << i << ' ';
-      cout << "sum: " << sum << endl;
-    #endif
-  
-      
-      // determines ev0
-      vector<double> ev0;
-      for (size_t i=0; i<cumsum_svd0.size(); ++i){
-        ev0.push_back(cumsum_svd0[i] / sum);
-      }
-
-      // debug print of the ev0 values
-    #ifdef DEBUG
-      for (double i: ev0)
-        cout << i << ' ';
-      cout << endl;
-    #endif
-  
-      
-      // singular values from svd trunction levels based on ev0 and thresholds
-      n100  = find_svd_trunc(ev0, 1);
-      n9999 = find_svd_trunc(ev0, .9999);
-      n999  = find_svd_trunc(ev0, .999);
-      n99   = find_svd_trunc(ev0, .99);
-      
 
       return 0;
     }
@@ -94,10 +44,6 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       set(opt, "info:dim1",         meta_cast->dims[0]);
       set(opt, "info:dim2",         meta_cast->dims[1]);
       set(opt, "info:dim3",         meta_cast->dims[2]);
-      set(opt, "stat:n100",         n100);
-      set(opt, "stat:n9999",        n9999);
-      set(opt, "stat:n999",         n999);
-      set(opt, "stat:n99",          n99);
       if (block_cast != NULL){
       set(opt, "block:method",      block_cast->block_method);
       set(opt, "block:total_count", block_cast->total_blocks);
@@ -112,7 +58,7 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       }
       return opt;
     }
-    struct pressio_options get_configuration() const override {
+    struct pressio_options get_configuration_impl() const override {
       pressio_options opts;
       set(opts, "pressio:stability", "experimental");
       set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
@@ -137,11 +83,6 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
       set(opt, "block:loc1",        "first coordinate of the block");
       set(opt, "block:loc2",        "second coordinate of the block");
       set(opt, "block:loc3",        "third coordinate of the block");
-      set(opt, "stat:n100",         "svd truncation representing 100% of the data");
-      set(opt, "stat:n9999",        "svd truncation representing 99.99% of the data");
-      set(opt, "stat:n999",         "svd truncation representing 99.9% of the data");
-      set(opt, "stat:n99",          "svd truncation representing 99% of the data");
-
 
       return opt;
     }
@@ -158,10 +99,7 @@ class data_analysis_metric_plugin : public libpressio_metrics_plugin {
     void* file_meta;
     void* block_meta;
 };
-
 static pressio_register metrics_data_analysis_plugin(metrics_plugins(), "data_analysis", [](){ return compat::make_unique<data_analysis_metric_plugin>(); });
-
-
 
 
 // dependent on error bound
@@ -172,7 +110,8 @@ class compress_analysis_metric_plugin : public libpressio_metrics_plugin {
       auto dtype = input->dtype();
       auto num_elements = input->num_elements();
 
-      q_entropy = qentropy(input->data(), error_bound, dtype, num_elements);
+      //q_entropy = qentropy(input->data(), error_bound, dtype, num_elements);
+      q_entropy = 0;
       return 0;
     }
 
@@ -186,13 +125,12 @@ class compress_analysis_metric_plugin : public libpressio_metrics_plugin {
 
     pressio_options get_metrics_results(pressio_options const &)  override {
       pressio_options opt;
-      set(opt, "stat:qentropy",     q_entropy);
       set(opt, "info:error_bound",  error_bound);
       set(opt, "info:bound_type",   bound_type);
       set(opt, "info:compressor",   compressor);
       return opt;
     }
-    struct pressio_options get_configuration() const override {
+    struct pressio_options get_configuration_impl() const override {
       pressio_options opts;
       set(opts, "pressio:stability", "experimental");
       set(opts, "pressio:thread_safe", static_cast<int32_t>(pressio_thread_safety_multiple));
@@ -201,7 +139,6 @@ class compress_analysis_metric_plugin : public libpressio_metrics_plugin {
     struct pressio_options get_documentation_impl() const override {
       pressio_options opt;
       set(opt, "pressio:description", "statistics requiring an error bound");
-      set(opt, "stat:qentropy",       "quantized entropy based upon error bound");
       set(opt, "info:error_bound",    "error bound used based on the bound_type");
       set(opt, "info:bound_type",     "error bound type (rel or abs)");
       set(opt, "info:compressor",     "compressor used to compress data");
@@ -223,5 +160,47 @@ class compress_analysis_metric_plugin : public libpressio_metrics_plugin {
     std::string bound_type;
     std::string compressor;
 };
-
 static pressio_register metrics_compress_analysis_plugin(metrics_plugins(), "compress_analysis", [](){ return compat::make_unique<compress_analysis_metric_plugin>(); });
+
+class nanotime_metric_plugin : public libpressio_metrics_plugin {
+
+  typedef std::chrono::nanoseconds ns;
+  typedef std::chrono::duration<double, std::nano> duration;
+
+  int begin_compress_impl(const struct pressio_data * input, struct pressio_data const * ) override {
+    start = high_resolution_clock::now();
+    return 0;
+  }
+
+  int end_compress_impl(const struct pressio_data * input, struct pressio_data const *, int) override {
+    end = high_resolution_clock::now();
+    return 0;
+  }
+  pressio_options get_metrics_results(pressio_options const &)  override {
+    pressio_options opt;
+    duration elapsed = end - start;
+    set(opt, "nanotime:compress", elapsed.count());
+    return opt;
+  } 
+  
+  struct pressio_options get_documentation_impl() const override {
+    pressio_options opt;
+    set(opt, "pressio:description", "compression and error statistics timing");
+    set(opt, "nanotime:compress",     "timing results");
+
+    return opt;
+  }
+  std::unique_ptr<libpressio_metrics_plugin> clone() override {
+    return compat::make_unique<nanotime_metric_plugin>(*this);
+  }
+
+  const char* prefix() const override {
+    return "nanotime";
+  }
+
+  private:
+  high_resolution_clock::time_point start;
+  high_resolution_clock::time_point end;
+};
+static pressio_register metrics_nanotime_plugin(metrics_plugins(), "nanotime", [](){ return compat::make_unique<nanotime_metric_plugin>(); });
+

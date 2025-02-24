@@ -9,6 +9,7 @@
 
 void exportcsv(pressio_options options, std::string output_file) {
 
+  /*
     std::vector<std::string> hdrs =
     {"info:filename", "info:filepath", "info:dataset", "info:dim1", "info:dim2", "info:dim3", 
      "block:total_count", "block:number", "block:dim1", "block:dim2", "block:dim3", 
@@ -19,6 +20,18 @@ void exportcsv(pressio_options options, std::string output_file) {
      "error_stat:average_error", "error_stat:error_range", "error_stat:mse",
      "error_stat:psnr", "error_stat:rmse", "error_stat:value_max", "error_stat:value_mean",
      "error_stat:value_min", "error_stat:value_range", "error_stat:value_std", "size:bit_rate",
+    };
+    */
+    std::vector<std::string> hdrs =
+    {"info:filename", "info:dataset", "info:dim1", "info:dim2", "info:dim3", 
+     "block:total_count", "block:number", "block:dim1", "block:dim2", "block:dim3", 
+     "block:method","block:loc1", "block:loc2", "block:loc3",
+     "info:bound_type", "info:compressor", "info:error_bound", 
+     "global:value_std", "global:compression_ratio", "size:compression_ratio", "global:time_compress",
+     "error_stat:average_error", "error_stat:error_range", "error_stat:mse",
+     "error_stat:psnr", "error_stat:rmse", "error_stat:value_max", "error_stat:value_mean",
+     "error_stat:value_min", "error_stat:value_range", "error_stat:value_std", "size:bit_rate",
+     "nanotime:compress",
     };
     std::ifstream myFile_chk;
     myFile_chk.open(output_file);
