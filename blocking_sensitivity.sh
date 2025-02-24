@@ -5,7 +5,7 @@ function echo_do(){
 }
 
 COMPRESS_HOME=/project/jonccal/fthpc/alpoulo/repositories/Correlation_Compressibility
-
+DATA_HOME=/project/jonccal/fthpc/common/sdrbench
 cd $COMPRESS_HOME/build
 
 declare -A dset_size
@@ -16,6 +16,7 @@ dset_size[hurricane_V]="-d 100 -d 500 -d 500"
 dset_size[CESM3D]="-d 26 -d 1800 -d 3600"
 dset_size[NYX_z]="-d 512 -d 512 -d 512"
 dset_size[SDRBENCH-SCALE-98x1200x1200]="-d 98 -d 1200 -d 1200"
+dset_size[s3d]="-d 500 -d 500 -d 500"
 
 declare -A dset_dtype
 dset_dtype[SDRBENCH-Miranda-256x384x384]=float64
@@ -25,6 +26,7 @@ dset_dtype[hurricane_V]=float32
 dset_dtype[CESM3D]=float32
 dset_dtype[NYX_z]=float32
 dset_dtype[SDRBENCH-SCALE-98x1200x1200]=float32
+dset_dtype[s3d]=float64
 
 declare -A dset_loc
 dset_loc[SDRBENCH-Miranda-256x384x384]=$COMPRESS_HOME/datasets
@@ -34,6 +36,7 @@ dset_loc[hurricane_V]=$COMPRESS_HOME/datasets
 dset_loc[CESM3D]=/zfs/fthpc/alpoulo/datasets
 dset_loc[NYX_z]=$COMPRESS_HOME/datasets
 dset_loc[SDRBENCH-SCALE-98x1200x1200]=$COMPRESS_HOME/datasets
+dset_loc[s3d]=$DATA_HOME
 
 walltime="12:00:00"
 
@@ -41,11 +44,12 @@ walltime="12:00:00"
 #app="SDRBENCH-Miranda-256x384x384"
 #app="hurricane"
 #app="hurricane_V"
-app="NYX_z"
+#app="NYX_z"
 #app="CESM3D"
 #app="qmcpack"
+app="s3d"
 
-ncores=64
+ncores=28
 
 max_block_count="1"
 
@@ -57,7 +61,7 @@ for compressor in "sz" "sz3" "zfp" "sperr" "tthresh"
 do
   #for block_size in 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
   #for block_size in 16 20 24 28 32
-  for block_size in 4 6 8 10 12 14 
+  for block_size in 4 6 8 10 12 14 16 20 24 28 32
   do
     blocks=${max_block_count}
 
@@ -67,7 +71,7 @@ do
     echo "#SBATCH --nodes 1" >> $slurmout
     echo "#SBATCH --ntasks-per-node ${ncores}" >> $slurmout
     echo "#SBATCH --cpus-per-task 1" >> $slurmout
-    echo "#SBATCH --mem 250gb" >> $slurmout
+    echo "#SBATCH --mem 500gb" >> $slurmout
     echo "#SBATCH --time ${walltime}" >> $slurmout
     #echo "#SBATCH --partition fluxcapacitor" >> $slurmout
 
