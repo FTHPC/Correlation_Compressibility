@@ -11,6 +11,8 @@ suppressPackageStartupMessages({
   library('mgcv') #generalized additive modeling
   library('glmnet') #generalized linear model via penalized max likelihood (lasso,elasticnet)
   library('rTensor')
+  library('randtoolbox') #for sobol sampling
+  library('SobolSequence')
 })
 
 ### read data
@@ -63,6 +65,10 @@ select_data <- function(data, blockcount, buffers, compressors, errorbounds, sam
     }
     if (samplemode == "UNIFORM") {
       subsample <- sample(1:max_block,blockcount,FALSE)
+    }
+    if (samplemode == "SOBOL") {
+      #subsample <- ceiling(sobol(blockcount, init=FALSE) * max_block)
+      subsample <- ceiling(sobolSequence.points(dimR=2,count=blockcount,digitalShift=TRUE)*max_block)[,1]
     }
     #
     for (comp in compressors) {
@@ -130,8 +136,13 @@ select_data_allEB <- function(data, blockcount, buffers, compressors, samplemode
       stride <- floor(max_block/blockcount)
       smpl <- seq(from=1, to=max_block, by=stride)
       subsample <- smpl[1:blockcount]
-    } else {
+    }
+    if (samplemode == "UNIFORM") {
       subsample <- sample(1:max_block,blockcount,FALSE)
+    }
+    if (samplemode == "SOBOL") {
+      #subsample <- ceiling(sobol(blockcount, init=FALSE) * max_block)
+      subsample <- ceiling(sobolSequence.points(dimR=2,count=blockcount,digitalShift=TRUE)*max_block)[,1]
     }
     #
     for (comp in compressors) {

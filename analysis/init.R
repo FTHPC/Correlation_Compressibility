@@ -211,9 +211,9 @@ hurricane_u_uniform_flexmix_fdf <- getFDF("hurricane_U",uniform,flexmix)
 ############################################################################################################################
 # Hurricane Step 48
 ############################################################################################################################
-hurricane_step48_stride_linear_fdf <- getFDF("hurricane_step48",stride,linear)
+#hurricane_step48_stride_linear_fdf <- getFDF("hurricane_step48",stride,linear)
 #---------------------------------------------------------------------------------------------------------------------------
-hurricane_step48_uniform_linear_fdf <- getFDF("hurricane_step48",uniform,linear)
+#hurricane_step48_uniform_linear_fdf <- getFDF("hurricane_step48",uniform,linear)
 #---------------------------------------------------------------------------------------------------------------------------
 hurricane_step48_stride_flexmix_fdf <- getFDF("hurricane_step48",stride,flexmix)
 #---------------------------------------------------------------------------------------------------------------------------
@@ -225,16 +225,16 @@ hurricane_step48_uniform_flexmix_fdf <- getFDF("hurricane_step48",uniform,flexmi
 # hurricane_step48_uniform_mixed_fdf <- getFDF("hurricane_step48",uniform,mixed)
 # step48_um_predictions <- getPredictionsVsReal(hurricane_step48_uniform_mixed_fdf, "hurricane_step48",uniform,mixed)
 #---------------------------------------------------------------------------------------------------------------------------
-hurricane_step48_stride_linear_allEB_fdf <- getFDF("hurricane_step48",stride,linear,TRUE)
-hurricane_step48_uniform_linear_allEB_fdf <- getFDF("hurricane_step48",uniform,linear,TRUE)
+#hurricane_step48_stride_linear_allEB_fdf <- getFDF("hurricane_step48",stride,linear,TRUE)
+#hurricane_step48_uniform_linear_allEB_fdf <- getFDF("hurricane_step48",uniform,linear,TRUE)
 hurricane_step48_stride_flexmix_allEB_fdf <- getFDF("hurricane_step48",stride,flexmix,TRUE)
 hurricane_step48_uniform_flexmix_allEB_fdf <- getFDF("hurricane_step48",uniform,flexmix,TRUE)
 
 ############################################################################################################################
 # Hurricane TC
 ############################################################################################################################
-hurricane_TC_stride_linear_fdf <- getFDF("hurricane_TC",stride,linear)
-hurricane_TC_uniform_linear_fdf <- getFDF("hurricane_TC",uniform,linear)
+#hurricane_TC_stride_linear_fdf <- getFDF("hurricane_TC",stride,linear)
+#hurricane_TC_uniform_linear_fdf <- getFDF("hurricane_TC",uniform,linear)
 hurricane_TC_stride_flexmix_fdf <- getFDF("hurricane_TC",stride,flexmix)
 hurricane_TC_uniform_flexmix_fdf <- getFDF("hurricane_TC",uniform,flexmix)
 # #---------------------------------------------------------------------------------------------------------------------------
@@ -246,8 +246,8 @@ hurricane_TC_uniform_flexmix_fdf <- getFDF("hurricane_TC",uniform,flexmix)
 ############################################################################################################################
 # SCALE-LETKF
 ############################################################################################################################
-scale_stride_linear_fdf <- getFDF("SCALE",stride,linear)
-scale_uniform_linear_fdf <- getFDF("SCALE",uniform,linear)
+#scale_stride_linear_fdf <- getFDF("SCALE",stride,linear)
+#scale_uniform_linear_fdf <- getFDF("SCALE",uniform,linear)
 scale_stride_flexmix_fdf <- getFDF("SCALE",stride,flexmix)
 scale_uniform_flexmix_fdf <- getFDF("SCALE",uniform,flexmix)
 # #---------------------------------------------------------------------------------------------------------------------------
@@ -259,8 +259,8 @@ scale_uniform_flexmix_fdf <- getFDF("SCALE",uniform,flexmix)
 ############################################################################################################################
 # qmcpack
 ############################################################################################################################
-qmcpack_stride_linear_fdf <- getFDF("qmcpack",stride,linear)
-qmcpack_uniform_linear_fdf <- getFDF("qmcpack",uniform,linear)
+#qmcpack_stride_linear_fdf <- getFDF("qmcpack",stride,linear)
+#qmcpack_uniform_linear_fdf <- getFDF("qmcpack",uniform,linear)
 qmcpack_stride_flexmix_fdf <- getFDF("qmcpack",stride,flexmix)
 qmcpack_uniform_flexmix_fdf <- getFDF("qmcpack",uniform,flexmix)
 
@@ -277,15 +277,15 @@ nyx_uniform_flexmix_fdf <- getFDF("NYX",uniform,flexmix,1)
 
 combine = TRUE
 if(combine) {
-  combined_stride_linear <- rbind(hurricane_CLOUD_stride_linear_fdf,hurricane_Pf_stride_linear_fdf,
-                                  hurricane_PRECIP_stride_linear_fdf,hurricane_QRAIN_stride_linear_fdf,
-                                  hurricane_step48_stride_linear_fdf,hurricane_TC_stride_linear_fdf,
-                                  miranda_stride_linear_fdf)#,qmcpack_stride_linear_fdf)
+  #combined_stride_linear <- rbind(hurricane_CLOUD_stride_linear_fdf,hurricane_Pf_stride_linear_fdf,
+  #                                hurricane_PRECIP_stride_linear_fdf,hurricane_QRAIN_stride_linear_fdf,
+  #                                hurricane_step48_stride_linear_fdf,hurricane_TC_stride_linear_fdf,
+  #                                miranda_stride_linear_fdf)#,qmcpack_stride_linear_fdf)
                                   
-  combined_uniform_linear <- rbind(hurricane_CLOUD_uniform_linear_fdf,hurricane_Pf_uniform_linear_fdf,
-                                  hurricane_PRECIP_uniform_linear_fdf,hurricane_QRAIN_uniform_linear_fdf,
-                                  hurricane_step48_uniform_linear_fdf,hurricane_TC_uniform_linear_fdf,
-                                  miranda_uniform_linear_fdf)
+  #combined_uniform_linear <- rbind(hurricane_CLOUD_uniform_linear_fdf,hurricane_Pf_uniform_linear_fdf,
+  #                                hurricane_PRECIP_uniform_linear_fdf,hurricane_QRAIN_uniform_linear_fdf,
+  #                                hurricane_step48_uniform_linear_fdf,hurricane_TC_uniform_linear_fdf,
+  #                                miranda_uniform_linear_fdf)
   
   combined_stride_flexmix <- rbind(hurricane_CLOUD_stride_flexmix_fdf,hurricane_Pf_stride_flexmix_fdf,
                                   hurricane_PRECIP_stride_flexmix_fdf,hurricane_QRAIN_stride_flexmix_fdf,
@@ -297,14 +297,14 @@ if(combine) {
                                    hurricane_step48_uniform_flexmix_fdf,hurricane_TC_uniform_flexmix_fdf,
                                    miranda_uniform_flexmix_fdf)
   
-  total_combined <- rbind(hurricane_CLOUD_stride_linear_fdf,hurricane_Pf_stride_linear_fdf,
-                          hurricane_PRECIP_stride_linear_fdf,hurricane_QRAIN_stride_linear_fdf,
-                          hurricane_step48_stride_linear_fdf,hurricane_TC_stride_linear_fdf,
-                          miranda_stride_linear_fdf,
-                          hurricane_CLOUD_uniform_linear_fdf,hurricane_Pf_uniform_linear_fdf,
-                          hurricane_PRECIP_uniform_linear_fdf,hurricane_QRAIN_uniform_linear_fdf,
-                          hurricane_step48_uniform_linear_fdf,hurricane_TC_uniform_linear_fdf,
-                          miranda_uniform_linear_fdf,
+  total_combined <- rbind(#hurricane_CLOUD_stride_linear_fdf,hurricane_Pf_stride_linear_fdf,
+                          #hurricane_PRECIP_stride_linear_fdf,hurricane_QRAIN_stride_linear_fdf,
+                          #hurricane_step48_stride_linear_fdf,hurricane_TC_stride_linear_fdf,
+                          #miranda_stride_linear_fdf,
+                          #hurricane_CLOUD_uniform_linear_fdf,hurricane_Pf_uniform_linear_fdf,
+                          #hurricane_PRECIP_uniform_linear_fdf,hurricane_QRAIN_uniform_linear_fdf,
+                          #hurricane_step48_uniform_linear_fdf,hurricane_TC_uniform_linear_fdf,
+                          #miranda_uniform_linear_fdf,
                           hurricane_CLOUD_stride_flexmix_fdf,hurricane_Pf_stride_flexmix_fdf,
                           hurricane_PRECIP_stride_flexmix_fdf,hurricane_QRAIN_stride_flexmix_fdf,
                           hurricane_step48_stride_flexmix_fdf,hurricane_TC_stride_flexmix_fdf,

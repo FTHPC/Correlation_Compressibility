@@ -303,6 +303,8 @@ priorScatterRealVsPred_multiMethod <- function(df,app,ylim=0,log=0) {
   
   df$author <- paste0("(",df$author," et al.)")
   
+  df$compressor <- toupper(df$compressor)
+  
   df$compressor <- paste(df$compressor, df$author)
   
   df$errorbound <- as.factor(formatC(df$errorbound,format='e',digits=0))

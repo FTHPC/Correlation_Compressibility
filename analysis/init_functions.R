@@ -49,11 +49,12 @@ getGlobalCRs <-function(app,exclude=NA){
 }
 
 ############################################################################################################################
-getFDF <- function(app,samplemethod,model,oos=FALSE,allEB=FALSE) {
+getFDF <- function(app,samplemethod,model,oos=FALSE,allEB=FALSE,insmpl=FALSE) {
   #
   fdfpath <- paste0('rawdata_analysis/fdf/', app, '_', samplemethod,'_',model)
   if(oos) { fdfpath <- paste0(fdfpath,'_outofsample') } 
-  if (allEB) { fdfpath <- paste0(fdf_path,'_allEB') }
+  if(insmpl) { fdfpath <- paste0(fdfpath,'_insample') } 
+  if (allEB) { fdfpath <- paste0(fdfpath,'_allEB') }
   fdfpath <- paste0(fdfpath,'_fdf.csv')
   #
   fdf <- read_csv(fdfpath, col_names = TRUE,show_col_types = FALSE)
@@ -274,6 +275,7 @@ getPredictionsVsReal_allEB <- function(fdf,app,samplemethod,model,oos=0,insmp=0)
 
 ############################################################################################################################
 getPredictionsVsReal <- function(fdf,app,samplemethod,model,oos=0,insmp=0,alleb=0) {
+  
   realpath <- paste0('rawdata_analysis/real/', app, '_', samplemethod,'_',model)
   if(oos) { realpath <- paste0(realpath,'_outofsample')}
   if(insmp) { realpath <- paste0(realpath,'_insample')}
@@ -294,7 +296,27 @@ getPredictionsVsReal <- function(fdf,app,samplemethod,model,oos=0,insmp=0,alleb=
   return (pred_df)
 }
 ############################################################################################################################
-
+getPredictionsVsReal_noFDF <- function(app,samplemethod,model,oos=0,insmp=0,alleb=0) {
+  
+  fdf <- getFDF(app,samplemethod,model,oos=oos,allEB=alleb,insmp)
+  
+  path <- paste0(app, '_', samplemethod,'_',model)
+  if(oos) { path <- paste0(path,'_outofsample')}
+  if(insmp) { path <- paste0(path,'_insample')}
+  if(alleb) { path <- paste0(path,'_allEB')}
+  
+  realpath <- paste0('rawdata_analysis/real/', path, "_real.csv")
+  real <- read_csv(realpath, col_names = FALSE,show_col_types = FALSE)
+  
+  predpath <- paste0('rawdata_analysis/pred/', path, "_pred.csv")
+  pred <- read_csv(predpath, col_names = FALSE,show_col_types = FALSE)
+  
+  pred_df <- filterPredictions(fdf,real,pred)
+  pred_df <- cbind(rep(app,nrow(pred_df)),rep(samplemethod,nrow(pred_df)),rep(model,nrow(pred_df)),pred_df)
+  colnames(pred_df) <- c("app","samplemethod","model", "blocksize","blockcount","compressor","errorbound","real","pred")
+  return (pred_df)
+}
+############################################################################################################################
 
 getPredictionsByFile <- function(preds,global) {
   #names(global)[names(global)=="globalCR"] <- "real"

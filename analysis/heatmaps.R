@@ -31,8 +31,9 @@ suppressPackageStartupMessages({
 ################################################
 ################################################
 makeSingleHeatmap <- function(fdf,lim=100) {
-  if (fdf$samplemethod[1] == "stride") { sample <- "uniform" } 
-  else { sample <- "random" }
+  if (fdf$samplemethod[1] == "stride") { sample <- "uniform k-stride" } 
+  else if (fdf$samplemethod[1] == "uniform") { sample <- "random" }
+  else { sample <- "sobol" }
   ht=3; wdth=8;
   
   des <- paste0('img/heatmap/',fdf$app[1],"_heatmap_",fdf$compressor[1],"_", fdf$samplemethod[1], "_",fdf$model,".pdf")
@@ -55,22 +56,50 @@ makeSingleHeatmap <- function(fdf,lim=100) {
   dev.off()
 }
 
+runMakeSingleHeatmap <- function(fdf, lim=NA) {
+  
+  for (comp in unique(fdf$compressor)) {
+    tmpdf <- fdf %>% filter(compressor == comp)
+    if (is.na(lim)) {
+      if(mean(tmpdf$mape) < 5) {
+        lim <- 5
+      } else if (mean(tmpdf$mape) < 15) {
+        lim <- 15
+      } else if (mean(tmpdf$mape) < 25) {
+        lim <- 25
+      } else { lim <- 100 }
+    }
+    makeSingleHeatmap(tmpdf,lim)
+  }
+  
+}
+
+
 makeDoubleHeatmapBySample <- function(fdf,lim=100) {
-  if (fdf$samplemethod[1] == "stride") { sample <- "uniform" } 
-  else { sample <- "random" }
+  #if (fdf$samplemethod[1] == "stride") { sample <- "uniform k-stride" } 
+  #else if (fdf$samplemethod[1] == "uniform") { sample <- "random" }
+  #else { sample <- "sobol" }
+
+  
+  des <- paste0('img/heatmap/',fdf$app[1],"_heatmap_", fdf$compressor[1], "_", fdf$model,".pdf")
+  #dat$app <- sub("_", " ", dat$app)
+  #title <- paste(fdf$app[1], comp, "compression", fdf$model[1], 'regression modeling with',sample, "sampling")
+  
+  #des <- paste0('img/heatmap/',fdf$app[1],"_heatmap_",fdf$compressor[1], "_",fdf$model,".pdf")
+  
   fdf$samplemethod[fdf$samplemethod == "stride"] <- "Uniform k-Stride"
   fdf$samplemethod[fdf$samplemethod == "uniform"] <- "Random"
+  #fdf$samplemethod[fdf$samplemethod == "sobol"] <- "Sobol"
   ht=6; wdth=8;
   
   fdf$samplemethod <- as.factor(fdf$samplemethod)
   levels(fdf$samplemethod) <- c("Uniform k-Stride","Random")
   
-  des <- paste0('img/heatmap/',fdf$app[1],"_heatmap_",fdf$compressor[1], "_",fdf$model,".pdf")
   
   plt <- ggplot(fdf,aes(x=as.factor(blockcount),y=as.factor(blocksize),fill=mape)) +
     geom_tile() + 
     geom_text(aes(label=round(mape,1)),size=3.5,check_overlap=TRUE) +
-    scale_fill_gradient(high = "#CA0020", low = "#4DAC26", limits = c(0,lim)) +
+    scale_fill_gradient(high = "#CA0020", low = "#4DAC26", limits = c(0.5,lim)) +
     coord_equal() +
     facet_wrap(~samplemethod,ncol=1) +
     labs(title=NULL,x="Block count", y="Block size",fill="MAPE") +
@@ -85,9 +114,28 @@ makeDoubleHeatmapBySample <- function(fdf,lim=100) {
   dev.off()
 }
 
+runMakeDoubleHeatmapBySample <- function(fdf, lim=NA) {
+  
+  for (comp in unique(fdf$compressor)) {
+    tmpdf <- fdf %>% filter(compressor == comp)
+    if (is.na(lim)) {
+      if(mean(tmpdf$mape) < 5) {
+        lim <- 5
+      } else if (mean(tmpdf$mape) < 15) {
+        lim <- 15
+      } else if (mean(tmpdf$mape) < 25) {
+        lim <- 25
+      } else { lim <- 100 }
+    }
+    makeDoubleHeatmapBySample(tmpdf,lim)
+  }
+  
+}
+
 makeHeatmapByCompressor <- function(fdf,lim=100) {
-  if (fdf$samplemethod == "stride") { sample <- "uniform" } 
-  else { sample <- "random" }
+  if (fdf$samplemethod[1] == "stride") { sample <- "uniform k-stride" } 
+  else if (fdf$samplemethod[1] == "uniform") { sample <- "random" }
+  else { sample <- "sobol" }
   
   for(comp in unique(fdf$compressor)) {
     dat <- fdf %>% filter(compressor == comp)
@@ -119,8 +167,9 @@ makeHeatmapByCompressor <- function(fdf,lim=100) {
 }
 
 makeHeatmapByEB <- function(fdf,fill=1,lim=100) {
-  if (fdf$samplemethod[1] == "stride") { sample <- "uniform" } 
-  else { sample <- "random" }
+  if (fdf$samplemethod[1] == "stride") { sample <- "uniform k-stride" } 
+  else if (fdf$samplemethod[1] == "uniform") { sample <- "random" }
+  else { sample <- "sobol" }
   
   for(eb in unique(fdf$errorbound)) {
     dat <- fdf %>% filter(errorbound == eb) %>% dplyr::select(app,blocksize,blockcount,compressor,mape) 
@@ -169,7 +218,8 @@ makeHeatmapByEB <- function(fdf,fill=1,lim=100) {
 makeHeatmapByEB_allEB <- function(fdf,fill=1,lim=100,oos=FALSE,allEB=FALSE,insmp=FALSE) {
   #fdf <- subset(fdf, compressor != tthresh)
   if (fdf$samplemethod[1] == "stride") { sample <- "uniform k-stride" } 
-  else { sample <- "random" }
+  else if (fdf$samplemethod[1] == "uniform") { sample <- "random" }
+  else { sample <- "sobol" }
   
   res=200
   wdth=975
@@ -229,8 +279,9 @@ makeHeatmapByEB_allEB <- function(fdf,fill=1,lim=100,oos=FALSE,allEB=FALSE,insmp
 
 
 makeHeatmapByEB_allEB_IQR <- function(fdf,fill=1,lim=100,oos=FALSE,allEB=FALSE,insmp=FALSE) {
-  if (fdf$samplemethod[1] == "stride") { sample <- "uniform" } 
-  else { sample <- "random" }
+  if (fdf$samplemethod[1] == "stride") { sample <- "uniform k-stride" } 
+  else if (fdf$samplemethod[1] == "uniform") { sample <- "random" }
+  else { sample <- "sobol" }
   #print(fdf$app)
   
   res=200

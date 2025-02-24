@@ -283,6 +283,8 @@ makeRealVsPredScatterplots_singleBCBSByComp <- function(pred_df,insmp=0,oos=0,al
   
   pred_df$errorbound <- as.factor(formatC(pred_df$errorbound,format='e',digits=0))
   
+  pred_df$compressor <- toupper(pred_df$compressor)
+  
   plt <- ggplot(pred_df,aes(x=log(real),y=log(pred), color=as.factor(errorbound))) +
     geom_point(alpha=0.2) +
     facet_wrap(~compressor,ncol=length(unique(pred_df$compressor)), scales="fixed") +

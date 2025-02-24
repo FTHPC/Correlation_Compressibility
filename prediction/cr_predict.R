@@ -108,7 +108,7 @@ predict_cr <- function(df,modeltype,kf=5,oos=FALSE){
         preds <- stats::predict(mi, newdata=test.set)
       }
       if (modeltype == "FLEXMIX") {
-        ncomp <- ifelse(sd(train.set$y) < 0.2, 4, 8)
+        ncomp <- ifelse(sd(train.set$y) < 0.2, 4, 8) #determine # comparisons for flexmix
         ncomps[l] <- ncomp
         tryCatch(
           expr = { fit <<- flexmix(y ~ x1 + x2 + x3, data=train.set, k=ncomp) }, 

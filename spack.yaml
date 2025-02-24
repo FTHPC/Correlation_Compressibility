@@ -3,8 +3,10 @@ spack:
     all:
       target:
       - x86_64_v3
+    perl:
+      require: os=rocky8
   specs:
-  - libpressio@1.0.1+libdistributed+hdf5+mgard+python+sz+sz3+mpi+bitgrooming+digitrounding+fpzip+zfp ^sz@master+stats ^cmake@3.25
+  - libpressio@1.0.2+libdistributed+hdf5+python+sz+sz3+mpi+bitgrooming+digitrounding+fpzip+zfp ^sz@master+stats ^cmake@3.25
   - libpressio-tthresh
   - libpressio-tools+opt+tthresh+mpi+sperr
   - libpressio-predict@0.0.5+python+khan2023+sian2022+rahman2023
@@ -26,6 +28,14 @@ spack:
   view: true
   concretizer:
     unify: true
+    reuse:
+      roots: true
+      from:
+      - type: local
+      - type: buildcache
+        exclude:
+        - perl
+        - util-macros
   develop:
     libpressio-predict:
       spec: libpressio-predict@git.master=0.0.5
@@ -43,5 +53,6 @@ spack:
       modules: []
       environment: {}
       extra_rpaths: []
+  mirrors: {}
   repos:
   - /home/alpoulo/repositories/spack_packages

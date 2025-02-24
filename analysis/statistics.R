@@ -139,3 +139,21 @@ runTTest <- function(stride_fdf, uniform_fdf,filterBS = TRUE,bs=28,bc=24) {
 }
 
 
+runInvSqrtBlockcountSignificanceByCompressor <- function(app,samplemethod,model,insmp=0,oos=0,allEB=0) {
+
+  pred_df <- getPredictionsVsReal_noFDF(app,samplemethod,model,oos,insmp,allEB)
+  pred_df["invblockcount"] <- 1 / sqrt(pred_df$blockcount)
+  pred_df["abserr"] <- (log(pred_df$real) - log(pred_df$pred))
+  pred_df["abserr"][sapply(pred_df["abserr"], is.infinite)] <- NA
+  pred_df <- na.omit(pred_df)
+  
+  for (comp in unique(pred_df$compressor)) {
+    tmpdf <- pred_df %>% filter(compressor == comp)
+    print(comp)
+    model <- lm(tmpdf$abserr ~ tmpdf$invblockcount)
+    print(summary(lm(tmpdf$abserr ~ tmpdf$invblockcount)))
+    plot(tmpdf$invblockcount,tmpdf$abserr,
+         main=comp)
+  }
+}
+

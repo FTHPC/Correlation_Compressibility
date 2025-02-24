@@ -61,7 +61,7 @@ nbuffers <- c(240,13,48,48,
               48,48,48,6,
               7,11,288)
 #
-app_idx <- 1
+app_idx <- 17
 var_nm <- var_nms[app_idx]
 fname <- fnames[app_idx]
 app <- apps[app_idx]
@@ -79,22 +79,23 @@ zfp <- "zfp"
 compressors <- c(bit_grooming, sperr, sz, sz3,tthresh, zfp)
 #compressors <- c(zfp)
 #
-blockcounts <- seq(from=16, to=128, by=8)
+#blockcounts <- seq(from=16, to=128, by=8)
+blockcounts <- 2^seq(from=4,to=7)
 #blockcounts <- c(128)
 #blocksizes <- c(8,12,16,20,24)
 blocksizes <- c(16,20,24,28,32)
 #blocksizes <- c(32)
 errorbounds <- c(1e-2, 1e-3, 1e-4, 1e-5)
 #
-#samplemethods <- c("STRIDE","UNIFORM")
-samplemethods <- "STRIDE"; 
+#samplemethods <- c("STRIDE","UNIFORM", "SOBOL")
+samplemethods <- "SOBOL"; 
 #modeltypes <- c("FLEXMIX","LINEAR")
 modeltypes <- "FLEXMIX"; 
 errormode <- c('pressio:abs')
 #
 thresh <- 200
 #
-allEB <- TRUE
+allEB <- FALSE
 outofsample <- FALSE
 kf <- 5
 #if(allEB) { kf <- 10 } else { kf <- 5 }
@@ -104,7 +105,7 @@ for (modeltype in modeltypes) {
     mdltype <- str_to_lower(modeltype)  
     smplmthd <- str_to_lower(samplemethod)
     
-    print(paste("running",app,mdltype,smplmthd))
+    print(paste("running",app,mdltype,smplmthd,"with outofsample =",outofsample,"and allEB =",allEB))
 
     if (allEB) {
       res <- corr_predict_allEB(app,blocksizes,blockcounts,
