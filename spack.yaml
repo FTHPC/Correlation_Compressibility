@@ -6,7 +6,7 @@ spack:
     perl:
       require: os=rocky8
   specs:
-  - libpressio@1.0.2+libdistributed+hdf5+python+sz+sz3+mpi+bitgrooming+digitrounding+fpzip+zfp ^sz@master+stats ^cmake@3.25
+  - libpressio@1.0.3+libdistributed+hdf5+mgard+python+sz+sz3+mpi+bitgrooming+digitrounding+fpzip+zfp~cuda ^sz@master+stats ^cmake@3.25
   - libpressio-tthresh
   - libpressio-tools+opt+tthresh+mpi+sperr
   - libpressio-predict@0.0.5+python+khan2023+sian2022+rahman2023
@@ -25,6 +25,8 @@ spack:
   - pcre2 os=rocky8
   - nasm os=rocky8
   - util-macros os=rocky8
+  - boost
+  - libpressio-rmetric
   view: true
   concretizer:
     unify: true
