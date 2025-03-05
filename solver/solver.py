@@ -7,11 +7,10 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import dlib
 import random
+import cfg
+import util
 
-X = "config:bound"
-Y = "size:compression_ratio"
-Z = "error_stat:psnr"
-
+################################################################################################################################
 def make_linear_proxy(df: pd.DataFrame, x_col: str, y_col: str):
     local_df = df.sort_values(x_col).reset_index(drop=True)
     lower_bound = local_df[x_col].min()
@@ -38,7 +37,7 @@ def make_linear_proxy(df: pd.DataFrame, x_col: str, y_col: str):
         return np.interp(x, [lower_x, upper_x], [lower_y, upper_y])
 
     return proxy
-
+################################################################################################################################
 def make_polynomial_proxy(df: pd.DataFrame, x_col: str, y_col: str, deg):
     local_df = df.sort_values(x_col)
     lower_bound = df[x_col].min()
@@ -49,28 +48,26 @@ def make_polynomial_proxy(df: pd.DataFrame, x_col: str, y_col: str, deg):
     def polynomial(x: float) -> float:
         return poly([x])[0]
     return polynomial
-
+################################################################################################################################
 def make_inverted_objective(proxy):
     def inverted(x):
         return -proxy(x)
     return inverted
-
-#def on_error(f, on_error):
+################################################################################################################################
 def on_error(f, on_error):
-
     def g(*args):
         try:
             return f(*args)
         except:
             return on_error
     return g
-
+################################################################################################################################
 def make_acc_fidelity(proxy):
     def high(x: float) -> float:
         time.sleep(1000/1_000_000_000)
         return proxy(x)
     return high
-
+################################################################################################################################
 def make_approx_fidelity(proxy,scale):
     noise_db = {}
     def low(x: float) -> float:
@@ -83,42 +80,7 @@ def make_approx_fidelity(proxy,scale):
         y = proxy(x) + noise
         return y 
     return low
-
-def make_callback(proxy,target):
-
-    def callback(x):
-        start = time.perf_counter()
-        y = proxy(x)
-        end = time.perf_counter()
-        callback.iter = callback.iter + 1
-        callback.history.append((x, y))
-        callback.timing.append((end - start))
-        #diff = y - target
-        diff = y - target
-        #callback.diffs.append(y - target)
-        callback.diffs.append(y - target)
-        #diff = (y - target)**2
-        print(f"Iteration {callback.iter}: Current eb = {x}, Pred CR = {y}, diff = {diff}, time = {end - start}")
-        return abs(diff)
-
-    def reset():
-        nonlocal callback
-        callback.timing = []
-        callback.history = []
-        callback.diffs = []
-        callback.iter = 0
-       
-    def reset_iter():
-        callback.iter = 0
-    
-    callback.reset = reset
-    callback.reset_iter = reset_iter
-    callback.timing = []
-    callback.history = []
-    callback.diffs = []
-    callback.iter = 0
-    return callback
-
+################################################################################################################################
 def make_polynomial_callback(proxy,target):
 
     def callback(x):
@@ -151,8 +113,7 @@ def make_polynomial_callback(proxy,target):
     callback.diffs = []
     callback.iter = 0
     return callback
-
-
+################################################################################################################################
 def brents(objective,x0,x1,max_iters,tolerance=1e-5):
     fx0 = objective(x0)
     fx1 = objective(x1)
@@ -210,9 +171,42 @@ def brents(objective,x0,x1,max_iters,tolerance=1e-5):
 
     return fx1, x1
     #return x1, iters
+################################################################################################################################
+def make_binary_search_dlib_callback(proxy,target):
+    def callback(x):
+        start = time.perf_counter()
+        y = proxy(x)
+        end = time.perf_counter()
+        callback.iter = callback.iter + 1
+        callback.history.append((x, y))
+        callback.timing.append((end - start))
+        #diff = y - target
+        diff = y - target
+        #callback.diffs.append(y - target)
+        callback.diffs.append(y - target)
+        #diff = (y - target)**2
+        #print(f"Iteration {callback.iter}: Current eb = {x}, Pred CR = {y}, diff = {diff}, time = {end - start}")
+        return abs(diff)
 
-
-def binary_search(low,high,threshold,objective,max_iters,max_searches,tolerance=1e-5):
+    def reset():
+        nonlocal callback
+        callback.timing = []
+        callback.history = []
+        callback.diffs = []
+        callback.iter = 0
+       
+    def reset_iter():
+        callback.iter = 0
+    
+    callback.reset = reset
+    callback.reset_iter = reset_iter
+    callback.timing = []
+    callback.history = []
+    callback.diffs = []
+    callback.iter = 0
+    return callback
+################################################################################################################################    
+def binary_search_dlib(low,high,objective,max_iters,max_searches,tolerance=1e-5):
     iters = 0
     closest_pred = np.inf
     closest_x = 0
@@ -232,78 +226,128 @@ def binary_search(low,high,threshold,objective,max_iters,max_searches,tolerance=
         if y < closest_pred:
             closest_pred = y
             closest_x = x
-        print(f"high: {high}, low: {low}, x: {x}, y: {y}")
-        if y < threshold:
-            print(f'result: {result}')
-            return result
         if x < mid:
             high = mid
         else:
             low = mid
-        if high - low < tolerance:
+        #if high - low < tolerance:
+        #    break
+    return closest_pred,closest_x    
+################################################################################################################################
+def make_binary_search_callback(proxy,target):
+
+    def callback(x):
+        start = time.perf_counter()
+        y = proxy(x)
+        end = time.perf_counter()
+        callback.iter = callback.iter + 1
+        callback.history.append((x, y))
+        callback.timing.append((end - start))
+        #diff = y - target
+        diff = y - target
+        #callback.diffs.append(y - target)
+        callback.diffs.append(y - target)
+        #diff = (y - target)**2
+        #print(f"Iteration {callback.iter}: Current eb = {x}, Pred CR = {y}, diff = {diff}, time = {end - start}")
+        return diff
+
+    def reset():
+        nonlocal callback
+        callback.timing = []
+        callback.history = []
+        callback.diffs = []
+        callback.iter = 0
+       
+    def reset_iter():
+        callback.iter = 0
+    
+    callback.reset = reset
+    callback.reset_iter = reset_iter
+    callback.timing = []
+    callback.history = []
+    callback.diffs = []
+    callback.iter = 0
+    return callback
+################################################################################################################################
+def binary_search(low,high,objective,max_searches,tolerance=1e-5):
+    iters = 0
+    closest_pred = np.inf
+    closest_x = 0
+    while iters < max_searches:
+        x = (high + low) / 2
+        diff = objective(x)
+        y = abs(diff)
+        objective.reset_iter()
+        if y < closest_pred:
+            closest_pred = y
+            closest_x = x
+        if diff < 0:
+            low = x
+        elif diff > 0:
+            high = x
+        else: # diff == 0
             break
-    print(f'unable to satisfy threshold. returning closest estimation.')
+        iters = iters + 1
     return closest_pred,closest_x
+################################################################################################################################
+def run_binary_search(comp,errmode,max_searches,max_trials,cr_max):
+    #sd = 5
+    #deg = 7
+    preds = []
+    for field in cfg.fields:
+        print(field)
+        results_df = util.get_results(cfg.resultsdir, f'hurricane_{comp}_{field}f*{errmode}')
+        results_df = results_df[results_df['size:compression_ratio'] <= cr_max]
+        for t in range(1,49):
+            ts = f'{t:02d}'
+            df = results_df[results_df['timestep'] == ts]
+            if len(df) == 0:
+                continue
 
+            max_cr = df[cfg.Y].max()
+            min_cr = df[cfg.Y].min()
 
-df = pd.read_csv("results.csv", index_col=0)
-lower_bound = df[X].min()
-upper_bound = df[X].max()
-df = df.sort_values(X)
+            linear_proxy = make_linear_proxy(df,cfg.X,cfg.Y)
+            objective_fx = on_error(linear_proxy, np.inf)
 
-orig_x = df[X]
-orig_y = df[Y]
-orig_z = df[Z]
+            lower_bound = df[cfg.X].min()
+            upper_bound = df[cfg.X].max()
+            df = df.sort_values(cfg.X)
 
-sd = 5
-deg = 7
-max_iters = 10# 30
-max_searches = 5#10
-x0 = df.sample(n=1)[X].item()
-cr_min = df[Y].min()
-#cr_max = df[Y].max()
-cr_max = 1500
+            orig_x = df[cfg.X]
+            orig_y = df[cfg.Y]
+            orig_z = df[cfg.Z]
 
-linear_proxy = make_linear_proxy(df,X,Y)
-linear_approx = make_approx_fidelity(linear_proxy,sd)
-polynomial_proxy = make_polynomial_proxy(df,X,Y,deg)
-polynomial_approx = make_approx_fidelity(polynomial_proxy,sd)
-#objective_fx = on_error(linear_proxy, np.inf)
-objective_fx = on_error(linear_approx, np.inf)
-#objective_fx = on_error(polynomial_proxy, np.inf)
-#objective_fx = on_error(linear_approx, np.inf)
+            for trial in range(max_trials):
 
-for i in range(0,10):
-    target = random.uniform(cr_min, cr_max)
-    threshold = target * 0.05
-    #print(f'target: {target}, threshold: {threshold}')
-    objective = make_callback(objective_fx, target)
-    
-    print(f'BINARY SEARCH')
-    start = time.perf_counter()
-    result = binary_search(lower_bound,upper_bound,threshold,objective,max_iters,max_searches)
-    stop = time.perf_counter()
-    pred = objective.history[-1][1]
-    lin_approx = linear_proxy(objective.history[-1][0])
-    print(f'target: {target}, threshold: {threshold}')
-    print(f'pred: {pred}, actual: {lin_approx}') 
-    print(f'time: {stop - start}')
-    objective.reset()
-    
-    poly_objective = make_polynomial_callback(objective_fx, target)
-    x0 = orig_x.iloc[1]
-    x1 = orig_x.iloc[-2]
-    print(f'\nBRENTS METHOD')
-    start = time.perf_counter()
-    result = brents(poly_objective,x0,x1,max_searches)
-    stop = time.perf_counter()
-    pred = poly_objective.history[-1][1]
-    lin_approx = linear_proxy(poly_objective.history[-1][0])
-    #print(f'target: {target}') 
-    print(f'target: {target}, threshold: {threshold}')
-    print(f'pred: {pred}, actual: {lin_approx}') 
-    print(f'time: {stop - start}')
-    print(f'\n')
-    poly_objective.reset()
+                target = random.uniform(min_cr, max_cr)
+                closest_eb,closest_cr,closest_psnr = util.get_nearest_cr(df,target)
 
+                for search in range(2,max_searches+1):
 
+                    threshold = target * 0.05
+                    objective = make_binary_search_callback(objective_fx, target)
+
+                    start = time.perf_counter()
+                    #result = binary_search_dlib(lower_bound,upper_bound,objective,max_iters,search)
+                    result = binary_search(lower_bound,upper_bound,objective,search)
+                    stop = time.perf_counter()
+                    pred = objective.history[-1][1]
+                    pred_eb = objective.history[-1][0]
+                    lin_approx = linear_proxy(objective.history[-1][0])
+
+                    preds.append([comp,errmode, field,ts,'binary search','linear','no',search,
+                                  0,target,pred,pred_eb,closest_cr,closest_eb,closest_psnr
+                    ])
+
+                    objective.reset()
+
+    predictions = pd.DataFrame(preds)
+    # sampling column indicates whether or not we 'ran the full compressor' (aka did an accurate
+    # linear interpretation) or if we added noise to assume a less accurate method
+    # proxy column indicates a linear or polynomial proxy 
+    predictions.columns=['comp','error_mode', 'field','ts','search method','proxy','sampling','searches',
+                         'dlib_iters', 'target_cr','pred_cr', 'pred_eb','closest_cr','closest_eb','closest_psnr']
+    outfile = 'predictions_' + comp + '_' + errmode + '_hurricane_binary_search_linear.csv'
+    predictions.to_csv(outfile)
+    return predictions

@@ -18,7 +18,6 @@ datasets = {
 }
 
 def get_timestep(fpath,timestep):
-    #timestep_str = f"{timestep:02d}"
     files = glob.glob(os.path.join(fpath, f"*{timestep}.bin"))
 
     return files
@@ -26,9 +25,10 @@ def get_timestep(fpath,timestep):
 #compressors = ['sz','sz3','zfp','sperr','tthresh','mgard']
 #compressors = ['sz']
 
-assert len(sys.argv) > 1, "must provide compressor to use"
+assert len(sys.argv) > 2, "must provide compressor to use and error bounding mode (abs | rel)"
 
 comp = sys.argv[1]
+errmode = sys.argv[2]
 
 app = 'hurricane'
 dim1 = 100
@@ -52,7 +52,7 @@ walltime = '8:00:00'
 for t in range(1,49):
 
     timestep = f"{t:02d}"
-    job = app + '_t' + timestep + '_' + comp 
+    job = app + '_t' + timestep + '_' + comp + '_' + errmode 
     
     preamble = [
             f'#!/bin/bash\n',
@@ -79,7 +79,7 @@ for t in range(1,49):
     files = get_timestep(appdir,timestep)
     for f in files:
         with open(slurmout,'a') as so:
-            so.write(f'echo_do mpiexec --use-hwthread-cpus -np {ntasks} python build_dataset.py {comp} {f} {dim1} {dim2} {dim3}\n\n')
+            so.write(f'echo_do mpiexec --use-hwthread-cpus -np {ntasks} python build_dataset.py {comp} {f} {dim1} {dim2} {dim3} {errmode}\n\n')
 
     os.system("sbatch %s" %slurmout)
 

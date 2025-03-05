@@ -12,26 +12,30 @@ import sys
 
 compresshome = "/project/jonccal/fthpc/alpoulo/repositories/Correlation_Compressibility/"
 
-def evaluate(bound, compressor_id):
+def evaluate(bound, compressor_id, errmode):
     #compressor_id = "sz3"
     global data
     output = data.copy()
-    c = lp.PressioCompressor(compressor_id, {f"{compressor_id}:metric": "composite", "composite:plugins": ["size", "error_stat"]}, {"pressio:abs": bound})
+    #c = lp.PressioCompressor(compressor_id, {f"{compressor_id}:metric": "composite", "composite:plugins": ["size", "error_stat"]}, {"pressio:abs": bound})
+    c = lp.PressioCompressor(compressor_id, {f"{compressor_id}:metric": "composite", "composite:plugins": ["size", "error_stat"]}, {f"{errmode}": bound})
     compressed = c.encode(data)
     c.decode(compressed, output)
     return c.get_metrics() | {"config:compressor_id": compressor_id, "config:bound": bound}
 
-assert len(sys.argv) == 6, "must provide compressor, file path, and dimensions"
+assert len(sys.argv) == 7, "must provide compressor, file path, dimensions, and error mode"
 
 compressor = sys.argv[1]
 inpath = sys.argv[2]
 dim1 = int(sys.argv[3])
 dim2 = int(sys.argv[4])
 dim3 = int(sys.argv[5])
+errmode = sys.argv[6]
 
 app = Path(inpath.split("/")[-2]).stem
 fname = Path(inpath.split("/")[-1]).stem
-outfile = compresshome + "solver/output/" + app + '_' + compressor + "_" + fname + ".csv"
+outfile = compresshome + "solver/output/" + app + '_' + compressor + "_" + fname + "_" + errmode + ".csv"
+
+errmode = "pressio:" + errmode
 
 data = np.fromfile(inpath, dtype=np.float32).reshape(dim1, dim2, dim3)
 
@@ -44,7 +48,7 @@ with MPICommExecutor() as pool:
         #for expon in tqdm(np.logspace(1e-5, 1e-3, num=N)):
         for expon in np.logspace(1e-5, 1e-3, num=N):
             bound = np.log10(expon)
-            futs.append(pool.submit(evaluate, bound, compressor))
+            futs.append(pool.submit(evaluate, bound, compressor, errmode))
         print("tasksdone")
         for idx, fut in enumerate(futs):
             results.append(fut.result())
