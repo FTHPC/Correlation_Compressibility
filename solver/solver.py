@@ -170,69 +170,7 @@ def brents(objective,x0,x1,max_iters,tolerance=1e-5):
         iters = iters + 1
 
     return fx1, x1
-    #return x1, iters
-################################################################################################################################
-def make_binary_search_dlib_callback(proxy,target):
-    def callback(x):
-        start = time.perf_counter()
-        y = proxy(x)
-        end = time.perf_counter()
-        callback.iter = callback.iter + 1
-        callback.history.append((x, y))
-        callback.timing.append((end - start))
-        #diff = y - target
-        diff = y - target
-        #callback.diffs.append(y - target)
-        callback.diffs.append(y - target)
-        #diff = (y - target)**2
-        #print(f"Iteration {callback.iter}: Current eb = {x}, Pred CR = {y}, diff = {diff}, time = {end - start}")
-        return abs(diff)
-
-    def reset():
-        nonlocal callback
-        callback.timing = []
-        callback.history = []
-        callback.diffs = []
-        callback.iter = 0
-       
-    def reset_iter():
-        callback.iter = 0
-    
-    callback.reset = reset
-    callback.reset_iter = reset_iter
-    callback.timing = []
-    callback.history = []
-    callback.diffs = []
-    callback.iter = 0
-    return callback
-################################################################################################################################    
-def binary_search_dlib(low,high,objective,max_iters,max_searches,tolerance=1e-5):
-    iters = 0
-    closest_pred = np.inf
-    closest_x = 0
-    while iters < max_searches:
-        mid = (high + low) / 2
-        if iters > max_iters:
-            break
-        iters = iters + 1
-        result = dlib.find_min_global(
-                objective,
-                [low], [high],
-                max_iters
-            )
-        x = result[0][0]
-        y = result[1]
-        objective.reset_iter()
-        if y < closest_pred:
-            closest_pred = y
-            closest_x = x
-        if x < mid:
-            high = mid
-        else:
-            low = mid
-        #if high - low < tolerance:
-        #    break
-    return closest_pred,closest_x    
+    #return x1, iters  
 ################################################################################################################################
 def make_binary_search_callback(proxy,target):
 
@@ -243,9 +181,7 @@ def make_binary_search_callback(proxy,target):
         callback.iter = callback.iter + 1
         callback.history.append((x, y))
         callback.timing.append((end - start))
-        #diff = y - target
         diff = y - target
-        #callback.diffs.append(y - target)
         callback.diffs.append(y - target)
         #diff = (y - target)**2
         #print(f"Iteration {callback.iter}: Current eb = {x}, Pred CR = {y}, diff = {diff}, time = {end - start}")
@@ -297,7 +233,7 @@ def run_binary_search(comp,errmode,max_searches,max_trials,cr_max):
     for field in cfg.fields:
         print(field)
         results_df = util.get_results(cfg.resultsdir, f'hurricane_{comp}_{field}f*{errmode}')
-        results_df = results_df[results_df['size:compression_ratio'] <= cr_max]
+        results_df = results_df[results_df[cfg.Y] <= cr_max]
         for t in range(1,49):
             ts = f'{t:02d}'
             df = results_df[results_df['timestep'] == ts]
@@ -348,6 +284,141 @@ def run_binary_search(comp,errmode,max_searches,max_trials,cr_max):
     # proxy column indicates a linear or polynomial proxy 
     predictions.columns=['comp','error_mode', 'field','ts','search method','proxy','sampling','searches',
                          'dlib_iters', 'target_cr','pred_cr', 'pred_eb','closest_cr','closest_eb','closest_psnr']
-    outfile = 'predictions_' + comp + '_' + errmode + '_hurricane_binary_search_linear.csv'
+    #outfile = 'predictions_' + comp + '_' + errmode + '_hurricane_binary_search_linear.csv'
+    outfile = 'predictions_' + comp + '_' + errmode + '_s' + max_searches + '_d0_cr' + max_cr + '_hurricane_binary_search_linear.csv'
+    predictions.to_csv(outfile)
+    return predictions
+
+################################################################################################################################
+def make_binary_search_dlib_callback(proxy,target):
+    def callback(x):
+        start = time.perf_counter()
+        y = proxy(x)
+        end = time.perf_counter()
+        callback.iter = callback.iter + 1
+        callback.history.append((x, y))
+        callback.timing.append((end - start))
+        diff = y - target
+        callback.diffs.append(y - target)
+        #diff = (y - target)**2
+        #print(f"Iteration {callback.iter}: Current eb = {x}, Pred CR = {y}, diff = {diff}, time = {end - start}")
+        return abs(diff)
+
+    def reset():
+        nonlocal callback
+        callback.timing = []
+        callback.history = []
+        callback.diffs = []
+        callback.iter = 0
+       
+    def reset_iter():
+        callback.iter = 0
+    
+    callback.reset = reset
+    callback.reset_iter = reset_iter
+    callback.timing = []
+    callback.history = []
+    callback.diffs = []
+    callback.iter = 0
+    return callback
+
+################################################################################################################################  
+def binary_search_dlib(low,high,objective,max_iters,max_searches,tolerance=1e-5):
+    iters = 0
+    closest_pred = np.inf
+    closest_x = 0
+    while iters < max_searches:
+        mid = (high + low) / 2
+        iters = iters + 1
+        result = dlib.find_min_global(
+                objective,
+                [low], [high],
+                max_iters
+            )
+        x = result[0][0]
+        y = result[1]
+        objective.reset_iter()
+        
+        diff = objective.diffs[-1]
+        if y < closest_pred:
+            closest_pred = y
+            closest_x = x
+        if diff > 0:
+            high = mid
+        else:
+            low = mid
+    return closest_pred,closest_x 
+
+################################################################################################################################
+def run_binary_search_dlib(comp,errmode,max_searches,max_dlib_iters,max_trials,cr_max):
+    #sd = 5
+    #deg = 7
+    preds = []
+    for field in cfg.fields:
+        print(field)
+        results_df = util.get_results(cfg.resultsdir, f'hurricane_{comp}_{field}f*{errmode}')
+        results_df = results_df[results_df[cfg.Y] <= cr_max]
+        for t in range(1,49):
+            ts = f'{t:02d}'
+            df = results_df[results_df['timestep'] == ts]
+            if len(df) == 0:
+                continue
+
+            max_cr = df[cfg.Y].max()
+            min_cr = df[cfg.Y].min()
+
+            linear_proxy = make_linear_proxy(df,cfg.X,cfg.Y)
+            objective_fx = on_error(linear_proxy, np.inf)
+
+            lower_bound = df[cfg.X].min()
+            upper_bound = df[cfg.X].max()
+            df = df.sort_values(cfg.X)
+
+            orig_x = df[cfg.X]
+            orig_y = df[cfg.Y]
+            orig_z = df[cfg.Z]
+
+            for trial in range(max_trials):
+
+                target = random.uniform(min_cr, max_cr)
+                objective = make_binary_search_dlib_callback(objective_fx, target)
+
+                closest_eb,closest_cr,closest_psnr = util.get_nearest_cr(df,target)
+
+                for search in range(1,max_searches+1):
+
+                    threshold = target * 0.05
+
+                    #start = time.perf_counter()
+                    result = binary_search_dlib(lower_bound,upper_bound,objective,max_dlib_iters,search)
+                    #stop = time.perf_counter()
+                    pred = objective.history[-1][1]
+                    pred_eb = objective.history[-1][0]
+                    lin_approx = linear_proxy(objective.history[-1][0])
+
+                    preds.append([comp,
+                                  errmode, 
+                                  field,ts,
+                                  'binary search dlib',
+                                  'linear',
+                                  'no',
+                                  search,
+                                  max_dlib_iters,
+                                  target,
+                                  pred,
+                                  pred_eb,
+                                  closest_cr,
+                                  closest_eb,
+                                  closest_psnr
+                    ])
+                    objective.reset()
+
+    predictions = pd.DataFrame(preds)
+    # sampling column indicates whether or not we 'ran the full compressor' (aka did an accurate
+    # linear interpretation) or if we added noise to assume a less accurate method
+    # proxy column indicates a linear or polynomial proxy 
+    predictions.columns=['comp','error_mode', 'field','ts','search method','proxy','sampling','searches',
+                         'dlib_iters', 'target_cr','pred_cr', 'pred_eb','closest_cr','closest_eb','closest_psnr']
+    outfile = 'predictions_' + comp + '_' + errmode + '_s' + str(max_searches) + '_d' + str(max_dlib_iters) + '_cr' + str(cr_max) + '_hurricane_binary_search_dlib_linear.csv'
     predictions.to_csv(outfile)
     return predictions

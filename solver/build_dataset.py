@@ -13,10 +13,8 @@ import sys
 compresshome = "/project/jonccal/fthpc/alpoulo/repositories/Correlation_Compressibility/"
 
 def evaluate(bound, compressor_id, errmode):
-    #compressor_id = "sz3"
     global data
     output = data.copy()
-    #c = lp.PressioCompressor(compressor_id, {f"{compressor_id}:metric": "composite", "composite:plugins": ["size", "error_stat"]}, {"pressio:abs": bound})
     c = lp.PressioCompressor(compressor_id, {f"{compressor_id}:metric": "composite", "composite:plugins": ["size", "error_stat"]}, {f"{errmode}": bound})
     compressed = c.encode(data)
     c.decode(compressed, output)

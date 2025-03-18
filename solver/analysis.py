@@ -44,14 +44,15 @@ def calculate_error_by_searches(df):
     def sem_custom(x):
         return stats.sem(x, ddof=1)
 
-    df['abs_err'] = abs(df['target_cr'] - df['pred_cr'])
-    df['abs_rel_err'] = df['abs_err'] / df['target_cr']
+    df['abs_err'] = abs(df['closest_cr'] - df['pred_cr'])
+    df['abs_rel_err'] = df['abs_err'] / df['closest_cr']
     
     errors = df.groupby(['searches']).agg(
         mean_abserr=('abs_err', 'mean'),
         sem_abserr=('abs_rel_err', sem_custom),
         mean_relerr=('abs_rel_err','mean')
     ).reset_index()
+    errors['mean_relerr'] = errors['mean_relerr'] * 100
     
     return errors
 ################################################################################################################################
@@ -59,14 +60,15 @@ def calculate_error_by_field(df):
     def sem_custom(x):
         return stats.sem(x, ddof=0)
 
-    df['abs_err'] = abs(df['target_cr'] - df['pred_cr'])
-    df['abs_rel_err'] = abs((df['target_cr'] - df['pred_cr']) / df['target_cr'])
+    df['abs_err'] = abs(df['closest_cr'] - df['pred_cr'])
+    df['abs_rel_err'] = abs((df['closest_cr'] - df['pred_cr']) / df['closest_cr'])
     
     errors = df.groupby(['searches','field']).agg(
         mean_abserr=('abs_err', 'mean'),
         sem_abserr=('abs_rel_err', sem_custom),
         mean_relerr=('abs_rel_err','mean')
     ).reset_index()
+    errors['mean_relerr'] = errors['mean_relerr'] * 100
     
     return errors
 ################################################################################################################################

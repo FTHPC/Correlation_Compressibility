@@ -18,8 +18,12 @@ datasets = {
 }
 
 def get_timestep(fpath,timestep):
-    files = glob.glob(os.path.join(fpath, f"*{timestep}.bin"))
-
+    #files = glob.glob(os.path.join(fpath, f"*{timestep}.bin"))
+    filter_fields = ['Uf' + timestep + '.bin','Vf' + timestep + '.bin','Wf' + timestep + '.bin']
+    files = list(map(lambda file: os.path.join(fpath, file), filter_fields))
+    #print(filter_fields)
+    #files = os.path.join(fpath,*filter_fields)
+    #print(files)
     return files
 
 #compressors = ['sz','sz3','zfp','sperr','tthresh','mgard']
@@ -46,10 +50,14 @@ if not os.path.exists(jobdir):
 
 ntasks = 16
 mem = '2gb'
-walltime = '8:00:00'
+walltime = '6:00:00'
 
 #for comp in compressors:
-for t in range(1,49):
+timesteps1 = [24,25,26,27,37,38,39,40,41,47,48]
+timesteps2 = list(range(1,49))
+timesteps = list(filter(lambda x: x not in timesteps1, timesteps2))
+for t in timesteps:
+#for t in range(1,49):
 
     timestep = f"{t:02d}"
     job = app + '_t' + timestep + '_' + comp + '_' + errmode 
