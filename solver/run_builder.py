@@ -18,9 +18,9 @@ datasets = {
 }
 
 def get_timestep(fpath,timestep):
-    #files = glob.glob(os.path.join(fpath, f"*{timestep}.bin"))
-    filter_fields = ['Uf' + timestep + '.bin','Vf' + timestep + '.bin','Wf' + timestep + '.bin']
-    files = list(map(lambda file: os.path.join(fpath, file), filter_fields))
+    files = glob.glob(os.path.join(fpath, f"*{timestep}.bin"))
+    #filter_fields = ['Uf' + timestep + '.bin','Vf' + timestep + '.bin','Wf' + timestep + '.bin']
+    #files = list(map(lambda file: os.path.join(fpath, file), filter_fields))
     #print(filter_fields)
     #files = os.path.join(fpath,*filter_fields)
     #print(files)
@@ -50,12 +50,14 @@ if not os.path.exists(jobdir):
 
 ntasks = 16
 mem = '2gb'
-walltime = '6:00:00'
+walltime = '10:00:00'
 
 #for comp in compressors:
-timesteps1 = [24,25,26,27,37,38,39,40,41,47,48]
-timesteps2 = list(range(1,49))
-timesteps = list(filter(lambda x: x not in timesteps1, timesteps2))
+#timesteps = [24,25,26,27,37,38,39,40,41,47,48]
+timesteps = [24,25,26,27,37]
+#timesteps = [38,39,40,41,47,48]
+#timesteps2 = list(range(1,49))
+#timesteps = list(filter(lambda x: x not in timesteps1, timesteps2))
 for t in timesteps:
 #for t in range(1,49):
 
@@ -87,7 +89,8 @@ for t in timesteps:
     files = get_timestep(appdir,timestep)
     for f in files:
         with open(slurmout,'a') as so:
-            so.write(f'echo_do mpiexec --use-hwthread-cpus -np {ntasks} python build_dataset.py {comp} {f} {dim1} {dim2} {dim3} {errmode}\n\n')
+            so.write(f'echo_do mpiexec -np {ntasks} python build_dataset.py {comp} {f} {dim1} {dim2} {dim3} {errmode} {app}\n\n')
+            #so.write(f'echo_do mpiexec --use-hwthread-cpus -np {ntasks} python build_dataset.py {comp} {f} {dim1} {dim2} {dim3} {errmode}\n\n')
 
     os.system("sbatch %s" %slurmout)
 

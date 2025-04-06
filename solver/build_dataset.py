@@ -20,7 +20,7 @@ def evaluate(bound, compressor_id, errmode):
     c.decode(compressed, output)
     return c.get_metrics() | {"config:compressor_id": compressor_id, "config:bound": bound}
 
-assert len(sys.argv) == 7, "must provide compressor, file path, dimensions, and error mode"
+assert len(sys.argv) == 8, "must provide compressor, file path, dimensions, and error mode and app"
 
 compressor = sys.argv[1]
 inpath = sys.argv[2]
@@ -28,8 +28,9 @@ dim1 = int(sys.argv[3])
 dim2 = int(sys.argv[4])
 dim3 = int(sys.argv[5])
 errmode = sys.argv[6]
+app = sys.argv[7]
 
-app = Path(inpath.split("/")[-2]).stem
+#app = Path(inpath.split("/")[-2]).stem
 fname = Path(inpath.split("/")[-1]).stem
 outfile = compresshome + "solver/output/" + app + '_' + compressor + "_" + fname + "_" + errmode + ".csv"
 

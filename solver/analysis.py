@@ -3,6 +3,7 @@ import numpy as np
 import time
 from numpy.polynomial import Polynomial
 from scipy.optimize import minimize
+from sklearn.metrics import r2_score
 import matplotlib.pyplot as plt
 import dlib
 import random
@@ -16,6 +17,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import cfg
+
 
 ################################################################################################################################
 def calculate_error(df):
@@ -45,14 +47,15 @@ def calculate_error_by_searches(df):
         return stats.sem(x, ddof=1)
 
     df['abs_err'] = abs(df['closest_cr'] - df['pred_cr'])
-    df['abs_rel_err'] = df['abs_err'] / df['closest_cr']
+    df['APE'] = (df['abs_err'] / df['closest_cr']) * 100
     
     errors = df.groupby(['searches']).agg(
         mean_abserr=('abs_err', 'mean'),
-        sem_abserr=('abs_rel_err', sem_custom),
-        mean_relerr=('abs_rel_err','mean')
+        mean_APE=('APE', 'mean'),
+        MAPE=('APE','median'),
+        sem_abserr=('APE', sem_custom)
     ).reset_index()
-    errors['mean_relerr'] = errors['mean_relerr'] * 100
+    #errors['MAPE'] = errors['MAPE'] * 100
     
     return errors
 ################################################################################################################################
@@ -61,14 +64,84 @@ def calculate_error_by_field(df):
         return stats.sem(x, ddof=0)
 
     df['abs_err'] = abs(df['closest_cr'] - df['pred_cr'])
-    df['abs_rel_err'] = abs((df['closest_cr'] - df['pred_cr']) / df['closest_cr'])
+    df['APE'] = abs((df['closest_cr'] - df['pred_cr']) / df['closest_cr']) * 100
     
     errors = df.groupby(['searches','field']).agg(
         mean_abserr=('abs_err', 'mean'),
-        sem_abserr=('abs_rel_err', sem_custom),
-        mean_relerr=('abs_rel_err','mean')
+        mean_APE=('APE','mean'),
+        MAPE=('APE','median'),
+        sem_abserr=('APE', sem_custom)
     ).reset_index()
-    errors['mean_relerr'] = errors['mean_relerr'] * 100
+    #errors['MAPE'] = errors['MAPE'] * 100
+    
+    return errors
+
+
+
+################################################################################################################################
+def calculate_error_by_field_withr2(df):
+    def sem_custom(x):
+        return stats.sem(x, ddof=0)
+
+    def calculate_metrics(df):
+        return pd.Series({
+            'mean_abserr': df['abs_err'].mean(),
+            'mean_APE': df['APE'].mean(),
+            'MAPE': df['APE'].median(),
+            'stdv': np.std(df['APE']),
+            'sem_abserr': sem_custom(df['APE']),
+            'R_squared': r2_score(df['closest_cr'], df['pred_cr'])
+        })
+
+    df['abs_err'] = abs(df['closest_cr'] - df['pred_cr'])
+    df['APE'] = abs((df['closest_cr'] - df['pred_cr']) / df['closest_cr']) * 100
+    errors = df.groupby(['search method', 'searches', 'field']).apply(calculate_metrics).reset_index()
+    errors['dlib_iters'] = 0
+    #errors = df.groupby(['search method', 'searches', 'dlib_iters', 'field']).apply(calculate_metrics).reset_index() 
+    errors = errors[['search method', 'searches', 'dlib_iters', 'field', 'mean_abserr', 'mean_APE', 'MAPE','stdv', 'sem_abserr', 'R_squared']]
+    return errors
+################################################################################################################################
+def calculate_error_by_field_withr2_poly(df):
+    def sem_custom(x):
+        return stats.sem(x, ddof=0)
+
+    def calculate_metrics(df):
+        return pd.Series({
+            'mean_abserr': df['abs_err'].mean(),
+            'mean_APE': df['APE'].mean(),
+            'MAPE': df['APE'].median(),
+            'stdv': np.std(df['APE']),
+            'sem_abserr': sem_custom(df['APE']),
+            'R_squared': r2_score(df['closest_cr'], df['pred_cr'])
+        })
+
+    df['abs_err'] = abs(df['closest_cr'] - df['pred_cr'])
+    df['APE'] = abs((df['closest_cr'] - df['pred_cr']) / df['closest_cr']) * 100
+    errors = df.groupby(['search method', 'degree', 'dlib_iters', 'field']).apply(calculate_metrics).reset_index()    
+    
+    return errors
+
+################################################################################################################################
+def calculate_error_by_field_withr2_dlib(df):
+    def sem_custom(x):
+        return stats.sem(x, ddof=0)
+
+    def calculate_metrics(df):
+        return pd.Series({
+            'mean_abserr': df['abs_err'].mean(),
+            'mean_APE': df['APE'].mean(),
+            'MAPE': df['APE'].median(),
+            'stdv': np.std(df['APE']),
+            'sem_abserr': sem_custom(df['APE']),
+            'R_squared': r2_score(df['closest_cr'], df['pred_cr'])
+        })
+
+    df.replace([np.inf], np.nan, inplace=True)
+    df.dropna(inplace=True)
+    df['abs_err'] = abs(df['closest_cr'] - df['pred_cr'])
+    df['APE'] = abs((df['closest_cr'] - df['pred_cr']) / df['closest_cr']) * 100
+    errors = df.groupby(['search method', 'searches','dlib_iters','field']).apply(calculate_metrics).reset_index()
     
     return errors
 ################################################################################################################################
+
