@@ -80,7 +80,8 @@ def make_noisy_fidelity(proxy,scale):
     def low(x: float) -> float:
         nonlocal noise_db
         if x not in noise_db:
-            noise = np.random.normal(scale=scale)
+            noise = np.random.normal(loc=scale)
+            noise = noise * random.choice([-1,1])
             noise_db[x] = noise
         else:
             noise = noise_db[x]
@@ -119,65 +120,7 @@ def make_polynomial_callback(proxy,target):
     callback.history = []
     callback.diffs = []
     callback.iter = 0
-    return callback
-################################################################################################################################
-def brents(objective,x0,x1,max_iters,tolerance=1e-5):
-    fx0 = objective(x0)
-    fx1 = objective(x1)
-
-    #print(f'x0: {x0}, f(x0): {fx0}, x1: {x1}, fx1: {fx1}')
-
-    assert (fx0*fx1) <= 0, "Root not bracketed"
-
-    if abs(fx0) < abs(fx1):
-        x0, x1 = x1, x0
-        fx0, fx1 = fx1, fx0
-
-    x2, fx2 = x0, fx0
-
-    mflag = True
-    iters = 0
-
-    # note that iters from callback will be > iters in this method
-    # because we call the objective function 3x per iteration
-    while iters < max_iters and abs(x1 - x0) > tolerance:
-        fx0 = objective(x0)
-        fx1 = objective(x1)
-        fx2 = objective(x2)
-
-        if fx0 != fx2 and fx1 != fx2:
-            L0 = (x0 * fx1 * fx2) / ((fx0 - fx1) * (fx0 - fx2))
-            L1 = (x1 * fx0 * fx2) / ((fx1 - fx0) * (fx1 - fx2))
-            L2 = (x2 * fx1 * fx0) / ((fx2 - fx0) * (fx2 - fx1))
-            new = L0 + L1 + L2
-        else:
-            new = x1 - ((fx1 * (x1 - x0)) / (fx1 - fx0))
-
-        if ((new < ((3 * x0 + x1) / 4) or new > x1) or
-            (mflag == True and (abs(new - x1)) >= (abs(x1 - x2) / 2)) or
-            (mflag == False and (abs(new - x1)) >= (abs(x2 - d) / 2)) or
-            (mflag == True and (abs(x1 - x2)) < tolerance) or
-            (mflag == False and (abs(x2 - d)) < tolerance)):
-            new = (x0 + x1) / 2
-            mflag = True
-        else:
-            mflag = False
-
-        fnew = objective(new)
-        d, x2 = x2, x1
-
-        if (fx0 * fnew) < 0:
-            x1 = new
-        else:
-            x0 = new
-
-        if abs(fx0) < abs(fx1):
-            x0, x1 = x1, x0
-
-        iters = iters + 1
-
-    return fx1, x1
-    #return x1, iters  
+    return callback 
 ################################################################################################################################
 def make_binary_search_callback(proxy,target):
 
@@ -234,7 +177,7 @@ def binary_search(low,high,objective,max_searches,tolerance=1e-5):
         iters = iters + 1
     return closest_pred,closest_x
 ################################################################################################################################
-def run_binary_search(comp,errmode,max_searches,max_trials,cr_max,noise=1,app='hurricane'):
+def run_binary_search(comp,errmode,max_searches,max_trials,cr_max,noise,app='hurricane'):
 
     preds = []
     for field in cfg.get_fields(app):
@@ -253,8 +196,11 @@ def run_binary_search(comp,errmode,max_searches,max_trials,cr_max,noise=1,app='h
             linear_proxy = make_linear_proxy(df,cfg.X,cfg.Y)
             
             if noise:
-                scale = np.std(df[cfg.Y])
-                linear_proxy = make_approx_fidelity(linear_proxy, scale)
+                #scale = np.std(df[cfg.Y])
+                cr_range = max_cr - min_cr
+                scale = cr_range * noise
+                #linear_proxy = make_approx_fidelity(linear_proxy, scale)
+                linear_proxy = make_noisy_fidelity(linear_proxy, scale)
             else:
                 scale = 0
 
@@ -318,7 +264,7 @@ def run_binary_search(comp,errmode,max_searches,max_trials,cr_max,noise=1,app='h
                         ]
     outfile = 'predictions/predictions_' + comp + '_' + errmode + '_s-' + str(max_searches) + '_d-0_cr-' + str(cr_max) + app + '_' + app + '_binary_search_linear'
     if noise:
-        outfile = outfile + '_noisy'
+        outfile = outfile + '_' + str(noise) + '-noisy'
     outfile = outfile + '.csv'
     predictions.to_csv(outfile)
     return predictions
@@ -336,7 +282,7 @@ def make_binary_search_dlib_callback(proxy,target):
         diff = y - target
         callback.diffs.append(y - target)
         #diff = (y - target)**2
-        #print(f"Iteration {callback.iter}: Current eb = {x}, Pred CR = {y}, diff = {diff}, time = {end - start}")
+        print(f"Iteration {callback.iter}: Current eb = {x}, Pred CR = {y}, diff = {diff}, time = {end - start}")
         return abs(diff)
 
     def reset():
@@ -404,8 +350,11 @@ def run_binary_search_dlib(comp,errmode,max_searches,dlib_iter,max_trials,cr_max
 
             linear_proxy = make_linear_proxy(df,cfg.X,cfg.Y)
             if noise:
-                scale = np.std(df[cfg.Y])
-                linear_proxy = make_approx_fidelity(linear_proxy, scale)
+                #scale = np.std(df[cfg.Y])
+                cr_range = max_cr - min_cr
+                scale = cr_range * noise                
+                #linear_proxy = make_approx_fidelity(linear_proxy, scale)
+                linear_proxy = make_noisy_fidelity(linear_proxy, scale)
             else:
                 scale = 0
             objective_fx = on_error(linear_proxy, np.inf)
@@ -453,7 +402,7 @@ def run_binary_search_dlib(comp,errmode,max_searches,dlib_iter,max_trials,cr_max
                          'dlib_iters', 'target_cr','pred_cr', 'pred_eb','closest_cr','closest_eb','closest_psnr']
     outfile = 'predictions/predictions_' + comp + '_' + errmode + '_s-' + str(max_searches) + '_d-'+str(dlib_iter) + '_cr-' + str(cr_max) + '_' + app + '_binary_search_dlib_linear'
     if noise:
-        outfile = outfile + '_noisy'
+        outfile = outfile + '_' + str(noise) + '-noisy'
     outfile = outfile + '.csv'
     predictions.to_csv(outfile)
     return predictions
@@ -478,8 +427,11 @@ def run_search_dlib_only(comp,errmode,dlib_iters,max_trials,cr_max,noise=1,app='
 
             linear_proxy = make_linear_proxy(df,cfg.X,cfg.Y)
             if noise:
-                scale = np.std(df[cfg.Y])
-                linear_proxy = make_approx_fidelity(linear_proxy, scale)
+                #scale = np.std(df[cfg.Y])
+                cr_range = max_cr - min_cr
+                scale = cr_range * noise                
+                #linear_proxy = make_approx_fidelity(linear_proxy, scale)
+                linear_proxy = make_noisy_fidelity(linear_proxy, scale)
             else:
                 scale = 0
             objective_fx = on_error(linear_proxy, np.inf)
@@ -540,7 +492,7 @@ def run_search_dlib_only(comp,errmode,dlib_iters,max_trials,cr_max,noise=1,app='
     #outfile = 'predictions_' + comp + '_' + errmode + '_s' + str(max_searches) + '_d' + str(max_dlib_iters) + '_cr' + str(cr_max) + '_hurricane_binary_search_dlib_linear'
     outfile = 'predictions/predictions_' + comp + '_' + errmode + '_s-1_d-'+str(dlib_iters) + '_cr-' + str(cr_max) + '_' + app + '_search_dlib_only'
     if noise:
-        outfile = outfile + '_noisy'
+        outfile = outfile + '_' + str(noise) + '-noisy'
     outfile = outfile + '.csv'
     predictions.to_csv(outfile)
     return predictions
@@ -609,8 +561,11 @@ def run_polynomial_search(comp,errmode,max_degree,max_trials,cr_max,rand=0,noise
             linear_proxy = make_linear_proxy(df,cfg.X,cfg.Y)
             
             if noise:
-                scale = np.std(df[cfg.Y])
-                linear_proxy = make_approx_fidelity(linear_proxy, scale)
+                #scale = np.std(df[cfg.Y])
+                cr_range = max_cr - min_cr
+                scale = cr_range * noise                
+                #linear_proxy = make_approx_fidelity(linear_proxy, scale)
+                linear_proxy = make_noisy_fidelity(linear_proxy, scale)
             else:
                 scale = 0
 
@@ -663,11 +618,11 @@ def run_polynomial_search(comp,errmode,max_degree,max_trials,cr_max,rand=0,noise
                          'closest_cr',
                          'closest_eb',
                          'closest_psnr']
-    outfile = 'predictions/predictions_' + comp + '_' + errmode + '_s' + str(max_degree) + '_d0_cr' + str(cr_max) + '_' + {app} + '_polynomial_search'
+    outfile = 'predictions/predictions_' + comp + '_' + errmode + '_s' + str(max_degree) + '_d0_cr' + str(cr_max) + '_' + app + '_polynomial_search'
     if rand:
         outfile = outfile + '_random'
     if noise:
-        outfile = outfile + '_noisy'
+        outfile = outfile + '_' + str(noise) + '-noisy'
     outfile = outfile + '.csv'
     predictions.to_csv(outfile)
     return predictions

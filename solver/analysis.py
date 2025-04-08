@@ -79,7 +79,7 @@ def calculate_error_by_field(df):
 
 
 ################################################################################################################################
-def calculate_error_by_field_withr2(df):
+def calculate_error_by_field_withr2(df,noise=0):
     def sem_custom(x):
         return stats.sem(x, ddof=0)
 
@@ -95,13 +95,19 @@ def calculate_error_by_field_withr2(df):
 
     df['abs_err'] = abs(df['closest_cr'] - df['pred_cr'])
     df['APE'] = abs((df['closest_cr'] - df['pred_cr']) / df['closest_cr']) * 100
-    errors = df.groupby(['search method', 'searches', 'field']).apply(calculate_metrics).reset_index()
+    if noise:
+        errors = df.groupby(['search method', 'searches', 'field','noise']).apply(calculate_metrics).reset_index()
+    else:
+        errors = df.groupby(['search method', 'searches', 'field']).apply(calculate_metrics).reset_index()
     errors['dlib_iters'] = 0
     #errors = df.groupby(['search method', 'searches', 'dlib_iters', 'field']).apply(calculate_metrics).reset_index() 
-    errors = errors[['search method', 'searches', 'dlib_iters', 'field', 'mean_abserr', 'mean_APE', 'MAPE','stdv', 'sem_abserr', 'R_squared']]
+    if noise:
+        errors = errors[['search method', 'searches', 'dlib_iters', 'field', 'mean_abserr', 'mean_APE', 'MAPE','stdv', 'sem_abserr', 'R_squared', 'noise']]
+    else:
+        errors = errors[['search method', 'searches', 'dlib_iters', 'field', 'mean_abserr', 'mean_APE', 'MAPE','stdv', 'sem_abserr', 'R_squared']]
     return errors
 ################################################################################################################################
-def calculate_error_by_field_withr2_poly(df):
+def calculate_error_by_field_withr2_poly(df,noise=0):
     def sem_custom(x):
         return stats.sem(x, ddof=0)
 
@@ -117,12 +123,15 @@ def calculate_error_by_field_withr2_poly(df):
 
     df['abs_err'] = abs(df['closest_cr'] - df['pred_cr'])
     df['APE'] = abs((df['closest_cr'] - df['pred_cr']) / df['closest_cr']) * 100
-    errors = df.groupby(['search method', 'degree', 'dlib_iters', 'field']).apply(calculate_metrics).reset_index()    
+    if noise:
+        errors = df.groupby(['search method', 'degree', 'dlib_iters', 'field', 'noise']).apply(calculate_metrics).reset_index()    
+    else:
+        errors = df.groupby(['search method', 'degree', 'dlib_iters', 'field']).apply(calculate_metrics).reset_index()    
     
     return errors
 
 ################################################################################################################################
-def calculate_error_by_field_withr2_dlib(df):
+def calculate_error_by_field_withr2_dlib(df,noise=0):
     def sem_custom(x):
         return stats.sem(x, ddof=0)
 
@@ -140,7 +149,10 @@ def calculate_error_by_field_withr2_dlib(df):
     df.dropna(inplace=True)
     df['abs_err'] = abs(df['closest_cr'] - df['pred_cr'])
     df['APE'] = abs((df['closest_cr'] - df['pred_cr']) / df['closest_cr']) * 100
-    errors = df.groupby(['search method', 'searches','dlib_iters','field']).apply(calculate_metrics).reset_index()
+    if noise:
+        errors = df.groupby(['search method', 'searches','dlib_iters','field', 'noise']).apply(calculate_metrics).reset_index()
+    else:
+        errors = df.groupby(['search method', 'searches','dlib_iters','field']).apply(calculate_metrics).reset_index()
     
     return errors
 ################################################################################################################################

@@ -223,7 +223,7 @@ def make_error_barplot(errors,comp,):
     plt.bar(errors['searches'],errors['mean_APE'], yerr=errors['sem_abserr'],capsize=5)
     plt.title(f'{comp} pressio:{errmode}')
 ################################################################################################################################
-def make_abs_error_barplot_by_searches_and_field(errors,comp,errmode,xmain,xsub,dlib=0,poly=0,rand=0,ylim=0,app='hurricane'):
+def make_abs_error_barplot_by_searches_and_field(errors,comp,errmode,xmain,xsub,dlib=0,poly=0,rand=0,ylim=0,noise=0,app='hurricane'):
     if xmain == 'searches':
         xlab = 'Searches'
         sort = 'Field'
@@ -237,6 +237,9 @@ def make_abs_error_barplot_by_searches_and_field(errors,comp,errmode,xmain,xsub,
         if xsub == 'searches':
             sort = 'Searches'
             title_sub = '# Searches'
+        elif xsub == 'dlib_iters':
+            sort = 'dlib_iters'
+            title_sub = 'dlib iters'
         else:
             sort = 'Degree'
             title_sub = 'Degree'
@@ -249,6 +252,7 @@ def make_abs_error_barplot_by_searches_and_field(errors,comp,errmode,xmain,xsub,
     if dlib:
         ofile = ofile + '_dlib'
         title = title + ' with dlib'
+        legend_title = 'dlib iters'
     if poly:
         ofile = ofile + '_poly'
         title = title + ' with Polynomial Estimation'
@@ -256,6 +260,10 @@ def make_abs_error_barplot_by_searches_and_field(errors,comp,errmode,xmain,xsub,
     if rand:
         ofile = ofile + '_rand'
         title = title + ' - random sampling'
+    if noise:
+        noisestr = noise * 100
+        ofile = ofile + '_' + str(noisestr) + 'noise'
+        title = title + ' and ' + str(noisestr) + '% noise'
     ofile = ofile + '.pdf'
     with PdfPages(ofile) as pdf_pages:    
         fig,ax = plt.subplots(figsize=(16,6))        
@@ -383,9 +391,69 @@ def create_raw_cr_figs_against_binary_predictions(comp,errmode,cr_max=1000,app='
 
 
 
+#def make_abs_error_barplot_by_searches_and_field(errors,comp,errmode,xmain,xsub,dlib=0,poly=0,rand=0,ylim=0,noise=0,rand=0,app='hurricane'):
+def make_scatter_by_field_noisy(preds,comp,errmode,srch,srchval,dlib=0,poly=0,rand=0,app='hurricane'):
+    compname = comp.upper()    
+    title = compname + ' ' + 'pressio:' + errmode + ' Real vs Predicted by ' 
+    ofile = 'img/results/accuracy/' + app + '_pred_vs_real_' + comp + '_' + errmode
+    
+    if 'binary' in srch:
+        filtercol = 'searches'
+        title = title + 'Binary Search'
+        ofile = ofile + '_binary' + str(srchval)
+    elif 'polynomial' in srch:
+        filtercol = 'degree'
+        title = title + 'Polynomial Estimation'
+        ofile = ofile + '_poly' + str(srchval)
+    elif 'dlib' in srch:
+        filtercol = 'dlib_iters'
+        title = title + 'dlib Search with ' + str(dlib) + ' dlib Iterations'
+        ofile = ofile + '_dlib' + str(srchval)
+    else:
+        print(f'invalid search option: {srch}. returning None')
+        return None    
+    if rand:
+        ofile = ofile + '_rand'
+        title = title + ' - random sampling'
+    ofile = ofile + '.pdf'        
 
+    legend_title = '% noise'
+    
+    preds = preds[preds['search method'] == srch]
+    preds = preds[preds[filtercol] == srchval]
 
+    preds['noise'] = (preds['noise'] * 100).astype(int)
+    noiselevels = list(preds['noise'].unique())
+    colors = plt.cm.get_cmap('viridis', len(noiselevels))    
+        
+    labels = list(preds['field'].unique())
+    num_plots = len(list(labels))
+    
+    with PdfPages(ofile) as pdf_pages:    
+        rows = 4
+        cols = 4
+        fig, axes = plt.subplots(rows, cols, figsize=(10, 12))
+        axes = axes.flatten()
 
+        for i in range(num_plots):
+            df = preds[preds['field'] == labels[i]]
+            for c,noise in enumerate(noiselevels):
+                axes[i].scatter(df['closest_cr'], df['pred_cr'],s=.15,alpha=0.15,c=pd.factorize(df['noise'])[0])
+            axes[i].set_title(f'{labels[i]}')
+            axes[i].set_xlabel('closest cr')
+            axes[i].set_ylabel('pred cr')
 
+        for idx in range(num_plots,rows*cols):
+            fig.delaxes(axes[idx])
+        
+        plt.title(title)
+        handles, labels = axes[0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc='upper right',markerscale=20)      
+
+        plt.suptitle(title)
+        fig.subplots_adjust(top=0.9)        
+        plt.tight_layout()
+        pdf_pages.savefig(fig, bbox_inches='tight',dpi=50)
+        plt.close(fig)  
 
 

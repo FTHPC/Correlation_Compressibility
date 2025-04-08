@@ -109,6 +109,23 @@ def get_dlib_predictions(comp,errmode,app='hurricane'):
         
     predictions = pd.concat(df,ignore_index=True)    
     return predictions
+################################################################################################################################
+def get_poly_predictions(comp,errmode,app='hurricane',rand=0):
+    fpath = 'predictions/polynomial/'
+    files = glob.glob(os.path.join(fpath, f"*{comp}_{errmode}*{app}*.csv"))
+    #print(files)
+    if rand:
+        files = [f for f in files if 'random' in f]
+    else:
+        files = [f for f in files if 'random' not in f]
+    df = []
+    for f in files:
+        tmpdf = pd.read_csv(f,index_col=0)
+        tmpdf['searches'] = 0
+        df.append(tmpdf)
+        
+    predictions = pd.concat(df,ignore_index=True)    
+    return predictions
 
 ################################################################################################################################
 def get_binary_predictions(comp,errmode,app='hurricane'):
@@ -122,6 +139,73 @@ def get_binary_predictions(comp,errmode,app='hurricane'):
     predictions = pd.concat(df,ignore_index=True)
     predictions['dlib_iters'] = 0
     return predictions
+################################################################################################################################
+def get_noisy_dlib_predictions(comp,errmode,app='hurricane'):
+    fpath = 'predictions/noise/dlib/'
+    df = []
+    files = glob.glob(os.path.join(fpath, f"*{comp}_{errmode}*{app}*.csv"))
+    for f in files:
+        tmpdf = pd.read_csv(f,index_col=0)
+        if 'dlib only' in list(tmpdf['search method']):
+            tmpdf['searches'] = 0
+        err = Path(f.split('/')[-1]).stem
+        err = Path(err.split('.')[-1]).stem
+        err = Path(err.split('-')[0]).stem
+        if err == '01': noise = .01
+        if err == '05': noise = .05
+        if err == '1': noise = .1
+        if err == '2': noise = .2
+        tmpdf['noise'] = noise
+        
+        df.append(tmpdf)
+        
+    predictions = pd.concat(df,ignore_index=True)    
+    return predictions
+################################################################################################################################
+def get_noisy_poly_predictions(comp,errmode,app='hurricane'):
+    fpath = 'predictions/noise/polynomial/'
+    df = []
+    files = glob.glob(os.path.join(fpath, f"*{comp}_{errmode}*{app}*.csv"))
+    for f in files:
+        tmpdf = pd.read_csv(f,index_col=0)
+        tmpdf['searches'] = 0
+        tmpdf['dlib_iters'] == 0
+        err = Path(f.split('/')[-1]).stem
+        err = Path(err.split('.')[-1]).stem
+        err = Path(err.split('-')[0]).stem
+        if err == '01': noise = .01
+        if err == '05': noise = .05
+        if err == '1': noise = .1
+        if err == '2': noise = .2
+        tmpdf['noise'] = noise
+        
+        df.append(tmpdf)
+        
+    predictions = pd.concat(df,ignore_index=True)    
+    return predictions
+
+################################################################################################################################
+def get_noisy_binary_predictions(comp,errmode,app='hurricane'):
+    fpath = 'predictions/noise/binary/'
+    df = []
+    files = glob.glob(os.path.join(fpath, f"*{comp}_{errmode}*{app}*.csv"))
+    for f in files:
+        tmpdf = pd.read_csv(f,index_col=0)
+        err = Path(f.split('/')[-1]).stem
+        err = Path(err.split('.')[-1]).stem
+        err = Path(err.split('-')[0]).stem
+        if err == '01': noise = .01
+        if err == '05': noise = .05
+        if err == '1': noise = .1
+        if err == '2': noise = .2
+        tmpdf['noise'] = noise
+        df.append(tmpdf)
+        
+    predictions = pd.concat(df,ignore_index=True)
+    predictions['dlib_iters'] = 0
+    return predictions
+
+                              
 ################################################################################################################################
 
 def get_nearest_cr(df,target):
