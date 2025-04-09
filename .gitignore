@@ -40,4 +40,6 @@ rawdata_*
 .test
 *.json
 *.swp
+.ipynb_checkpoints
+old
 CMakeCache.txt
