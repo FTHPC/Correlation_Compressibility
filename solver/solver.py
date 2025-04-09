@@ -175,7 +175,7 @@ def binary_search(low,high,objective,max_searches,tolerance=1e-5):
         else: # diff == 0
             break
         iters = iters + 1
-    return closest_pred,closest_x
+    return low,high
 ################################################################################################################################
 def run_binary_search(comp,errmode,max_searches,max_trials,cr_max,noise,app='hurricane'):
 
@@ -196,10 +196,8 @@ def run_binary_search(comp,errmode,max_searches,max_trials,cr_max,noise,app='hur
             linear_proxy = make_linear_proxy(df,cfg.X,cfg.Y)
             
             if noise:
-                #scale = np.std(df[cfg.Y])
                 cr_range = max_cr - min_cr
                 scale = cr_range * noise
-                #linear_proxy = make_approx_fidelity(linear_proxy, scale)
                 linear_proxy = make_noisy_fidelity(linear_proxy, scale)
             else:
                 scale = 0
@@ -282,7 +280,7 @@ def make_binary_search_dlib_callback(proxy,target):
         diff = y - target
         callback.diffs.append(y - target)
         #diff = (y - target)**2
-        print(f"Iteration {callback.iter}: Current eb = {x}, Pred CR = {y}, diff = {diff}, time = {end - start}")
+        #print(f"Iteration {callback.iter}: Current eb = {x}, Pred CR = {y}, diff = {diff}, time = {end - start}")
         return abs(diff)
 
     def reset():
@@ -294,43 +292,48 @@ def make_binary_search_dlib_callback(proxy,target):
        
     def reset_iter():
         callback.iter = 0
+
+    def compare(b,d):
+        ret = None
+        bdiff = abs(b - target)
+        ddiff = abs(d - target)
+        if bdiff > ddiff:
+            ret = 'dlib'
+        else:
+            ret = 'binary'
+        return ret
+            
     
     callback.reset = reset
     callback.reset_iter = reset_iter
     callback.timing = []
     callback.history = []
+    callback.compare = compare
     callback.diffs = []
     callback.iter = 0
     return callback
 
 ################################################################################################################################  
-def binary_search_dlib(low,high,objective,max_iters,max_searches,tolerance=1e-5):
+def binary_search_dlib(low,high,b_objective,d_objective,max_iters,max_searches,tolerance=1e-5):
     libc = CDLL('libc.so.6')
     iters = 0
     closest_pred = np.inf
     closest_x = 0
-    while iters < max_searches:
-        mid = (high + low) / 2
-        iters = iters + 1
-        libc.srand(42)
-        result = dlib.find_min_global(
-                objective,
-                [low], [high],
-                max_iters
-            )
-        x = result[0][0]
-        y = result[1]
-        objective.reset_iter()
-        
-        diff = objective.diffs[-1]
-        if y < closest_pred:
-            closest_pred = y
-            closest_x = x
-        if diff > 0:
-            high = mid
-        else:
-            low = mid
-    return closest_pred,closest_x 
+    
+    dlow,dhigh = binary_search(low,high,b_objective,max_searches)
+    b_pred = b_objective.history[-1][1]
+    b_pred_eb = b_objective.history[-1][0]    
+    
+    libc.srand(42)
+    result = dlib.find_min_global(
+            d_objective,
+            [dlow], [dhigh],
+            max_iters
+    )
+    d_pred = d_objective.history[-1][1]
+    d_pred_eb = d_objective.history[-1][0]
+    best = d_objective.compare(b_pred,d_pred)
+    return best,dlow,dhigh
 
 ################################################################################################################################
 def run_binary_search_dlib(comp,errmode,max_searches,dlib_iter,max_trials,cr_max,noise=1,app='hurricane'):    
@@ -350,10 +353,8 @@ def run_binary_search_dlib(comp,errmode,max_searches,dlib_iter,max_trials,cr_max
 
             linear_proxy = make_linear_proxy(df,cfg.X,cfg.Y)
             if noise:
-                #scale = np.std(df[cfg.Y])
                 cr_range = max_cr - min_cr
                 scale = cr_range * noise                
-                #linear_proxy = make_approx_fidelity(linear_proxy, scale)
                 linear_proxy = make_noisy_fidelity(linear_proxy, scale)
             else:
                 scale = 0
@@ -369,15 +370,27 @@ def run_binary_search_dlib(comp,errmode,max_searches,dlib_iter,max_trials,cr_max
 
             for trial in range(max_trials):
                 target = random.uniform(min_cr, max_cr)
-                objective = make_binary_search_dlib_callback(objective_fx, target)
+                
+                b_objective = make_binary_search_callback(objective_fx, target)                
+                d_objective = make_binary_search_dlib_callback(objective_fx, target)
+                
                 closest_eb,closest_cr,closest_psnr = util.get_nearest_cr(df,target)
 
                 for search in range(1,max_searches+1):                        
-                    result = binary_search_dlib(lower_bound,upper_bound,objective,dlib_iter,search)
+                    best,dlow,dhigh = binary_search_dlib(lower_bound,upper_bound,b_objective,d_objective,dlib_iter,search)
+
+                    if best == 'dlib':
+                        pred = d_objective.history[-1][1]
+                        pred_eb = d_objective.history[-1][0]
+                        worse_pred = b_objective.history[-1][1]
+                        worse_pred_eb = b_objective.history[-1][0]
+                    else:
+                        pred = b_objective.history[-1][1]
+                        pred_eb = b_objective.history[-1][0]
+                        worse_pred = d_objective.history[-1][1]
+                        worse_pred_eb = d_objective.history[-1][0]                        
                     
-                    pred = objective.history[-1][1]
-                    pred_eb = objective.history[-1][0]
-                    lin_approx = linear_proxy(objective.history[-1][0])
+                    #lin_approx = linear_proxy(objective.history[-1][0])
 
                     preds.append([comp,
                                   errmode, 
@@ -392,14 +405,20 @@ def run_binary_search_dlib(comp,errmode,max_searches,dlib_iter,max_trials,cr_max
                                   pred_eb,
                                   closest_cr,
                                   closest_eb,
-                                  closest_psnr
+                                  closest_psnr,
+                                  best,
+                                  dlow,
+                                  dhigh,
+                                  worse_pred,
+                                  worse_pred_eb
                     ])
-                    objective.reset()
+                    b_objective.reset()
+                    d_objective.reset()
 
     predictions = pd.DataFrame(preds)
 
     predictions.columns=['comp','error_mode', 'field','ts','search method','proxy','sampling','searches',
-                         'dlib_iters', 'target_cr','pred_cr', 'pred_eb','closest_cr','closest_eb','closest_psnr']
+                         'dlib_iters', 'target_cr','pred_cr', 'pred_eb','closest_cr','closest_eb','closest_psnr', 'best','dlow','dhigh','worse_pred','worse_eb']
     outfile = 'predictions/predictions_' + comp + '_' + errmode + '_s-' + str(max_searches) + '_d-'+str(dlib_iter) + '_cr-' + str(cr_max) + '_' + app + '_binary_search_dlib_linear'
     if noise:
         outfile = outfile + '_' + str(noise) + '-noisy'
